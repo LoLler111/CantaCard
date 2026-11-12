@@ -6,6 +6,7 @@ composeBom = "2026.09.00"
 activityCompose = "1.13.0"
 coroutines = "1.11.0"
 profileinstaller = "1.4.1"
+zxing = "3.5.4"
 junit = "4.13.2"
 orgJson = "20260814"
 
@@ -17,6 +18,7 @@ androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 junit = { module = "junit:junit", version.ref = "junit" }
 # Implementazione JVM di org.json per i test unitari (nell'APK si usa quella del framework).
 org-json = { module = "org.json:json", version.ref = "orgJson" }

@@ -17,8 +17,7 @@ class MainActivity : ComponentActivity() {
             CantaCardTheme {
                 CardListScreen(
                     repository = repository,
-                    // Fase 2: aprirà la visualizzazione della tessera.
-                    onOpen = { card -> repository.markUsed(card.id) },
+                    onOpen = { card -> startActivity(ShowCardActivity.intent(this, card.id)) },
                 )
             }
         }

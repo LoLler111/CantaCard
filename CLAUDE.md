@@ -15,11 +15,14 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 
 ## Stato
 
-- Fase corrente: **1 – scheletro + modello dati** completata (lista con ricerca, ordinamento,
-  preferite, persistenza JSON). APK release: 1,13 MB. Prossima: fase 2, visualizzazione.
+- Fase 1 (scheletro + modello dati) completata: APK release 1,13 MB.
+- Fase 2 (visualizzazione) completata: `ShowCardActivity` con codice ZXing a scala intera e quiet
+  zone, luminosità massima, schermo acceso, preferita ed eliminazione. APK release 1,25 MB.
+  Prossima: fase 3, aggiunta/scansione + modifica tessera.
 - Repo: git locale su branch `main`, remote `origin` = https://github.com/LoLler111/CantaCard
   (pubblico, vuoto). **Push solo su richiesta esplicita dell'utente.**
-- Identità git: la configura l'utente. Non impostare `user.name`/`user.email` di propria iniziativa.
+- Identità git del repo (config locale, scelta dall'utente): `LoLler111`
+  `<59455683+LoLler111@users.noreply.github.com>`.
 - `applicationId`: **provvisorio `dev.cantacard`**, da decidere prima della pubblicazione (è permanente
   dopo). Il `namespace` Kotlin/R resta `dev.cantacard` anche se l'applicationId cambia.
 - URL di aggiornamento del catalogo:

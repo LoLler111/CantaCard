@@ -2,6 +2,11 @@
 <resources>
     <string name="app_name" translatable="false">CantaCard</string>
 
+    <!-- Azioni comuni -->
+    <string name="action_back">Indietro</string>
+    <string name="action_delete">Elimina</string>
+    <string name="action_cancel">Annulla</string>
+
     <!-- Lista tessere -->
     <string name="search_hint">Cerca tessere</string>
     <string name="search_clear">Cancella ricerca</string>
@@ -9,6 +14,15 @@
     <string name="list_empty_body">Le tessere che aggiungi compariranno qui.</string>
     <string name="list_no_results">Nessuna tessera trovata</string>
     <string name="card_favorite">Preferita</string>
+
+    <!-- Visualizzazione tessera -->
+    <string name="favorite_add">Aggiungi alle preferite</string>
+    <string name="favorite_remove">Rimuovi dalle preferite</string>
+    <string name="card_not_found">Tessera non trovata</string>
+    <string name="code_invalid">Il numero non è valido per il formato %1$s. Mostra il numero alla cassa per l\'inserimento manuale.</string>
+    <string name="code_unknown_format">Formato %1$s non supportato da questa versione. Mostra il numero alla cassa per l\'inserimento manuale.</string>
+    <string name="delete_title">Eliminare la tessera?</string>
+    <string name="delete_message">«%1$s» verrà eliminata da questo telefono.</string>
 
     <!-- Solo build di debug -->
     <string name="debug_add_samples">Aggiungi tessere di prova</string>

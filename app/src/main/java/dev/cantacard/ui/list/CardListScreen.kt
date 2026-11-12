@@ -1,8 +1,7 @@
 package dev.cantacard.ui.list
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -109,12 +108,7 @@ fun CardListScreen(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 items(visible, key = { it.id }) { card ->
-                    CardTile(
-                        card = card,
-                        onClick = { onOpen(card) },
-                        // Provvisorio finché non c'è il menu della tessera.
-                        onLongClick = { repository.toggleFavorite(card.id) },
-                    )
+                    CardTile(card = card, onClick = { onOpen(card) })
                 }
             }
         }
@@ -148,13 +142,8 @@ private fun SearchField(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun CardTile(
-    card: Card,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-) {
+private fun CardTile(card: Card, onClick: () -> Unit) {
     val background = Color(card.color)
     val content = if (background.luminance() > 0.5f) Color.Black else Color.White
     val favoriteLabel = stringResource(R.string.card_favorite)
@@ -167,7 +156,7 @@ private fun CardTile(
                 .aspectRatio(CARD_RATIO)
                 .clip(RoundedCornerShape(12.dp))
                 .background(background)
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+                .clickable(onClick = onClick),
         ) {
             Text(
                 text = card.initial,

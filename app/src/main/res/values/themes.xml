@@ -4,4 +4,10 @@
     <style name="Theme.CantaCard" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/window_background</item>
     </style>
+
+    <!-- Visualizzazione tessera: sempre chiara (anche col tema scuro), niente lampo nero all'apertura.
+         Definita solo qui, non in values-night. -->
+    <style name="Theme.CantaCard.Code" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
 </resources>
