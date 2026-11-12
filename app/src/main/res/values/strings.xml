@@ -13,9 +13,16 @@
     <!-- Lista tessere -->
     <string name="search_hint">Cerca tessere</string>
     <string name="search_clear">Cancella ricerca</string>
-    <string name="list_empty_title">Nessuna tessera</string>
-    <string name="list_empty_body">Le tessere che aggiungi compariranno qui.</string>
-    <string name="list_no_results">Nessuna tessera trovata</string>
+    <string name="list_empty_title">Il tuo portafoglio è vuoto</string>
+    <string name="list_empty_body">Aggiungi le tue tessere fedeltà: le mostri alla cassa in un attimo, anche senza connessione.</string>
+    <string name="list_empty_cta">Aggiungi la prima tessera</string>
+    <string name="list_no_results">Nessuna tessera per «%1$s»</string>
+    <plurals name="list_header_count">
+        <item quantity="one">%d tessera · sempre offline</item>
+        <item quantity="other">%d tessere · sempre offline</item>
+    </plurals>
+    <string name="section_favorites">Preferite</string>
+    <string name="section_all">Le tue tessere</string>
     <string name="card_favorite">Preferita</string>
     <string name="add_card">Aggiungi</string>
 
@@ -23,6 +30,7 @@
     <string name="favorite_add">Aggiungi alle preferite</string>
     <string name="favorite_remove">Rimuovi dalle preferite</string>
     <string name="card_not_found">Tessera non trovata</string>
+    <string name="show_hint">Luminosità al massimo · avvicina allo scanner</string>
     <string name="code_invalid">Il numero non è valido per il formato %1$s. Mostra il numero alla cassa per l\'inserimento manuale.</string>
     <string name="code_unknown_format">Formato %1$s non supportato da questa versione. Mostra il numero alla cassa per l\'inserimento manuale.</string>
     <string name="delete_title">Eliminare la tessera?</string>
@@ -35,8 +43,13 @@
     <string name="field_number">Numero della tessera</string>
     <string name="field_format">Formato del codice</string>
     <string name="field_note">Nota (facoltativa)</string>
+    <string name="section_code">Codice</string>
+    <string name="section_details">Dettagli</string>
     <string name="scan_camera">Scansiona</string>
+    <string name="scan_camera_hint">Con la fotocamera</string>
     <string name="scan_photo">Da una foto</string>
+    <string name="scan_photo_hint">Foto o screenshot</string>
+    <string name="edit_or_manual">oppure inseriscilo a mano</string>
     <string name="number_invalid">Numero non valido per il formato %1$s</string>
     <string name="photo_no_code">Nessun codice trovato nell\'immagine</string>
     <string name="photo_error">Impossibile aprire l\'immagine</string>

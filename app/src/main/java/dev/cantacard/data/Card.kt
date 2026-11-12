@@ -29,10 +29,12 @@ data class Card(
     val format: CodeFormat? get() = CodeFormat.fromName(formatName)
 
     /** Lettera o cifra mostrata quando non c'è un'immagine. */
-    val initial: String
-        get() = name.trim().firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "?"
+    val initial: String get() = initialOf(name)
 
     companion object {
         fun newId(): String = UUID.randomUUID().toString()
+
+        fun initialOf(name: String): String =
+            name.trim().firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "?"
     }
 }

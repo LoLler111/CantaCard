@@ -27,7 +27,20 @@ import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
 import androidx.camera.compose.CameraXViewfinder
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.StrokeCap
+import dev.cantacard.ui.Brand
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -251,6 +264,12 @@ private fun CameraPreview(
 private fun ScanOverlay(modifier: Modifier = Modifier) {
     val hint = stringResource(R.string.scan_hint)
     Box(modifier) {
+        val sweep by rememberInfiniteTransition(label = "scan").animateFloat(
+            initialValue = 0.08f,
+            targetValue = 0.92f,
+            animationSpec = infiniteRepeatable(tween(1600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+            label = "sweep",
+        )
         Canvas(
             Modifier
                 .fillMaxSize()
@@ -258,22 +277,66 @@ private fun ScanOverlay(modifier: Modifier = Modifier) {
         ) {
             val frameWidth = size.width * 0.84f
             val frameHeight = (frameWidth / 1.586f).coerceAtMost(size.height * 0.5f)
-            val topLeft = Offset((size.width - frameWidth) / 2, (size.height - frameHeight) / 2)
-            val frameSize = Size(frameWidth, frameHeight)
-            val radius = CornerRadius(16.dp.toPx())
-            drawRect(Color.Black.copy(alpha = 0.55f))
-            drawRoundRect(Color.Transparent, topLeft, frameSize, radius, blendMode = BlendMode.Clear)
-            drawRoundRect(Color.White, topLeft, frameSize, radius, style = Stroke(width = 3.dp.toPx()))
+            val left = (size.width - frameWidth) / 2
+            val top = (size.height - frameHeight) / 2
+            val radius = 20.dp.toPx()
+            drawRect(Color.Black.copy(alpha = 0.6f))
+            drawRoundRect(
+                Color.Transparent, Offset(left, top), Size(frameWidth, frameHeight), CornerRadius(radius),
+                blendMode = BlendMode.Clear,
+            )
+            // Angoli del mirino.
+            val arm = 34.dp.toPx()
+            val stroke = Stroke(width = 5.dp.toPx(), cap = StrokeCap.Round)
+            val right = left + frameWidth
+            val bottom = top + frameHeight
+            listOf(
+                Triple(Offset(left, top), 180f, Offset(1f, 1f)),
+                Triple(Offset(right - 2 * radius, top), 270f, Offset(-1f, 1f)),
+                Triple(Offset(right - 2 * radius, bottom - 2 * radius), 0f, Offset(-1f, -1f)),
+                Triple(Offset(left, bottom - 2 * radius), 90f, Offset(1f, -1f)),
+            ).forEach { (arcTopLeft, start, _) ->
+                drawArc(Brand.Teal300, start, 90f, false, arcTopLeft, Size(2 * radius, 2 * radius), style = stroke)
+            }
+            val strokeWidth = 5.dp.toPx()
+            fun line(from: Offset, to: Offset) =
+                drawLine(Brand.Teal300, from, to, strokeWidth, cap = StrokeCap.Round)
+            line(Offset(left + radius, top), Offset(left + radius + arm, top))
+            line(Offset(left, top + radius), Offset(left, top + radius + arm))
+            line(Offset(right - radius, top), Offset(right - radius - arm, top))
+            line(Offset(right, top + radius), Offset(right, top + radius + arm))
+            line(Offset(left + radius, bottom), Offset(left + radius + arm, bottom))
+            line(Offset(left, bottom - radius), Offset(left, bottom - radius - arm))
+            line(Offset(right - radius, bottom), Offset(right - radius - arm, bottom))
+            line(Offset(right, bottom - radius), Offset(right, bottom - radius - arm))
+            // Linea di scansione che scorre su e giù.
+            val y = top + frameHeight * sweep
+            drawRect(
+                brush = Brush.verticalGradient(
+                    listOf(Color.Transparent, Brand.Coral.copy(alpha = 0.35f), Color.Transparent),
+                    startY = y - 18.dp.toPx(),
+                    endY = y + 18.dp.toPx(),
+                ),
+                topLeft = Offset(left + 12.dp.toPx(), y - 18.dp.toPx()),
+                size = Size(frameWidth - 24.dp.toPx(), 36.dp.toPx()),
+            )
+            drawLine(
+                Brand.Coral, Offset(left + 16.dp.toPx(), y), Offset(right - 16.dp.toPx(), y),
+                2.dp.toPx(), cap = StrokeCap.Round,
+            )
         }
         Text(
             text = hint,
             color = Color.White,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .systemBarsPadding()
-                .padding(bottom = 64.dp, start = 24.dp, end = 24.dp),
+                .padding(bottom = 56.dp, start = 24.dp, end = 24.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color.White.copy(alpha = 0.16f))
+                .padding(horizontal = 20.dp, vertical = 12.dp),
         )
     }
 }
@@ -287,15 +350,21 @@ private fun TopControls(onClose: () -> Unit, torch: Boolean?, onToggleTorch: () 
             .systemBarsPadding()
             .padding(8.dp),
     ) {
-        IconButton(onClick = onClose) {
+        val round = Modifier
+            .clip(CircleShape)
+            .background(Color.Black.copy(alpha = 0.35f))
+        IconButton(onClick = onClose, modifier = round) {
             Icon(painterResource(R.drawable.ic_close), stringResource(R.string.action_close), tint = Color.White)
         }
         if (torch != null) {
-            IconButton(onClick = onToggleTorch) {
+            IconButton(
+                onClick = onToggleTorch,
+                modifier = if (torch) Modifier.clip(CircleShape).background(Brand.Sun) else round,
+            ) {
                 Icon(
                     painter = painterResource(if (torch) R.drawable.ic_flash_off else R.drawable.ic_flash_on),
                     contentDescription = stringResource(if (torch) R.string.torch_off else R.string.torch_on),
-                    tint = Color.White,
+                    tint = if (torch) Color.Black else Color.White,
                 )
             }
         }
