@@ -1,5 +1,6 @@
 package dev.cantacard.ui.components
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,8 +20,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import dev.cantacard.R
+import dev.cantacard.ui.Brand
 
-/** Barra di ricerca a pillola, pensata per stare sull'intestazione verde. */
+/** Barra di ricerca a pillola, pensata per stare sull'intestazione verde, con bordo corallo. */
 @Composable
 fun SearchField(
     query: String,
@@ -56,6 +58,7 @@ fun SearchField(
         ),
         modifier = modifier
             .fillMaxWidth()
-            .shadow(6.dp, RoundedCornerShape(26.dp)),
+            .shadow(6.dp, RoundedCornerShape(26.dp))
+            .border(2.dp, Brand.Coral, RoundedCornerShape(26.dp)),
     )
 }
