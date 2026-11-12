@@ -23,9 +23,9 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
   Photo Picker. APK release 2,0 MB (CameraX è la parte più pesante del dex).
 - Fase 4 (catalogo) completata: `catalog/stores.json` (53 catene), `StorePickerActivity` con ricerca
   e "Altro negozio", negozio nel modulo (cambiabile), aggiornamento da GitHub. APK release 2,06 MB.
-  Prossima: fase 5, immagini. In sospeso: icona dell'app (l'utente ha scelto il concept "Carta canta":
-  mani con polsino che reggono la tessera con la faccia che urla, verde + corallo; da ridisegnare
-  in vettoriale come icona adattiva + monocromatica, logo piccolo = solo tessera con faccia).
+  Prossima: fase 5, immagini.
+- Icona "Carta canta" (disegno dell'utente, ricalcato in vettoriale): icona adattiva + monocromatica,
+  logo dell'intestazione = solo tessera con faccia. APK release 2,06 MB.
 - Repo: git locale su branch `main`, remote `origin` = https://github.com/LoLler111/CantaCard
   (pubblico, vuoto). **Push solo su richiesta esplicita dell'utente.**
 - Identità git del repo (config locale, scelta dall'utente): `LoLler111`
@@ -55,6 +55,7 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 | minSdk / target | minSdk 26, compileSdk 37, targetSdk 36 | minSdk 26 copre la quasi totalità dei dispositivi attivi (shortcut, icone adattive, `java.time`). compileSdk 37 è imposto dalle librerie Compose recenti. |
 | Toolchain | AGP 9.1.1 (Kotlin integrato in AGP), Gradle 9.3.1, Kotlin 2.4.21, Compose BOM 2026.09.00 | AGP 9.1 è l'ultimo supportato da Android Studio Panda 2 installato; per salire (9.5+) va aggiornato Studio. Versioni in `gradle/libs.versions.toml`. |
 | Aggiornamento catalogo | Controllo automatico in background al massimo una volta a settimana, solo all'apertura della scelta negozio, silenzioso; più "Aggiorna catalogo" nel menu della stessa schermata (scelta dell'utente) | Nessuna rete all'avvio; senza rete si usa sempre la copia locale. Copia scaricata in `files/catalog/stores.json`, vince la `version` più alta. |
+| Icona | Concept "Carta canta" dell'utente: due mani con polsino mostrano la tessera con la faccia che urla. Vector drawable ricalcati sull'originale (coordinate px 1250, gruppo scalato a 0,056 nella zona sicura), niente PNG | Pochi KB, nitida a ogni densità. Prima della pubblicazione valutare di differenziare la faccia (somiglia a Pac-Man, marchio registrato). |
 | Lingue | `localeFilters = ["it"]` | Elimina dall'APK le traduzioni delle librerie. Aggiungere ogni nuova lingua quando si traduce. |
 | Moduli | Un solo modulo `:app` | Progetto piccolo, multi-modulo non porta benefici. |
 
