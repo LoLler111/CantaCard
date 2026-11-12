@@ -159,6 +159,32 @@ private fun ScanScreen(
     onCode: (ScannedCode) -> Unit,
     onClose: () -> Unit,
 ) {
+    CameraPermissionGate(hasPermission, shouldExplain, onOpenSettings, onClose) {
+        var torch by rememberSaveable { mutableStateOf(false) }
+        var camera by remember { mutableStateOf<Camera?>(null) }
+        CameraPreview(onCode = onCode, onCamera = { camera = it }, modifier = Modifier.fillMaxSize())
+        ScanOverlay(Modifier.fillMaxSize())
+        LaunchedEffect(camera, torch) { camera?.cameraControl?.enableTorch(torch) }
+        TopControls(
+            onClose = onClose,
+            torch = torch.takeIf { camera?.cameraInfo?.hasFlashUnit() == true },
+            onToggleTorch = { torch = !torch },
+        )
+    }
+}
+
+/**
+ * Chiede il permesso della fotocamera (solo quando serve) e mostra [content] se concesso,
+ * altrimenti la spiegazione con il pulsante per concederlo o aprire le impostazioni.
+ */
+@Composable
+internal fun CameraPermissionGate(
+    hasPermission: () -> Boolean,
+    shouldExplain: () -> Boolean,
+    onOpenSettings: () -> Unit,
+    onClose: () -> Unit,
+    content: @Composable () -> Unit,
+) {
     var granted by remember { mutableStateOf(hasPermission()) }
     var asked by rememberSaveable { mutableStateOf(false) }
     // Dopo un rifiuto definitivo il sistema non mostra più la richiesta: si va alle impostazioni.
@@ -181,18 +207,7 @@ private fun ScanScreen(
 
     Box(Modifier.fillMaxSize()) {
         when {
-            granted -> {
-                var torch by rememberSaveable { mutableStateOf(false) }
-                var camera by remember { mutableStateOf<Camera?>(null) }
-                CameraPreview(onCode = onCode, onCamera = { camera = it }, modifier = Modifier.fillMaxSize())
-                ScanOverlay(Modifier.fillMaxSize())
-                LaunchedEffect(camera, torch) { camera?.cameraControl?.enableTorch(torch) }
-                TopControls(
-                    onClose = onClose,
-                    torch = torch.takeIf { camera?.cameraInfo?.hasFlashUnit() == true },
-                    onToggleTorch = { torch = !torch },
-                )
-            }
+            granted -> content()
             asked -> PermissionRationale(
                 blocked = blocked,
                 onGrant = {
@@ -342,7 +357,7 @@ private fun ScanOverlay(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun TopControls(onClose: () -> Unit, torch: Boolean?, onToggleTorch: () -> Unit) {
+internal fun TopControls(onClose: () -> Unit, torch: Boolean?, onToggleTorch: () -> Unit) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier

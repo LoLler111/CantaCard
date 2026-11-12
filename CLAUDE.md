@@ -23,7 +23,10 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
   Photo Picker. APK release 2,0 MB (CameraX è la parte più pesante del dex).
 - Fase 4 (catalogo) completata: `catalog/stores.json` (53 catene), `StorePickerActivity` con ricerca
   e "Altro negozio", negozio nel modulo (cambiabile), aggiornamento da GitHub. APK release 2,06 MB.
-  Prossima: fase 5, immagini.
+- Fase 5 (immagini) completata: icona dal sito scaricata da sola alla scelta del negozio (+ "Aggiorna
+  icona"), foto della tessera (`scan.PhotoActivity`) e galleria con ritaglio (`ui.edit.CropDialog`),
+  immagine condivisa da altre app (`ShareImageActivity`, legge anche il codice), scelta del colore.
+  APK release 2,16 MB (+100 KB: soprattutto ImageCapture di CameraX). Prossima: fase 6, backup.
 - Icona: la tessera con la faccia che urla, inclinata di 8°, su verde acqua (vettoriale): icona
   adattiva + monocromatica + logo dell'intestazione. Le mani del concept "Carta canta" sono state
   tolte su richiesta dell'utente. APK release 2,06 MB.
@@ -48,7 +51,7 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 | Navigazione | Stato Compose semplice (sealed class + `BackHandler`), niente Navigation Compose | Meno dipendenze. |
 | DI | Manuale (container nell'`Application`), niente Hilt/Koin | Meno dipendenze e avvio più rapido. |
 | Rete | `HttpURLConnection` del framework, niente OkHttp/Retrofit/Jsoup | La rete serve solo per icone e catalogo; parsing HTML minimo dei tag `<link>`. |
-| Immagini | Loader proprio (decodifica WebP 256 px + piccola cache in memoria), niente Coil/Glide; ritaglio con composable proprio, niente uCrop | Peso. |
+| Immagini | Loader proprio (`image.ImageLoader`, LruCache 8 MB), niente Coil/Glide; ritaglio con composable proprio, niente uCrop. Icone ≤ 256 px; foto della tessera ritagliata al rapporto ID-1 e larga 512 px (riempie la tessera in lista, ~20–40 KB). Il tipo si deduce dal rapporto (largo = foto a tutta tessera, altrimenti icona nel tondo). Icona scaricata da sola quando si sceglie un negozio dal catalogo (scelta dell'utente) e mai sopra una foto; pulsante "Aggiorna icona" per riscaricarla. Foto con `ImageCapture` di CameraX già inclusa | Peso; nessun permesso storage. |
 | Widget | `AppWidgetProvider` + `RemoteViews` classici, niente Glance | Peso. |
 | Visualizzazione tessera | `ShowCardActivity` separata e leggera | Apertura diretta da shortcut/widget; luminosità e schermo acceso limitati a quella finestra. |
 | Schermate | Un'Activity per schermata (lista, tessera, modifica, scanner), risultati via `ActivityResultContract` | Niente libreria di navigazione; ogni schermata si apre da sola (shortcut, condivisione). |
@@ -92,7 +95,7 @@ CantaCard/
 
 - `Card`: `id` (UUID), `name`, `storeId?`, `number`, `format` (nome dell'enum ZXing, es. `"EAN_13"`,
   mai l'ordinal), `color`, `image?` (nome file), `favorite`, `lastUsed`, `useCount`, `createdAt`, `note?`.
-- Salvataggio: `files/cards.json` = `{"version": 1, "cards": [...]}`; immagini in `files/images/<id>.webp`.
+- Salvataggio: `files/cards.json` = `{"version": 1, "cards": [...]}`; immagini in `files/images/<id>-<versione>.webp` (nome nuovo a ogni sostituzione, la vecchia si cancella; provvisorie in `cache/edit-images/`).
 - Lettura tollerante: campi sconosciuti ignorati, campi mancanti con default, un record corrotto non
   deve bloccare gli altri.
 - Si salva **sempre** il formato del codice oltre al numero.

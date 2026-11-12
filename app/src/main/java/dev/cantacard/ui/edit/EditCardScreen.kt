@@ -1,5 +1,23 @@
 package dev.cantacard.ui.edit
 
+import dev.cantacard.ui.contentColorOn
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import dev.cantacard.scan.PhotoActivity
+import dev.cantacard.image.rememberCardImage
+import dev.cantacard.image.SiteIconFetcher
+import dev.cantacard.image.ImageStore
+import dev.cantacard.image.Bitmaps
+import java.io.IOException
+import java.io.File
+import android.graphics.Bitmap
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -94,8 +112,14 @@ fun EditCardScreen(
     /** Negozio scelto prima di aprire il modulo (solo per una tessera nuova). */
     initialStoreId: String?,
     initialName: String?,
+    /** Immagine condivisa da un'altra app, da ritagliare subito (file provvisorio). */
+    initialCrop: String?,
+    /** Codice letto dall'immagine condivisa. */
+    initialCode: ScannedCode?,
+    images: ImageStore,
     hasCamera: Boolean,
-    onSave: (Card) -> Unit,
+    /** Tessera da salvare, eventuale nuova immagine provvisoria, `true` se l'immagine va tolta. */
+    onSave: (Card, File?, Boolean) -> Unit,
     onClose: () -> Unit,
 ) {
     val prefilledName = remember {
@@ -103,11 +127,17 @@ fun EditCardScreen(
     }
     var storeId by rememberSaveable { mutableStateOf(original?.storeId ?: initialStoreId) }
     var name by rememberSaveable { mutableStateOf(prefilledName) }
-    var number by rememberSaveable { mutableStateOf(original?.number.orEmpty()) }
+    var number by rememberSaveable { mutableStateOf(original?.number ?: initialCode?.text.orEmpty()) }
     // Formato suggerito dal catalogo per una tessera nuova; quello scansionato prevale.
     var formatName by rememberSaveable {
-        mutableStateOf(original?.formatName ?: catalog.find(initialStoreId)?.format?.name)
+        mutableStateOf(original?.formatName ?: initialCode?.format?.name ?: catalog.find(initialStoreId)?.format?.name)
     }
+    // Immagine: nuova provvisoria (WebP già pronto), tolta, o da ritagliare.
+    var pendingImage by rememberSaveable { mutableStateOf<String?>(null) }
+    var imageRemoved by rememberSaveable { mutableStateOf(false) }
+    var cropSource by rememberSaveable { mutableStateOf(initialCrop) }
+    var autoIconDone by rememberSaveable { mutableStateOf(false) }
+    var iconStatus by remember { mutableStateOf(IconStatus.IDLE) }
     var note by rememberSaveable { mutableStateOf(original?.note.orEmpty()) }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
 
@@ -122,18 +152,29 @@ fun EditCardScreen(
     val codeOk = cleanNumber.isNotEmpty() && (matrix != null || (format == null && formatName != null))
     val canSave = name.isNotBlank() && codeOk
     val store = catalog.find(storeId)
-    val dirty = if (original == null) {
-        name.trim() != prefilledName || number.isNotBlank() || note.isNotBlank() || storeId != initialStoreId
-    } else {
-        name != original.name || number != original.number || storeId != original.storeId ||
-            formatName != original.formatName || note != original.note.orEmpty()
-    }
-
     // Colore automatico: quello del negozio in catalogo, altrimenti uno stabile dal nome.
     fun autoColor(cardName: String, id: String?): Int = catalog.find(id)?.color ?: CardColors.forName(cardName)
     val originalAuto = original != null &&
         (original.color == autoColor(original.name, original.storeId) || original.color == CardColors.forName(original.name))
-    val cardColor = if (original != null && !originalAuto) original.color else autoColor(name.trim(), storeId)
+    // Colore scelto a mano dall'utente; `null` = automatico.
+    var colorChoice by rememberSaveable {
+        mutableStateOf(if (original != null && !originalAuto) original.color else null)
+    }
+    val automaticColor = autoColor(name.trim(), storeId)
+    val cardColor = colorChoice ?: automaticColor
+
+    val imageFile: File? = pendingImage?.let(::File)
+        ?: original?.image?.takeUnless { imageRemoved }?.let(images::file)
+    val cardImage = rememberCardImage(imageFile)
+
+    val dirty = if (original == null) {
+        name.trim() != prefilledName || number.isNotBlank() || note.isNotBlank() || storeId != initialStoreId ||
+            pendingImage != null || colorChoice != null
+    } else {
+        name != original.name || number != original.number || storeId != original.storeId ||
+            formatName != original.formatName || note != original.note.orEmpty() ||
+            pendingImage != null || imageRemoved || cardColor != original.color
+    }
 
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -147,14 +188,74 @@ fun EditCardScreen(
         formatName = code.format.name
     }
 
+    /** Salva [bitmap] come immagine provvisoria della tessera. */
+    suspend fun usePending(bitmap: Bitmap): Boolean {
+        val file = images.newTemp("webp")
+        val ok = withContext(Dispatchers.IO) {
+            try {
+                Bitmaps.writeWebp(bitmap, file)
+                true
+            } catch (e: IOException) {
+                false
+            }
+        }
+        if (ok) {
+            pendingImage?.let { File(it).delete() }
+            pendingImage = file.path
+            imageRemoved = false
+        }
+        return ok
+    }
+
+    /** Scarica l'icona dal sito del negozio (scelta dal catalogo o pulsante "Aggiorna icona"). */
+    fun fetchIcon(domain: String) {
+        if (iconStatus == IconStatus.LOADING) return
+        scope.launch {
+            iconStatus = IconStatus.LOADING
+            val bitmap = SiteIconFetcher.fetch(domain)
+            iconStatus = if (bitmap != null && usePending(bitmap)) IconStatus.IDLE else IconStatus.FAILED
+        }
+    }
+
+    // Negozio scelto dal catalogo prima di aprire il modulo: icona scaricata da sola, una volta.
+    LaunchedEffect(Unit) {
+        val domain = store?.domain
+        if (original == null && !autoIconDone && domain != null && cropSource == null) {
+            autoIconDone = true
+            fetchIcon(domain)
+        }
+    }
+
     val storeLauncher = rememberLauncherForActivityResult(StorePickerActivity.Pick()) { choice ->
         if (choice != null) {
             val oldName = store?.name
             val newStore = catalog.find(choice.storeId)
+            val changed = choice.storeId != storeId
             storeId = choice.storeId
             val newName = newStore?.name ?: choice.name
             if (newName != null && (name.isBlank() || name.trim() == oldName)) name = newName
             newStore?.format?.let { if (number.isBlank()) formatName = it.name }
+            // Cambio negozio: nuova icona, ma senza mai sostituire una foto della tessera.
+            val domain = newStore?.domain
+            if (changed && domain != null && cardImage?.isPhoto != true) fetchIcon(domain)
+        }
+    }
+    val cameraLauncher = rememberLauncherForActivityResult(PhotoActivity.Contract()) { path ->
+        if (path != null) cropSource = path
+    }
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) {
+            scope.launch {
+                val path = withContext(Dispatchers.IO) {
+                    val bitmap = Bitmaps.decode(context, uri) ?: return@withContext null
+                    try {
+                        images.newTemp("jpg").also { Bitmaps.writeJpeg(bitmap, it) }.path
+                    } catch (e: IOException) {
+                        null
+                    }
+                }
+                if (path != null) cropSource = path else snackbar.showSnackbar(unreadableMessage)
+            }
         }
     }
     val scanLauncher = rememberLauncherForActivityResult(ScanActivity.Contract()) { code ->
@@ -192,13 +293,13 @@ fun EditCardScreen(
                 name = trimmedName,
                 number = cleanNumber,
                 formatName = savedFormat,
-                // Il colore automatico segue nome e negozio; uno scelto dall'utente (fase 5) resta.
+                // Il colore automatico segue nome e negozio; uno scelto dall'utente resta.
                 color = cardColor,
                 storeId = storeId,
                 note = note.trim().ifEmpty { null },
             )
         }
-        onSave(card)
+        onSave(card, pendingImage?.let(::File), imageRemoved)
     }
 
     BackHandler(enabled = dirty) { confirmDiscard = true }
@@ -247,6 +348,7 @@ fun EditCardScreen(
                     initial = Card.initialOf(name),
                     color = previewColor,
                     favorite = original?.favorite == true,
+                    image = cardImage,
                     compact = false,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
@@ -350,6 +452,34 @@ fun EditCardScreen(
                     )
                 }
 
+                SectionTitle(R.string.section_image)
+                ImageSection(
+                    hasImage = cardImage != null,
+                    iconStatus = iconStatus,
+                    domain = store?.domain,
+                    hasCamera = hasCamera,
+                    onIcon = { domain -> fetchIcon(domain) },
+                    onCamera = {
+                        focusManager.clearFocus()
+                        cameraLauncher.launch(Unit)
+                    },
+                    onGallery = {
+                        focusManager.clearFocus()
+                        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    },
+                    onRemove = {
+                        pendingImage?.let { File(it).delete() }
+                        pendingImage = null
+                        imageRemoved = original?.image != null
+                        iconStatus = IconStatus.IDLE
+                    },
+                )
+                ColorPicker(
+                    automatic = automaticColor,
+                    selected = cardColor,
+                    onSelect = { color -> colorChoice = color.takeUnless { it == automaticColor } },
+                )
+
                 SectionTitle(R.string.section_details)
                 OutlinedTextField(
                     value = note,
@@ -368,6 +498,22 @@ fun EditCardScreen(
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
                 .imePadding(),
+        )
+    }
+
+    cropSource?.let { path ->
+        val source = remember(path) { File(path) }
+        CropDialog(
+            source = source,
+            onDone = { bitmap ->
+                cropSource = null
+                source.delete()
+                scope.launch { if (!usePending(bitmap)) snackbar.showSnackbar(unreadableMessage) }
+            },
+            onCancel = {
+                cropSource = null
+                source.delete()
+            },
         )
     }
 
@@ -527,6 +673,121 @@ private fun StoreField(store: Store?, onClick: () -> Unit) {
                 style = MaterialTheme.typography.labelLarge,
                 color = colors.primary,
             )
+        }
+    }
+}
+
+/** Stato del download dell'icona dal sito del negozio. */
+private enum class IconStatus { IDLE, LOADING, FAILED }
+
+/** Comandi per l'immagine: icona dal sito (o aggiornamento), foto della tessera, galleria. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ImageSection(
+    hasImage: Boolean,
+    iconStatus: IconStatus,
+    domain: String?,
+    hasCamera: Boolean,
+    onIcon: (String) -> Unit,
+    onCamera: () -> Unit,
+    onGallery: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (domain != null) {
+                ImageButton(
+                    icon = R.drawable.ic_refresh,
+                    label = if (hasImage) R.string.image_icon_refresh else R.string.image_icon,
+                    enabled = iconStatus != IconStatus.LOADING,
+                    onClick = { onIcon(domain) },
+                )
+            }
+            if (hasCamera) ImageButton(R.drawable.ic_photo_camera, R.string.image_photo, onClick = onCamera)
+            ImageButton(R.drawable.ic_image, R.string.image_gallery, onClick = onGallery)
+            if (hasImage) ImageButton(R.drawable.ic_delete, R.string.image_remove, onClick = onRemove)
+        }
+        when (iconStatus) {
+            IconStatus.LOADING -> Row(verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    stringResource(R.string.image_icon_loading, domain.orEmpty()),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            IconStatus.FAILED -> Text(
+                stringResource(R.string.image_icon_failed, domain.orEmpty()),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            IconStatus.IDLE -> Unit
+        }
+    }
+}
+
+@Composable
+private fun ImageButton(icon: Int, label: Int, enabled: Boolean = true, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        enabled = enabled,
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+    ) {
+        Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(stringResource(label))
+    }
+}
+
+/** Tavolozza del colore della tessera: il primo è quello automatico (negozio o nome). */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ColorPicker(automatic: Int, selected: Int, onSelect: (Int) -> Unit) {
+    val colors = remember(automatic) { (listOf(automatic) + CardColors.palette).distinct() }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            stringResource(R.string.field_color),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            colors.forEach { value ->
+                val color = Color(value)
+                val isSelected = value == selected
+                val label = if (value == automatic) stringResource(R.string.color_automatic) else CardColors.toHex(value)
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(color)
+                        .then(
+                            if (isSelected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                            else Modifier,
+                        )
+                        .clickable(onClickLabel = label) { onSelect(value) }
+                        .semantics {
+                            contentDescription = label
+                            this.selected = isSelected
+                        },
+                ) {
+                    if (isSelected) {
+                        Icon(
+                            painterResource(R.drawable.ic_check),
+                            contentDescription = null,
+                            tint = contentColorOn(color),
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+            }
         }
     }
 }

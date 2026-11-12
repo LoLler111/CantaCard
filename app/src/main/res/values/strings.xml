@@ -74,12 +74,31 @@
     <string name="catalog_up_to_date">Il catalogo è già aggiornato</string>
     <string name="catalog_update_failed">Aggiornamento non riuscito. Il catalogo attuale resta disponibile.</string>
 
+    <!-- Immagine e colore della tessera -->
+    <string name="section_image">Immagine e colore</string>
+    <string name="image_icon">Icona dal sito</string>
+    <string name="image_icon_refresh">Aggiorna icona</string>
+    <string name="image_photo">Foto della tessera</string>
+    <string name="image_gallery">Dalla galleria</string>
+    <string name="image_remove">Rimuovi immagine</string>
+    <string name="image_icon_loading">Cerco l\'icona su %1$s…</string>
+    <string name="image_icon_failed">Icona non trovata su %1$s</string>
+    <string name="field_color">Colore</string>
+    <string name="color_automatic">Colore automatico</string>
+    <string name="photo_hint">Inquadra il fronte della tessera</string>
+    <string name="photo_shutter">Scatta la foto</string>
+    <string name="crop_hint">Sposta e ingrandisci la foto per farla stare nel riquadro</string>
+    <string name="crop_rotate">Ruota</string>
+    <string name="crop_use">Usa la foto</string>
+    <string name="share_label">Nuova tessera CantaCard</string>
+    <string name="share_unreadable">Immagine non leggibile</string>
+
     <!-- Scansione -->
     <string name="scan_hint">Inquadra il codice della tessera</string>
     <string name="torch_on">Accendi la torcia</string>
     <string name="torch_off">Spegni la torcia</string>
     <string name="camera_permission_title">Serve la fotocamera</string>
-    <string name="camera_permission_body">Per scansionare la tessera CantaCard usa la fotocamera, solo sul telefono. In alternativa puoi inserire il numero a mano o leggerlo da una foto.</string>
+    <string name="camera_permission_body">CantaCard usa la fotocamera solo sul telefono, per leggere il codice o fotografare la tessera. In alternativa puoi inserire il numero a mano o usare una foto della galleria.</string>
     <string name="camera_permission_grant">Consenti</string>
     <string name="camera_permission_settings">Apri impostazioni</string>
     <string name="camera_error">Fotocamera non disponibile</string>

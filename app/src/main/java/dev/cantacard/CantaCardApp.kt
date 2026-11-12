@@ -5,6 +5,7 @@ import android.content.Context
 import dev.cantacard.data.CardRepository
 import dev.cantacard.data.CardStore
 import dev.cantacard.data.CatalogRepository
+import dev.cantacard.image.ImageStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import java.io.File
@@ -17,6 +18,9 @@ class CantaCardApp : Application() {
     val cards: CardRepository by lazy {
         CardRepository(CardStore(File(filesDir, "cards.json")), appScope)
     }
+
+    /** File delle immagini delle tessere (definitive e provvisorie). */
+    val images: ImageStore by lazy { ImageStore(this) }
 
     /** Letto solo quando serve (scelta del negozio, modulo), non all'avvio. */
     val catalog: CatalogRepository by lazy { CatalogRepository(this, appScope) }

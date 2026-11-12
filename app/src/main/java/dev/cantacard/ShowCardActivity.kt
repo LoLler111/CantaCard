@@ -70,6 +70,7 @@ class ShowCardActivity : ComponentActivity() {
                         onEdit = { startActivity(EditCardActivity.edit(this@ShowCardActivity, card.id)) },
                         onDelete = {
                             repository.delete(card.id)
+                            app.images.delete(card.image)
                             finish()
                         },
                     )

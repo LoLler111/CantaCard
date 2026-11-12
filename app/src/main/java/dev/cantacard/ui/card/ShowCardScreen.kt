@@ -54,7 +54,14 @@ import dev.cantacard.barcode.BarcodeEncoder
 import dev.cantacard.barcode.BarcodeLayout
 import dev.cantacard.barcode.BarcodeView
 import dev.cantacard.data.Card
-import dev.cantacard.ui.components.InitialBadge
+import dev.cantacard.ui.components.CARD_RATIO
+import dev.cantacard.ui.components.StoreMark
+import dev.cantacard.app
+import dev.cantacard.image.rememberCardImage
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import dev.cantacard.ui.components.cardSurface
 import dev.cantacard.ui.contentColorOn
 
@@ -112,7 +119,20 @@ fun ShowCardScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 28.dp),
                 ) {
-                    InitialBadge(card.initial, color, 60.dp)
+                    val image = rememberCardImage(card.image?.let(LocalContext.current.app.images::file))
+                    if (image != null && image.isPhoto) {
+                        Image(
+                            bitmap = image.bitmap,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .height(60.dp)
+                                .aspectRatio(CARD_RATIO)
+                                .clip(RoundedCornerShape(10.dp)),
+                        )
+                    } else {
+                        StoreMark(card.initial, color, image, 60.dp)
+                    }
                     Spacer(Modifier.width(16.dp))
                     Column {
                         Text(

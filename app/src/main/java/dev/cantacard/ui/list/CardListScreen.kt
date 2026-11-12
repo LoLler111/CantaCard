@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -57,6 +58,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.cantacard.BuildConfig
 import dev.cantacard.R
+import dev.cantacard.app
+import dev.cantacard.image.rememberCardImage
 import dev.cantacard.data.Card
 import dev.cantacard.data.CardQuery
 import dev.cantacard.data.CardRepository
@@ -220,12 +223,15 @@ private fun CardTile(card: Card, onClick: () -> Unit, modifier: Modifier = Modif
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) 0.96f else 1f, label = "press")
     val color = Color(card.color)
+    val images = LocalContext.current.app.images
+    val image = rememberCardImage(card.image?.let(images::file))
     val favoriteLabel = stringResource(R.string.card_favorite)
     CardArt(
         name = card.name,
         initial = card.initial,
         color = color,
         favorite = card.favorite,
+        image = image,
         modifier = modifier
             .graphicsLayer {
                 scaleX = scale

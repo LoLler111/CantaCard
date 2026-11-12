@@ -1,5 +1,6 @@
 package dev.cantacard.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,6 +29,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.cantacard.R
+import dev.cantacard.image.CardImage
 import dev.cantacard.ui.contentColorOn
 
 /** Rapporto larghezza/altezza di una carta di credito (ISO/IEC 7810 ID-1). */
@@ -56,9 +60,39 @@ fun InitialBadge(initial: String, background: Color, size: Dp, modifier: Modifie
     }
 }
 
+/** Icona del negozio in un tondo bianco, al posto dell'iniziale. */
+@Composable
+fun IconBadge(image: CardImage, size: Dp, modifier: Modifier = Modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(Color.White),
+    ) {
+        Image(
+            bitmap = image.bitmap,
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            filterQuality = FilterQuality.Medium,
+            modifier = Modifier
+                .padding(size * 0.14f)
+                .fillMaxSize()
+                .clip(RoundedCornerShape(size * 0.12f)),
+        )
+    }
+}
+
+/** Icona se l'immagine è un'icona, altrimenti l'iniziale. */
+@Composable
+fun StoreMark(initial: String, color: Color, image: CardImage?, size: Dp, modifier: Modifier = Modifier) {
+    if (image != null && !image.isPhoto) IconBadge(image, size, modifier) else InitialBadge(initial, color, size, modifier)
+}
+
 /**
  * Disegno di una tessera (senza codice): usato nella lista e come anteprima nel modulo.
- * Le dimensioni seguono il modificatore; il contenuto scala con [compact].
+ * Con la foto della tessera la foto la riempie tutta; con l'icona del negozio l'icona prende il
+ * posto dell'iniziale. Le dimensioni seguono il modificatore; il contenuto scala con [compact].
  */
 @Composable
 fun CardArt(
@@ -67,17 +101,46 @@ fun CardArt(
     color: Color,
     favorite: Boolean,
     modifier: Modifier = Modifier,
+    image: CardImage? = null,
     compact: Boolean = true,
 ) {
     val content = contentColorOn(color)
     Box(modifier.cardSurface(color)) {
+        if (image != null && image.isPhoto) {
+            Image(
+                bitmap = image.bitmap,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                filterQuality = FilterQuality.Medium,
+                modifier = Modifier.fillMaxSize(),
+            )
+            if (favorite) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(if (compact) 8.dp else 12.dp)
+                        .size(if (compact) 28.dp else 34.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.45f)),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_star),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(if (compact) 16.dp else 20.dp),
+                    )
+                }
+            }
+            return@Box
+        }
         Column(
             Modifier
                 .fillMaxSize()
                 .padding(if (compact) 12.dp else 18.dp),
         ) {
             Row(verticalAlignment = Alignment.Top, modifier = Modifier.fillMaxWidth()) {
-                InitialBadge(initial, color, if (compact) 36.dp else 48.dp)
+                StoreMark(initial, color, image, if (compact) 36.dp else 48.dp)
                 Spacer(Modifier.weight(1f))
                 if (favorite) {
                     Icon(

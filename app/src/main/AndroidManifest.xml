@@ -42,6 +42,26 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Immagine condivisa da un'altra app: nuova tessera con quell'immagine. Nessuna interfaccia. -->
+        <activity
+            android:name=".ShareImageActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:label="@string/share_label"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".scan.PhotoActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CantaCard.Scan" />
+
         <activity
             android:name=".scan.ScanActivity"
             android:exported="false"
