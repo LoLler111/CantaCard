@@ -39,6 +39,14 @@ android {
         buildConfig = true
     }
 
+    sourceSets {
+        // Il catalogo negozi ha una sola sorgente, catalog/stores.json alla radice del repo:
+        // finisce negli asset dell'APK ed è lo stesso file servito raw da GitHub.
+        getByName("main") {
+            assets.srcDir(rootProject.file("catalog"))
+        }
+    }
+
     androidResources {
         // Solo le lingue dell'interfaccia: elimina le traduzioni delle librerie.
         // Aggiungere qui ogni nuova lingua tradotta.

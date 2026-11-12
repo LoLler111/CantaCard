@@ -21,7 +21,11 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 - Fase 3 (aggiunta/scansione + modifica) completata: `EditCardActivity` (aggiungi e modifica),
   `scan.ScanActivity` (CameraX + ZXing, torcia, permesso chiesto solo lì), lettura da foto via
   Photo Picker. APK release 2,0 MB (CameraX è la parte più pesante del dex).
-  Prossima: fase 4, catalogo negozi.
+- Fase 4 (catalogo) completata: `catalog/stores.json` (53 catene), `StorePickerActivity` con ricerca
+  e "Altro negozio", negozio nel modulo (cambiabile), aggiornamento da GitHub. APK release 2,06 MB.
+  Prossima: fase 5, immagini. In sospeso: icona dell'app (l'utente ha scelto il concept "Carta canta":
+  mani con polsino che reggono la tessera con la faccia che urla, verde + corallo; da ridisegnare
+  in vettoriale come icona adattiva + monocromatica, logo piccolo = solo tessera con faccia).
 - Repo: git locale su branch `main`, remote `origin` = https://github.com/LoLler111/CantaCard
   (pubblico, vuoto). **Push solo su richiesta esplicita dell'utente.**
 - Identità git del repo (config locale, scelta dall'utente): `LoLler111`
@@ -50,6 +54,7 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 | Letture fotocamera | Formati senza checksum robusto (Code 39/93, Codabar, ITF) confermati su 2 frame uguali | Evita letture sbagliate. Un frame su due è provato ruotato di 90°. |
 | minSdk / target | minSdk 26, compileSdk 37, targetSdk 36 | minSdk 26 copre la quasi totalità dei dispositivi attivi (shortcut, icone adattive, `java.time`). compileSdk 37 è imposto dalle librerie Compose recenti. |
 | Toolchain | AGP 9.1.1 (Kotlin integrato in AGP), Gradle 9.3.1, Kotlin 2.4.21, Compose BOM 2026.09.00 | AGP 9.1 è l'ultimo supportato da Android Studio Panda 2 installato; per salire (9.5+) va aggiornato Studio. Versioni in `gradle/libs.versions.toml`. |
+| Aggiornamento catalogo | Controllo automatico in background al massimo una volta a settimana, solo all'apertura della scelta negozio, silenzioso; più "Aggiorna catalogo" nel menu della stessa schermata (scelta dell'utente) | Nessuna rete all'avvio; senza rete si usa sempre la copia locale. Copia scaricata in `files/catalog/stores.json`, vince la `version` più alta. |
 | Lingue | `localeFilters = ["it"]` | Elimina dall'APK le traduzioni delle librerie. Aggiungere ogni nuova lingua quando si traduce. |
 | Moduli | Un solo modulo `:app` | Progetto piccolo, multi-modulo non porta benefici. |
 
@@ -124,6 +129,9 @@ CantaCard/
   Si usa la copia con `version` più alta tra inclusa e scaricata; senza rete si usa sempre la copia locale.
 - Prima versione: 40–50 catene italiane (supermercati, profumerie, elettronica, abbigliamento,
   carburanti). **Se un dominio o un formato non è certo, lasciarlo vuoto/segnalarlo: mai inventarlo.**
+- Stato attuale: `format` vuoto per tutti (nessuno certo; vale quello scansionato). `domain` vuoto per
+  Trony, Maxi Zoo, Esso (siti non raggiungibili alla verifica). I colori sono approssimati dal sito o
+  dal marchio. Chi aggiorna il catalogo deve alzare `version`; il test `bundledCatalogIsValid` lo valida.
 
 ## Permessi
 

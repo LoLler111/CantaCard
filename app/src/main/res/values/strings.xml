@@ -39,7 +39,7 @@
     <!-- Aggiunta e modifica -->
     <string name="add_card_title">Nuova tessera</string>
     <string name="edit_card_title">Modifica tessera</string>
-    <string name="field_name">Nome del negozio</string>
+    <string name="field_name">Nome della tessera</string>
     <string name="field_number">Numero della tessera</string>
     <string name="field_format">Formato del codice</string>
     <string name="field_note">Nota (facoltativa)</string>
@@ -55,6 +55,24 @@
     <string name="photo_error">Impossibile aprire l\'immagine</string>
     <string name="discard_title">Scartare le modifiche?</string>
     <string name="discard_confirm">Scarta</string>
+
+    <!-- Scelta del negozio (catalogo) -->
+    <string name="store_picker_title">Scegli il negozio</string>
+    <string name="store_search_hint">Cerca un negozio</string>
+    <string name="store_other">Altro negozio</string>
+    <string name="store_other_hint">Qualsiasi tessera: nome e codice li inserisci tu</string>
+    <string name="store_other_named">Usa «%1$s» come nome</string>
+    <string name="store_section">Negozi</string>
+    <string name="store_no_results">Nessun negozio in catalogo per «%1$s»</string>
+    <string name="store_selected">Selezionato</string>
+    <string name="field_store">Negozio</string>
+    <string name="store_change">Cambia</string>
+    <string name="more_options">Altre opzioni</string>
+    <string name="catalog_update">Aggiorna catalogo</string>
+    <string name="catalog_updating">Controllo aggiornamenti…</string>
+    <string name="catalog_updated">Catalogo aggiornato</string>
+    <string name="catalog_up_to_date">Il catalogo è già aggiornato</string>
+    <string name="catalog_update_failed">Aggiornamento non riuscito. Il catalogo attuale resta disponibile.</string>
 
     <!-- Scansione -->
     <string name="scan_hint">Inquadra il codice della tessera</string>

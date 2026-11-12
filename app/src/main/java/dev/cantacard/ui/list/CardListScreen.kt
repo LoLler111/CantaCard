@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,12 +31,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -68,6 +64,7 @@ import dev.cantacard.ui.Brand
 import dev.cantacard.ui.SectionLabelStyle
 import dev.cantacard.ui.components.CARD_RATIO
 import dev.cantacard.ui.components.CardArt
+import dev.cantacard.ui.components.SearchField
 import dev.cantacard.ui.headerBrush
 
 @Composable
@@ -170,43 +167,10 @@ private fun Header(
             }
             if (showSearch) {
                 Spacer(Modifier.height(16.dp))
-                SearchField(query, onQueryChange)
+                SearchField(query, onQueryChange, placeholder = R.string.search_hint)
             }
         }
     }
-}
-
-@Composable
-private fun SearchField(query: String, onQueryChange: (String) -> Unit) {
-    val container = if (isSystemInDarkTheme()) {
-        MaterialTheme.colorScheme.surfaceContainerHigh
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerLowest
-    }
-    TextField(
-        value = query,
-        onValueChange = onQueryChange,
-        singleLine = true,
-        shape = RoundedCornerShape(26.dp),
-        placeholder = { Text(stringResource(R.string.search_hint)) },
-        leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(painterResource(R.drawable.ic_close), stringResource(R.string.search_clear))
-                }
-            }
-        },
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = container,
-            unfocusedContainerColor = container,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(6.dp, RoundedCornerShape(26.dp)),
-    )
 }
 
 @Composable

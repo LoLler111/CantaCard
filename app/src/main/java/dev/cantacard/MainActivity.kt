@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
                 CardListScreen(
                     repository = repository,
                     onOpen = { card -> startActivity(ShowCardActivity.intent(this, card.id)) },
-                    onAdd = { startActivity(EditCardActivity.add(this)) },
+                    onAdd = { startActivity(StorePickerActivity.add(this)) },
                 )
             }
         }

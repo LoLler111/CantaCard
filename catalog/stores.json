@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "stores": [
+    {"id": "esselunga", "name": "Esselunga", "aliases": ["Fidaty"], "domain": "esselunga.it", "color": "#005CA9", "format": "", "countries": ["IT"]},
+    {"id": "conad", "name": "Conad", "aliases": ["Carta Insieme", "Conad Superstore", "Spazio Conad"], "domain": "conad.it", "color": "#E2001A", "format": "", "countries": ["IT"]},
+    {"id": "coop", "name": "Coop", "aliases": ["Socio Coop", "Ipercoop", "Coop&Coop"], "domain": "coop.it", "color": "#E30613", "format": "", "countries": ["IT"]},
+    {"id": "carrefour", "name": "Carrefour", "aliases": ["Carrefour Market", "Carrefour Express"], "domain": "carrefour.it", "color": "#004E9F", "format": "", "countries": ["IT"]},
+    {"id": "lidl", "name": "Lidl", "aliases": ["Lidl Plus"], "domain": "lidl.it", "color": "#0050AA", "format": "", "countries": ["IT"]},
+    {"id": "eurospin", "name": "Eurospin", "aliases": [], "domain": "eurospin.it", "color": "#003961", "format": "", "countries": ["IT"]},
+    {"id": "pam", "name": "Pam", "aliases": ["Pam Panorama", "Panorama", "Pam Local"], "domain": "pampanorama.it", "color": "#D7141A", "format": "", "countries": ["IT"]},
+    {"id": "despar", "name": "Despar", "aliases": ["Interspar", "Eurospar", "Spar"], "domain": "despar.it", "color": "#D52B1E", "format": "", "countries": ["IT"]},
+    {"id": "iper", "name": "Iper", "aliases": ["Iper La grande i", "La grande i"], "domain": "iper.it", "color": "#EE3524", "format": "", "countries": ["IT"]},
+    {"id": "bennet", "name": "Bennet", "aliases": [], "domain": "bennet.com", "color": "#E4002B", "format": "", "countries": ["IT"]},
+    {"id": "famila", "name": "Famila", "aliases": ["Famila Superstore"], "domain": "famila.it", "color": "#DF1B7C", "format": "", "countries": ["IT"]},
+    {"id": "penny", "name": "Penny", "aliases": ["Penny Market"], "domain": "penny.it", "color": "#CD1414", "format": "", "countries": ["IT"]},
+    {"id": "md", "name": "MD", "aliases": ["MD Discount"], "domain": "mdspa.it", "color": "#EA0029", "format": "", "countries": ["IT"]},
+    {"id": "aldi", "name": "Aldi", "aliases": [], "domain": "aldi.it", "color": "#1C2C6C", "format": "", "countries": ["IT"]},
+    {"id": "crai", "name": "Crai", "aliases": [], "domain": "crai.it", "color": "#D71920", "format": "", "countries": ["IT"]},
+    {"id": "tigros", "name": "Tigros", "aliases": [], "domain": "tigros.it", "color": "#FFCC00", "format": "", "countries": ["IT"]},
+    {"id": "unes", "name": "Unes", "aliases": ["U2 Supermercato", "Il Viaggiator Goloso"], "domain": "unes.it", "color": "#00574A", "format": "", "countries": ["IT"]},
+    {"id": "iperal", "name": "Iperal", "aliases": [], "domain": "iperal.it", "color": "#C8102E", "format": "", "countries": ["IT"]},
+    {"id": "naturasi", "name": "NaturaSì", "aliases": ["Natura Sì"], "domain": "naturasi.it", "color": "#6EA820", "format": "", "countries": ["IT"]},
+    {"id": "ali", "name": "Alì", "aliases": ["Alìper", "Alì Supermercati"], "domain": "alisupermercati.it", "color": "#E30613", "format": "", "countries": ["IT"]},
+
+    {"id": "sephora", "name": "Sephora", "aliases": [], "domain": "sephora.it", "color": "#111111", "format": "", "countries": ["IT"]},
+    {"id": "douglas", "name": "Douglas", "aliases": [], "domain": "douglas.it", "color": "#1A1A1A", "format": "", "countries": ["IT"]},
+    {"id": "tigota", "name": "Tigotà", "aliases": [], "domain": "tigota.it", "color": "#D10B48", "format": "", "countries": ["IT"]},
+    {"id": "acquaesapone", "name": "Acqua & Sapone", "aliases": ["Acqua e Sapone"], "domain": "acquaesapone.it", "color": "#129767", "format": "", "countries": ["IT"]},
+    {"id": "kiko", "name": "KIKO Milano", "aliases": ["Kiko"], "domain": "kikocosmetics.com", "color": "#252B2E", "format": "", "countries": ["IT"]},
+    {"id": "pinalli", "name": "Pinalli", "aliases": [], "domain": "pinalli.it", "color": "#231F20", "format": "", "countries": ["IT"]},
+
+    {"id": "mediaworld", "name": "MediaWorld", "aliases": ["Media World"], "domain": "mediaworld.it", "color": "#DF0000", "format": "", "countries": ["IT"]},
+    {"id": "unieuro", "name": "Unieuro", "aliases": [], "domain": "unieuro.it", "color": "#E2001A", "format": "", "countries": ["IT"]},
+    {"id": "euronics", "name": "Euronics", "aliases": [], "domain": "euronics.it", "color": "#1D428A", "format": "", "countries": ["IT"]},
+    {"id": "expert", "name": "Expert", "aliases": [], "domain": "expert.it", "color": "#EA5B0C", "format": "", "countries": ["IT"]},
+    {"id": "trony", "name": "Trony", "aliases": [], "domain": "", "color": "#E30613", "format": "", "countries": ["IT"]},
+
+    {"id": "ovs", "name": "OVS", "aliases": [], "domain": "ovs.it", "color": "#3A2AFF", "format": "", "countries": ["IT"]},
+    {"id": "coin", "name": "Coin", "aliases": [], "domain": "coin.it", "color": "#1A1A1A", "format": "", "countries": ["IT"]},
+    {"id": "upim", "name": "Upim", "aliases": [], "domain": "upim.com", "color": "#FF7B33", "format": "", "countries": ["IT"]},
+    {"id": "hm", "name": "H&M", "aliases": ["HM", "H e M"], "domain": "hm.com", "color": "#E50010", "format": "", "countries": ["IT"]},
+    {"id": "zara", "name": "Zara", "aliases": [], "domain": "zara.com", "color": "#111111", "format": "", "countries": ["IT"]},
+    {"id": "decathlon", "name": "Decathlon", "aliases": [], "domain": "decathlon.it", "color": "#0082C3", "format": "", "countries": ["IT"]},
+    {"id": "calzedonia", "name": "Calzedonia", "aliases": [], "domain": "calzedonia.com", "color": "#1A1A1A", "format": "", "countries": ["IT"]},
+    {"id": "intimissimi", "name": "Intimissimi", "aliases": [], "domain": "intimissimi.com", "color": "#2B2B2B", "format": "", "countries": ["IT"]},
+    {"id": "tezenis", "name": "Tezenis", "aliases": [], "domain": "tezenis.com", "color": "#E5007D", "format": "", "countries": ["IT"]},
+
+    {"id": "feltrinelli", "name": "la Feltrinelli", "aliases": ["Feltrinelli", "laFeltrinelli"], "domain": "lafeltrinelli.it", "color": "#E20A16", "format": "", "countries": ["IT"]},
+    {"id": "mondadori", "name": "Mondadori Store", "aliases": ["Mondadori"], "domain": "mondadoristore.it", "color": "#A8001D", "format": "", "countries": ["IT"]},
+    {"id": "toyscenter", "name": "Toys Center", "aliases": ["Toys"], "domain": "toyscenter.it", "color": "#1C4A94", "format": "", "countries": ["IT"]},
+
+    {"id": "ikea", "name": "IKEA", "aliases": ["IKEA Family"], "domain": "ikea.com", "color": "#0058A3", "format": "", "countries": ["IT"]},
+    {"id": "leroymerlin", "name": "Leroy Merlin", "aliases": [], "domain": "leroymerlin.it", "color": "#78BE20", "format": "", "countries": ["IT"]},
+    {"id": "bricocenter", "name": "Bricocenter", "aliases": [], "domain": "bricocenter.it", "color": "#E2001A", "format": "", "countries": ["IT"]},
+    {"id": "obi", "name": "OBI", "aliases": [], "domain": "obi-italia.it", "color": "#FF7E21", "format": "", "countries": ["IT"]},
+
+    {"id": "arcaplanet", "name": "Arcaplanet", "aliases": [], "domain": "arcaplanet.it", "color": "#FFD500", "format": "", "countries": ["IT"]},
+    {"id": "maxizoo", "name": "Maxi Zoo", "aliases": ["Maxizoo"], "domain": "", "color": "#E30613", "format": "", "countries": ["IT"]},
+
+    {"id": "enilive", "name": "Enilive", "aliases": ["Eni", "Eni Live", "Agip"], "domain": "enilive.it", "color": "#FFD100", "format": "", "countries": ["IT"]},
+    {"id": "ip", "name": "IP", "aliases": ["Italiana Petroli", "IPlus"], "domain": "italianapetroli.it", "color": "#1388E6", "format": "", "countries": ["IT"]},
+    {"id": "q8", "name": "Q8", "aliases": ["Kuwait"], "domain": "q8.it", "color": "#1E3C8C", "format": "", "countries": ["IT"]},
+    {"id": "esso", "name": "Esso", "aliases": [], "domain": "", "color": "#DA291C", "format": "", "countries": ["IT"]}
+  ]
+}

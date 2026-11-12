@@ -6,6 +6,8 @@
     <uses-feature
         android:name="android.hardware.camera.any"
         android:required="false" />
+    <!-- Solo per il catalogo negozi (e, più avanti, le icone): sempre facoltativa. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".CantaCardApp"
@@ -28,6 +30,11 @@
             android:name=".ShowCardActivity"
             android:exported="false"
             android:theme="@style/Theme.CantaCard.Code" />
+
+        <activity
+            android:name=".StorePickerActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".EditCardActivity"

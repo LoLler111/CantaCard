@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -68,7 +69,11 @@ import dev.cantacard.R
 import dev.cantacard.barcode.BarcodeEncoder
 import dev.cantacard.barcode.BarcodeView
 import dev.cantacard.barcode.ScannedCode
+import dev.cantacard.StorePickerActivity
 import dev.cantacard.data.Card
+import dev.cantacard.data.Catalog
+import dev.cantacard.data.Store
+import dev.cantacard.ui.store.StoreBadge
 import dev.cantacard.data.CardColors
 import dev.cantacard.data.CardInput
 import dev.cantacard.data.CodeFormat
@@ -86,13 +91,24 @@ import kotlinx.coroutines.withContext
 @Composable
 fun EditCardScreen(
     original: Card?,
+    catalog: Catalog,
+    /** Negozio scelto prima di aprire il modulo (solo per una tessera nuova). */
+    initialStoreId: String?,
+    initialName: String?,
     hasCamera: Boolean,
     onSave: (Card) -> Unit,
     onClose: () -> Unit,
 ) {
-    var name by rememberSaveable { mutableStateOf(original?.name.orEmpty()) }
+    val prefilledName = remember {
+        original?.name ?: initialName ?: catalog.find(initialStoreId)?.name.orEmpty()
+    }
+    var storeId by rememberSaveable { mutableStateOf(original?.storeId ?: initialStoreId) }
+    var name by rememberSaveable { mutableStateOf(prefilledName) }
     var number by rememberSaveable { mutableStateOf(original?.number.orEmpty()) }
-    var formatName by rememberSaveable { mutableStateOf(original?.formatName) }
+    // Formato suggerito dal catalogo per una tessera nuova; quello scansionato prevale.
+    var formatName by rememberSaveable {
+        mutableStateOf(original?.formatName ?: catalog.find(initialStoreId)?.format?.name)
+    }
     var note by rememberSaveable { mutableStateOf(original?.note.orEmpty()) }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
 
@@ -106,12 +122,19 @@ fun EditCardScreen(
     // Formato sconosciuto (da un backup più recente): si conserva com'è.
     val codeOk = cleanNumber.isNotEmpty() && (matrix != null || (format == null && formatName != null))
     val canSave = name.isNotBlank() && codeOk
+    val store = catalog.find(storeId)
     val dirty = if (original == null) {
-        name.isNotBlank() || number.isNotBlank() || note.isNotBlank()
+        name.trim() != prefilledName || number.isNotBlank() || note.isNotBlank() || storeId != initialStoreId
     } else {
-        name != original.name || number != original.number ||
+        name != original.name || number != original.number || storeId != original.storeId ||
             formatName != original.formatName || note != original.note.orEmpty()
     }
+
+    // Colore automatico: quello del negozio in catalogo, altrimenti uno stabile dal nome.
+    fun autoColor(cardName: String, id: String?): Int = catalog.find(id)?.color ?: CardColors.forName(cardName)
+    val originalAuto = original != null &&
+        (original.color == autoColor(original.name, original.storeId) || original.color == CardColors.forName(original.name))
+    val cardColor = if (original != null && !originalAuto) original.color else autoColor(name.trim(), storeId)
 
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -125,6 +148,16 @@ fun EditCardScreen(
         formatName = code.format.name
     }
 
+    val storeLauncher = rememberLauncherForActivityResult(StorePickerActivity.Pick()) { choice ->
+        if (choice != null) {
+            val oldName = store?.name
+            val newStore = catalog.find(choice.storeId)
+            storeId = choice.storeId
+            val newName = newStore?.name ?: choice.name
+            if (newName != null && (name.isBlank() || name.trim() == oldName)) name = newName
+            newStore?.format?.let { if (number.isBlank()) formatName = it.name }
+        }
+    }
     val scanLauncher = rememberLauncherForActivityResult(ScanActivity.Contract()) { code ->
         code?.let(::apply)
     }
@@ -150,18 +183,19 @@ fun EditCardScreen(
                 name = trimmedName,
                 number = cleanNumber,
                 formatName = savedFormat,
-                color = CardColors.forName(trimmedName),
+                color = cardColor,
+                storeId = storeId,
                 createdAt = System.currentTimeMillis(),
                 note = note.trim().ifEmpty { null },
             )
         } else {
-            // Il colore automatico segue il nome; uno scelto dall'utente (fase 5) resta.
-            val autoColor = original.color == CardColors.forName(original.name)
             original.copy(
                 name = trimmedName,
                 number = cleanNumber,
                 formatName = savedFormat,
-                color = if (autoColor) CardColors.forName(trimmedName) else original.color,
+                // Il colore automatico segue nome e negozio; uno scelto dall'utente (fase 5) resta.
+                color = cardColor,
+                storeId = storeId,
                 note = note.trim().ifEmpty { null },
             )
         }
@@ -208,10 +242,7 @@ fun EditCardScreen(
                     .padding(horizontal = 20.dp, vertical = 8.dp),
             ) {
                 // Anteprima della tessera, aggiornata mentre si scrive.
-                val previewColor = Color(
-                    if (original != null && original.color != CardColors.forName(original.name)) original.color
-                    else CardColors.forName(name.trim()),
-                )
+                val previewColor = Color(cardColor)
                 CardArt(
                     name = name.trim().ifEmpty { stringResource(R.string.field_name) },
                     initial = Card.initialOf(name),
@@ -226,6 +257,14 @@ fun EditCardScreen(
                         .aspectRatio(CARD_RATIO),
                 )
                 Spacer(Modifier.height(4.dp))
+
+                StoreField(
+                    store = store,
+                    onClick = {
+                        focusManager.clearFocus()
+                        storeLauncher.launch(storeId)
+                    },
+                )
 
                 OutlinedTextField(
                     value = name,
@@ -433,6 +472,63 @@ private fun FormatPicker(selectedLabel: String, onSelect: (CodeFormat) -> Unit) 
                     },
                 )
             }
+        }
+    }
+}
+
+/** Riga del negozio scelto (o "Altro negozio") con il comando per cambiarlo. */
+@Composable
+private fun StoreField(store: Store?, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(18.dp),
+        color = colors.surfaceContainerLowest,
+        border = BorderStroke(1.dp, colors.outlineVariant),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+        ) {
+            if (store != null) {
+                StoreBadge(store, 40.dp)
+            } else {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(colors.secondaryContainer),
+                ) {
+                    Icon(
+                        painterResource(R.drawable.ic_add),
+                        contentDescription = null,
+                        tint = colors.onSecondaryContainer,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+            Column(
+                Modifier
+                    .weight(1f)
+                    .padding(horizontal = 14.dp),
+            ) {
+                Text(
+                    stringResource(R.string.field_store),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.onSurfaceVariant,
+                )
+                Text(
+                    store?.name ?: stringResource(R.string.store_other),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+            Text(
+                stringResource(R.string.store_change),
+                style = MaterialTheme.typography.labelLarge,
+                color = colors.primary,
+            )
         }
     }
 }
