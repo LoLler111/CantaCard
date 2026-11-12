@@ -20,7 +20,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import dev.cantacard.R
 
-/** Barra di ricerca a pillola, pensata per stare sull'intestazione a gradiente. */
+/** Barra di ricerca a pillola, pensata per stare sull'intestazione verde. */
 @Composable
 fun SearchField(
     query: String,

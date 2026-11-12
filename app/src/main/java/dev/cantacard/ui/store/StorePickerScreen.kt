@@ -60,7 +60,7 @@ import dev.cantacard.ui.Brand
 import dev.cantacard.ui.SectionLabelStyle
 import dev.cantacard.ui.components.SearchField
 import dev.cantacard.ui.contentColorOn
-import dev.cantacard.ui.headerBrush
+import dev.cantacard.ui.headerColor
 import kotlinx.coroutines.launch
 
 /** Scelta fatta: un negozio del catalogo, oppure "Altro negozio" ([storeId] `null`). */
@@ -185,7 +185,7 @@ private fun Header(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
-            .background(headerBrush),
+            .background(headerColor),
     ) {
         Column(
             Modifier

@@ -5,6 +5,13 @@
         <item name="android:windowBackground">@color/window_background</item>
     </style>
 
+    <!-- Solo per l'avvio di MainActivity: verde acqua pieno con la tessera al centro (prima di
+         Android 12 è lo sfondo della finestra di avvio). MainActivity torna a Theme.CantaCard
+         in onCreate. -->
+    <style name="Theme.CantaCard.Launch" parent="Theme.CantaCard">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+
     <!-- Visualizzazione tessera: sempre chiara (anche col tema scuro), niente lampo nero all'apertura.
          Definita solo qui, non in values-night. -->
     <style name="Theme.CantaCard.Code" parent="android:Theme.Material.Light.NoActionBar">

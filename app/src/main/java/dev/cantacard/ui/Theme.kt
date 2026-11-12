@@ -9,7 +9,6 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
@@ -113,14 +112,10 @@ fun CantaCardTheme(content: @Composable () -> Unit) {
     )
 }
 
-/** Gradiente dell'intestazione, più profondo col tema scuro. */
-val headerBrush: Brush
+/** Colore dell'intestazione: verde pieno del marchio (come la schermata di avvio), più scuro col tema scuro. */
+val headerColor: Color
     @Composable @ReadOnlyComposable
-    get() = if (isSystemInDarkTheme()) {
-        Brush.linearGradient(listOf(Brand.Teal950, Brand.Teal900))
-    } else {
-        Brush.linearGradient(listOf(Brand.Teal900, Brand.Teal700, Brand.Teal500))
-    }
+    get() = if (isSystemInDarkTheme()) Brand.Teal900 else Brand.Teal700
 
 /** Testo e icone leggibili sopra [background]. */
 fun contentColorOn(background: Color): Color =

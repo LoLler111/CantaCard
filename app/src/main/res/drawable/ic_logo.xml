@@ -1,21 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Logo per l'intestazione: la tessera dell'icona in un solo colore (si colora con tint). -->
+<!-- Logo a colori per l'intestazione: la tessera dell'icona dell'app, inclinata, con la sua ombra.
+     Stesse coordinate px di ic_launcher_foreground (tessera 315–937 × 255–708). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="100"
     android:viewportHeight="100">
-    <!-- Tessera disegnata in px (centro 626,481.5), inclinata di 8 gradi e scalata al centro. -->
     <group
-        android:scaleX="0.14"
-        android:scaleY="0.14"
-        android:translateX="-37.64"
-        android:translateY="-17.41">
+        android:scaleX="0.135"
+        android:scaleY="0.135"
+        android:translateX="-34.51"
+        android:translateY="-15">
         <group
             android:pivotX="626"
             android:pivotY="481.5"
             android:rotation="-8">
-            <path android:pathData="M375,255 H877 A60,60 0 0,1 937,315 V648 A60,60 0 0,1 877,708 H375 A60,60 0 0,1 315,648 V315 A60,60 0 0,1 375,255 Z M325,338 H927 V405 H325 Z M565,550 L637,483 A99,99 0 1,0 637,620 Z M532,505 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 Z M677.1,505 L745.1,470 L736.9,454 L668.9,489 Z M685.6,552 L757.6,547 L756.4,529 L684.4,534 Z M671.3,600.2 L738.3,630.2 L745.7,613.8 L678.7,583.8 Z" android:fillColor="#FF000000" android:fillType="evenOdd" />
+            <path android:pathData="M395,285 H897 A60,60 0 0,1 957,345 V678 A60,60 0 0,1 897,738 H395 A60,60 0 0,1 335,678 V345 A60,60 0 0,1 395,285 Z" android:fillColor="#33000000" />
+            <path android:pathData="M375,255 H877 A60,60 0 0,1 937,315 V648 A60,60 0 0,1 877,708 H375 A60,60 0 0,1 315,648 V315 A60,60 0 0,1 375,255 Z" android:fillColor="#FFFFFF" android:strokeColor="#0B4F4A" android:strokeWidth="20" android:strokeLineJoin="round" />
+            <path android:pathData="M325,338 H927 V405 H325 Z" android:fillColor="#0B4F4A" />
+            <path android:pathData="M565,550 L637,483 A99,99 0 1,0 637,620 Z" android:fillColor="#FF7A59" />
+            <path android:pathData="M532,505 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 Z" android:fillColor="#0B4F4A" />
+            <path android:pathData="M673,497 L741,462 M685,543 L757,538 M675,592 L742,622" android:strokeColor="#0B4F4A" android:strokeWidth="18" android:strokeLineCap="round" />
         </group>
     </group>
 </vector>

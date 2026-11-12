@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+: schermata di avvio di sistema tutta verde acqua, icona senza cerchio bianco.
+         Non c'è una versione night: anche col tema scuro l'avvio resta del colore del marchio. -->
+    <style name="Theme.CantaCard.Launch" parent="Theme.CantaCard">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:windowSplashScreenBackground">@color/brand</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/brand</item>
+    </style>
+</resources>

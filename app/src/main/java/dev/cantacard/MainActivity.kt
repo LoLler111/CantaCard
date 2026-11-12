@@ -12,6 +12,8 @@ import dev.cantacard.ui.list.CardListScreen
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Finita la schermata di avvio verde (Theme.CantaCard.Launch), torna lo sfondo normale.
+        setTheme(R.style.Theme_CantaCard)
         // Intestazione sempre scura (gradiente del marchio): icone di sistema chiare in alto.
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),

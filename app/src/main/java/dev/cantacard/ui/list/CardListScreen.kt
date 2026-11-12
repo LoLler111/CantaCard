@@ -1,6 +1,7 @@
 package dev.cantacard.ui.list
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -65,7 +66,7 @@ import dev.cantacard.ui.SectionLabelStyle
 import dev.cantacard.ui.components.CARD_RATIO
 import dev.cantacard.ui.components.CardArt
 import dev.cantacard.ui.components.SearchField
-import dev.cantacard.ui.headerBrush
+import dev.cantacard.ui.headerColor
 
 @Composable
 fun CardListScreen(
@@ -136,7 +137,7 @@ private fun Header(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
-            .background(headerBrush),
+            .background(headerColor),
     ) {
         Column(
             Modifier
@@ -144,11 +145,10 @@ private fun Header(
                 .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 20.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
+                Image(
                     painter = painterResource(R.drawable.ic_logo),
                     contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(30.dp),
+                    modifier = Modifier.size(40.dp),
                 )
                 Spacer(Modifier.width(10.dp))
                 Text(
@@ -162,7 +162,7 @@ private fun Header(
                     text = pluralStringResource(R.plurals.list_header_count, count, count),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.8f),
-                    modifier = Modifier.padding(top = 4.dp, start = 40.dp),
+                    modifier = Modifier.padding(top = 2.dp, start = 50.dp),
                 )
             }
             if (showSearch) {
