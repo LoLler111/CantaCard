@@ -54,6 +54,7 @@ fun ShowCardScreen(
     card: Card,
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
     val format = card.format
@@ -66,6 +67,7 @@ fun ShowCardScreen(
                 card = card,
                 onBack = onBack,
                 onToggleFavorite = onToggleFavorite,
+                onEdit = onEdit,
                 onDelete = { confirmDelete = true },
             )
             Column(
@@ -143,6 +145,7 @@ private fun TopBar(
     card: Card,
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Row(
@@ -170,6 +173,9 @@ private fun TopBar(
                     if (card.favorite) R.string.favorite_remove else R.string.favorite_add,
                 ),
             )
+        }
+        IconButton(onClick = onEdit) {
+            Icon(painterResource(R.drawable.ic_edit), stringResource(R.string.action_edit))
         }
         IconButton(onClick = onDelete) {
             Icon(painterResource(R.drawable.ic_delete), stringResource(R.string.action_delete))

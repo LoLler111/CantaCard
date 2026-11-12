@@ -7,6 +7,7 @@ activityCompose = "1.13.0"
 coroutines = "1.11.0"
 profileinstaller = "1.4.1"
 zxing = "3.5.4"
+camerax = "1.6.2"
 junit = "4.13.2"
 orgJson = "20260814"
 
@@ -19,6 +20,9 @@ androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+androidx-camera-compose = { module = "androidx.camera:camera-compose", version.ref = "camerax" }
 junit = { module = "junit:junit", version.ref = "junit" }
 # Implementazione JVM di org.json per i test unitari (nell'APK si usa quella del framework).
 org-json = { module = "org.json:json", version.ref = "orgJson" }

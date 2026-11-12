@@ -10,4 +10,9 @@
     <style name="Theme.CantaCard.Code" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@android:color/white</item>
     </style>
+
+    <!-- Scanner: sfondo nero dietro l'anteprima della fotocamera. -->
+    <style name="Theme.CantaCard.Scan" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
 </resources>

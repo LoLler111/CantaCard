@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Solo per scansionare le tessere; l'app si installa anche senza fotocamera. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="false" />
+
     <application
         android:name=".CantaCardApp"
         android:allowBackup="true"
@@ -22,6 +28,16 @@
             android:name=".ShowCardActivity"
             android:exported="false"
             android:theme="@style/Theme.CantaCard.Code" />
+
+        <activity
+            android:name=".EditCardActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".scan.ScanActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CantaCard.Scan" />
     </application>
 
 </manifest>

@@ -18,7 +18,10 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 - Fase 1 (scheletro + modello dati) completata: APK release 1,13 MB.
 - Fase 2 (visualizzazione) completata: `ShowCardActivity` con codice ZXing a scala intera e quiet
   zone, luminosità massima, schermo acceso, preferita ed eliminazione. APK release 1,25 MB.
-  Prossima: fase 3, aggiunta/scansione + modifica tessera.
+- Fase 3 (aggiunta/scansione + modifica) completata: `EditCardActivity` (aggiungi e modifica),
+  `scan.ScanActivity` (CameraX + ZXing, torcia, permesso chiesto solo lì), lettura da foto via
+  Photo Picker. APK release 2,0 MB (CameraX è la parte più pesante del dex).
+  Prossima: fase 4, catalogo negozi.
 - Repo: git locale su branch `main`, remote `origin` = https://github.com/LoLler111/CantaCard
   (pubblico, vuoto). **Push solo su richiesta esplicita dell'utente.**
 - Identità git del repo (config locale, scelta dall'utente): `LoLler111`
@@ -35,13 +38,15 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 | Linguaggio / UI | Kotlin + Jetpack Compose (Material 3), confermato dall'utente | Costa ~1,5–2 MB stimati rispetto alle View del framework, accettati per velocità di sviluppo (da misurare dopo la fase 1). Niente `material-icons-extended`: solo vector drawable XML propri. Baseline profile (`profileinstaller`) per l'avvio a freddo. |
 | Persistenza | **JSON locale** (`org.json` del framework + `android.util.AtomicFile`), niente Room | Poche decine di record letti tutti in memoria: 0 KB di dipendenze, nessun KSP, nessuna apertura DB all'avvio, scrittura atomica. Lo stesso formato serve per il backup. |
 | Generazione codici | ZXing `core` | Leggero, nessuna dipendenza Android. |
-| Scansione | ZXing `core` (già presente) + CameraX | ML Kit con modello incluso costa ~2,4 MB in più; la variante via Play Services/Google Code Scanner scarica il modello e dipende da GMS (non offline). ZXing basta per tessere piatte (EAN/Code128/QR). Si aggiunge anche "scansiona da immagine" via Photo Picker, a costo zero. |
+| Scansione | ZXing `core` (già presente) + CameraX 1.6 (`camera-camera2`, `camera-lifecycle`, `camera-compose`) | ML Kit con modello incluso costa ~2,4 MB in più; la variante via Play Services/Google Code Scanner scarica il modello e dipende da GMS (non offline). ZXing basta per tessere piatte (EAN/Code128/QR). Si aggiunge anche "scansiona da immagine" via Photo Picker, a costo zero. |
 | Navigazione | Stato Compose semplice (sealed class + `BackHandler`), niente Navigation Compose | Meno dipendenze. |
 | DI | Manuale (container nell'`Application`), niente Hilt/Koin | Meno dipendenze e avvio più rapido. |
 | Rete | `HttpURLConnection` del framework, niente OkHttp/Retrofit/Jsoup | La rete serve solo per icone e catalogo; parsing HTML minimo dei tag `<link>`. |
 | Immagini | Loader proprio (decodifica WebP 256 px + piccola cache in memoria), niente Coil/Glide; ritaglio con composable proprio, niente uCrop | Peso. |
 | Widget | `AppWidgetProvider` + `RemoteViews` classici, niente Glance | Peso. |
 | Visualizzazione tessera | `ShowCardActivity` separata e leggera | Apertura diretta da shortcut/widget; luminosità e schermo acceso limitati a quella finestra. |
+| Schermate | Un'Activity per schermata (lista, tessera, modifica, scanner), risultati via `ActivityResultContract` | Niente libreria di navigazione; ogni schermata si apre da sola (shortcut, condivisione). |
+| Letture fotocamera | Formati senza checksum robusto (Code 39/93, Codabar, ITF) confermati su 2 frame uguali | Evita letture sbagliate. Un frame su due è provato ruotato di 90°. |
 | minSdk / target | minSdk 26, compileSdk 37, targetSdk 36 | minSdk 26 copre la quasi totalità dei dispositivi attivi (shortcut, icone adattive, `java.time`). compileSdk 37 è imposto dalle librerie Compose recenti. |
 | Toolchain | AGP 9.1.1 (Kotlin integrato in AGP), Gradle 9.3.1, Kotlin 2.4.21, Compose BOM 2026.09.00 | AGP 9.1 è l'ultimo supportato da Android Studio Panda 2 installato; per salire (9.5+) va aggiornato Studio. Versioni in `gradle/libs.versions.toml`. |
 | Lingue | `localeFilters = ["it"]` | Elimina dall'APK le traduzioni delle librerie. Aggiungere ogni nuova lingua quando si traduce. |

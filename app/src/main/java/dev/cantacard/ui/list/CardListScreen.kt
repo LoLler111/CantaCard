@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -60,6 +61,7 @@ private const val CARD_RATIO = 1.586f
 fun CardListScreen(
     repository: CardRepository,
     onOpen: (Card) -> Unit,
+    onAdd: () -> Unit,
 ) {
     val cards by repository.cards.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
@@ -68,6 +70,13 @@ fun CardListScreen(
     }
 
     Scaffold(
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onAdd,
+                icon = { Icon(painterResource(R.drawable.ic_add), contentDescription = null) },
+                text = { Text(stringResource(R.string.add_card)) },
+            )
+        },
         topBar = {
             SearchField(
                 query = query,
@@ -101,7 +110,8 @@ fun CardListScreen(
                     start = 16.dp,
                     end = 16.dp,
                     top = padding.calculateTopPadding() + 8.dp,
-                    bottom = padding.calculateBottomPadding() + 16.dp,
+                    // Spazio per non coprire l'ultima riga con il pulsante Aggiungi.
+                    bottom = padding.calculateBottomPadding() + 88.dp,
                 ),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),

@@ -67,6 +67,7 @@ class ShowCardActivity : ComponentActivity() {
                         card = card,
                         onBack = ::finish,
                         onToggleFavorite = { repository.toggleFavorite(card.id) },
+                        onEdit = { startActivity(EditCardActivity.edit(this@ShowCardActivity, card.id)) },
                         onDelete = {
                             repository.delete(card.id)
                             finish()

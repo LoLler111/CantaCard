@@ -6,6 +6,9 @@
     <string name="action_back">Indietro</string>
     <string name="action_delete">Elimina</string>
     <string name="action_cancel">Annulla</string>
+    <string name="action_close">Chiudi</string>
+    <string name="action_save">Salva</string>
+    <string name="action_edit">Modifica</string>
 
     <!-- Lista tessere -->
     <string name="search_hint">Cerca tessere</string>
@@ -14,6 +17,7 @@
     <string name="list_empty_body">Le tessere che aggiungi compariranno qui.</string>
     <string name="list_no_results">Nessuna tessera trovata</string>
     <string name="card_favorite">Preferita</string>
+    <string name="add_card">Aggiungi</string>
 
     <!-- Visualizzazione tessera -->
     <string name="favorite_add">Aggiungi alle preferite</string>
@@ -23,6 +27,31 @@
     <string name="code_unknown_format">Formato %1$s non supportato da questa versione. Mostra il numero alla cassa per l\'inserimento manuale.</string>
     <string name="delete_title">Eliminare la tessera?</string>
     <string name="delete_message">«%1$s» verrà eliminata da questo telefono.</string>
+
+    <!-- Aggiunta e modifica -->
+    <string name="add_card_title">Nuova tessera</string>
+    <string name="edit_card_title">Modifica tessera</string>
+    <string name="field_name">Nome del negozio</string>
+    <string name="field_number">Numero della tessera</string>
+    <string name="field_format">Formato del codice</string>
+    <string name="field_note">Nota (facoltativa)</string>
+    <string name="scan_camera">Scansiona</string>
+    <string name="scan_photo">Da una foto</string>
+    <string name="number_invalid">Numero non valido per il formato %1$s</string>
+    <string name="photo_no_code">Nessun codice trovato nell\'immagine</string>
+    <string name="photo_error">Impossibile aprire l\'immagine</string>
+    <string name="discard_title">Scartare le modifiche?</string>
+    <string name="discard_confirm">Scarta</string>
+
+    <!-- Scansione -->
+    <string name="scan_hint">Inquadra il codice della tessera</string>
+    <string name="torch_on">Accendi la torcia</string>
+    <string name="torch_off">Spegni la torcia</string>
+    <string name="camera_permission_title">Serve la fotocamera</string>
+    <string name="camera_permission_body">Per scansionare la tessera CantaCard usa la fotocamera, solo sul telefono. In alternativa puoi inserire il numero a mano o leggerlo da una foto.</string>
+    <string name="camera_permission_grant">Consenti</string>
+    <string name="camera_permission_settings">Apri impostazioni</string>
+    <string name="camera_error">Fotocamera non disponibile</string>
 
     <!-- Solo build di debug -->
     <string name="debug_add_samples">Aggiungi tessere di prova</string>
