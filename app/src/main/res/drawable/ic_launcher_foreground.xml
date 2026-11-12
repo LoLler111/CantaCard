@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tessera bianca con barre ritagliate (evenOdd): lo sfondo si vede attraverso le barre,
+     così la stessa forma funziona anche come icona monocromatica. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M32,38H76A4,4 0,0 1,80 42V66A4,4 0,0 1,76 70H32A4,4 0,0 1,28 66V42A4,4 0,0 1,32 38Z
+            M35,45h2v18h-2z M39,45h1v18h-1z M42,45h3v18h-3z M47,45h1v18h-1z
+            M50,45h2v18h-2z M54,45h1v18h-1z M57,45h3v18h-3z M62,45h1v18h-1z
+            M65,45h2v18h-2z M69,45h1v18h-1z M71,45h2v18h-2z" />
+</vector>

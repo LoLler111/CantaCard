@@ -1,0 +1,143 @@
+# CantaCard
+
+App Android ultra leggera per le tessere fedeltà: mostra a schermo il codice (barcode/QR) da far
+leggere in cassa. Alternativa minimale a Stocard (diventata pesante dopo l'acquisizione da parte di
+Klarna e che spesso chiede aggiornamenti proprio alla cassa).
+
+## Principi (non negoziabili)
+
+- **Offline-first**: mostrare una tessera non deve MAI richiedere rete, login o aggiornamenti.
+- **Avvio istantaneo, APK minimo**: R8/minify + shrinkResources attivi, dipendenze ridotte al minimo.
+  Ogni nuova dipendenza va giustificata col suo peso sull'APK; si preferiscono le API del framework.
+- **Nessun backend proprio**, nessun account, nessuna analytics, nessuna pubblicità.
+- **Nessun logo di marchi incluso nell'APK** (le icone dei negozi si scaricano a runtime, su scelta
+  dell'utente, e restano solo in locale).
+
+## Stato
+
+- Fase corrente: **1 – scheletro + modello dati** completata (lista con ricerca, ordinamento,
+  preferite, persistenza JSON). APK release: 1,13 MB. Prossima: fase 2, visualizzazione.
+- Repo: git locale su branch `main`, remote `origin` = https://github.com/LoLler111/CantaCard
+  (pubblico, vuoto). **Push solo su richiesta esplicita dell'utente.**
+- Identità git: la configura l'utente. Non impostare `user.name`/`user.email` di propria iniziativa.
+- `applicationId`: **provvisorio `dev.cantacard`**, da decidere prima della pubblicazione (è permanente
+  dopo). Il `namespace` Kotlin/R resta `dev.cantacard` anche se l'applicationId cambia.
+- URL di aggiornamento del catalogo:
+  `https://raw.githubusercontent.com/LoLler111/CantaCard/main/catalog/stores.json`.
+
+## Decisioni prese
+
+| Tema | Decisione | Motivo |
+|---|---|---|
+| Linguaggio / UI | Kotlin + Jetpack Compose (Material 3), confermato dall'utente | Costa ~1,5–2 MB stimati rispetto alle View del framework, accettati per velocità di sviluppo (da misurare dopo la fase 1). Niente `material-icons-extended`: solo vector drawable XML propri. Baseline profile (`profileinstaller`) per l'avvio a freddo. |
+| Persistenza | **JSON locale** (`org.json` del framework + `android.util.AtomicFile`), niente Room | Poche decine di record letti tutti in memoria: 0 KB di dipendenze, nessun KSP, nessuna apertura DB all'avvio, scrittura atomica. Lo stesso formato serve per il backup. |
+| Generazione codici | ZXing `core` | Leggero, nessuna dipendenza Android. |
+| Scansione | ZXing `core` (già presente) + CameraX | ML Kit con modello incluso costa ~2,4 MB in più; la variante via Play Services/Google Code Scanner scarica il modello e dipende da GMS (non offline). ZXing basta per tessere piatte (EAN/Code128/QR). Si aggiunge anche "scansiona da immagine" via Photo Picker, a costo zero. |
+| Navigazione | Stato Compose semplice (sealed class + `BackHandler`), niente Navigation Compose | Meno dipendenze. |
+| DI | Manuale (container nell'`Application`), niente Hilt/Koin | Meno dipendenze e avvio più rapido. |
+| Rete | `HttpURLConnection` del framework, niente OkHttp/Retrofit/Jsoup | La rete serve solo per icone e catalogo; parsing HTML minimo dei tag `<link>`. |
+| Immagini | Loader proprio (decodifica WebP 256 px + piccola cache in memoria), niente Coil/Glide; ritaglio con composable proprio, niente uCrop | Peso. |
+| Widget | `AppWidgetProvider` + `RemoteViews` classici, niente Glance | Peso. |
+| Visualizzazione tessera | `ShowCardActivity` separata e leggera | Apertura diretta da shortcut/widget; luminosità e schermo acceso limitati a quella finestra. |
+| minSdk / target | minSdk 26, compileSdk 37, targetSdk 36 | minSdk 26 copre la quasi totalità dei dispositivi attivi (shortcut, icone adattive, `java.time`). compileSdk 37 è imposto dalle librerie Compose recenti. |
+| Toolchain | AGP 9.1.1 (Kotlin integrato in AGP), Gradle 9.3.1, Kotlin 2.4.21, Compose BOM 2026.09.00 | AGP 9.1 è l'ultimo supportato da Android Studio Panda 2 installato; per salire (9.5+) va aggiornato Studio. Versioni in `gradle/libs.versions.toml`. |
+| Lingue | `localeFilters = ["it"]` | Elimina dall'APK le traduzioni delle librerie. Aggiungere ogni nuova lingua quando si traduce. |
+| Moduli | Un solo modulo `:app` | Progetto piccolo, multi-modulo non porta benefici. |
+
+## Struttura prevista
+
+```
+CantaCard/
+├── CLAUDE.md
+├── catalog/
+│   └── stores.json            # sorgente unica del catalogo: inclusa negli asset dell'APK
+│                              # (srcDir Gradle) e servita raw da GitHub per l'aggiornamento
+├── app/
+│   ├── build.gradle.kts
+│   ├── proguard-rules.pro
+│   └── src/main/
+│       ├── AndroidManifest.xml
+│       ├── res/values/strings.xml   # tutte le stringhe UI, in italiano
+│       └── java/dev/cantacard/
+│           ├── CantaCardApp.kt      # Application + container dipendenze
+│           ├── MainActivity.kt      # lista, aggiunta, impostazioni
+│           ├── ShowCardActivity.kt  # visualizzazione tessera
+│           ├── data/                # Card, CardRepository (JSON), Catalog, Backup (zip)
+│           ├── barcode/             # generazione e scansione (ZXing)
+│           ├── image/               # favicon fetcher, ridimensionamento WebP, loader, crop
+│           ├── ui/                  # schermate Compose, tema
+│           ├── shortcuts/           # app shortcuts dinamiche
+│           └── widget/              # widget RemoteViews
+├── gradle/libs.versions.toml
+└── build.gradle.kts / settings.gradle.kts / gradlew
+```
+
+## Modello dati
+
+- `Card`: `id` (UUID), `name`, `storeId?`, `number`, `format` (nome dell'enum ZXing, es. `"EAN_13"`,
+  mai l'ordinal), `color`, `image?` (nome file), `favorite`, `lastUsed`, `useCount`, `createdAt`, `note?`.
+- Salvataggio: `files/cards.json` = `{"version": 1, "cards": [...]}`; immagini in `files/images/<id>.webp`.
+- Lettura tollerante: campi sconosciuti ignorati, campi mancanti con default, un record corrotto non
+  deve bloccare gli altri.
+- Si salva **sempre** il formato del codice oltre al numero.
+
+## Funzioni
+
+1. **Lista tessere**: griglia/lista con immagine o iniziale colorata, ricerca, preferite in cima,
+   poi ordinamento per uso recente.
+2. **Visualizzazione**: codice grande su sfondo bianco con quiet zone abbondante, luminosità al massimo
+   (`WindowManager.LayoutParams.screenBrightness = 1f`, nessun permesso) e `FLAG_KEEP_SCREEN_ON`
+   finché è aperta, numero leggibile sotto.
+3. **Aggiunta**: negozio da catalogo con ricerca (stile Google Wallet) con voce "Altro negozio" sempre
+   visibile; poi scansione offline o inserimento manuale con scelta del formato. Il formato rilevato
+   dalla scansione prevale su quello suggerito dal catalogo.
+4. **Immagine**, in ordine di preferenza:
+   1. icona dal sito del negozio, scaricata una volta alla scelta: manifest PWA → apple-touch-icon →
+      `link rel="icon"` → `/favicon.ico` (solo HTTPS, timeout brevi, limite di dimensione, SVG scartati);
+   2. foto del fronte della tessera con ritaglio;
+   3. galleria tramite Photo Picker (nessun permesso storage);
+   4. immagine condivisa da altre app (`ACTION_SEND` `image/*`);
+   5. ripiego: iniziale su colore scelto dall'utente.
+
+   Sempre ridimensionata a ~256 px WebP e salvata in locale.
+   **Vietato**: scraping di Google ed endpoint favicon non ufficiali (Google s2, DuckDuckGo, ecc.).
+5. **Backup/ripristino** via Storage Access Framework (l'utente sceglie dove: Drive, OneDrive, ...).
+   File `.zip` con `cantacard.json` (`formatVersion`, `exportedAt`, tessere) + `images/<id>.webp`.
+   Il ripristino deve gestire versioni future del formato senza crash (campi sconosciuti ignorati,
+   errori isolati per singola tessera, avviso se `formatVersion` è più recente).
+6. **Accesso rapido**: app shortcuts dinamiche per le preferite, poi widget.
+
+## Catalogo negozi
+
+- `catalog/stores.json`: `{"version": N, "stores": [{ "id", "name", "aliases": [], "domain",
+  "color": "#RRGGBB", "format", "countries": ["IT"] }]}`.
+- Incluso nell'APK; aggiornamento opzionale scaricando lo stesso file raw da questo repo GitHub.
+  Si usa la copia con `version` più alta tra inclusa e scaricata; senza rete si usa sempre la copia locale.
+- Prima versione: 40–50 catene italiane (supermercati, profumerie, elettronica, abbigliamento,
+  carburanti). **Se un dominio o un formato non è certo, lasciarlo vuoto/segnalarlo: mai inventarlo.**
+
+## Permessi
+
+Solo `CAMERA` (scansione e foto) e `INTERNET` (icone e catalogo, sempre opzionali).
+Nessun permesso storage.
+
+## Modo di lavorare
+
+- Fasi piccole e funzionanti, **un commit per fase**:
+  1. scheletro + modello dati → 2. visualizzazione → 3. aggiunta/scansione → 4. catalogo →
+  5. immagini → 6. backup → 7. shortcut/widget.
+- Prima di ogni fase: descrivere in breve cosa si farà. Fermarsi e chiedere quando c'è una scelta
+  non già decisa qui.
+- Testo UI in italiano, sempre in `res/values/strings.xml` (mai stringhe hardcoded nei composable).
+- Dopo ogni fase controllare la dimensione dell'APK release.
+
+## Ambiente di sviluppo (Windows)
+
+- Android Studio 2025.3 installato; JDK: usare la JBR di Studio
+  (`JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"`, `java` non è nel PATH).
+- SDK in `%LOCALAPPDATA%\Android\Sdk` (platform 36 / 36.1, build-tools 36.1.0), AVD `Medium_Phone_API_36.1`.
+- `local.properties` (non versionato) contiene `sdk.dir=C:/Users/Utente/AppData/Local/Android/Sdk`.
+- Build da riga di comando: `./gradlew testDebugUnitTest assembleDebug assembleRelease`.
+- La release è firmata con la chiave di debug solo per provarla in locale: prima della
+  pubblicazione serve la chiave vera (fuori dal repo).
+- Le build di debug mostrano nella lista vuota il pulsante "Aggiungi tessere di prova".

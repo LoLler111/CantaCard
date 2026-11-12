@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">CantaCard</string>
+
+    <!-- Lista tessere -->
+    <string name="search_hint">Cerca tessere</string>
+    <string name="search_clear">Cancella ricerca</string>
+    <string name="list_empty_title">Nessuna tessera</string>
+    <string name="list_empty_body">Le tessere che aggiungi compariranno qui.</string>
+    <string name="list_no_results">Nessuna tessera trovata</string>
+    <string name="card_favorite">Preferita</string>
+
+    <!-- Solo build di debug -->
+    <string name="debug_add_samples">Aggiungi tessere di prova</string>
+</resources>
