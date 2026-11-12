@@ -5,12 +5,12 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Disegno in px dell'originale (1250 x 1250), scalato nella zona visibile dell'icona adattiva. -->
+    <!-- Disegno in px dell'originale (1250 x 1250), ingrandito: tessera e mani nella zona sicura, i polsini escono dal bordo. -->
     <group
-        android:scaleX="0.056"
-        android:scaleY="0.056"
-        android:translateX="19"
-        android:translateY="19">
+        android:scaleX="0.07"
+        android:scaleY="0.07"
+        android:translateX="10.18"
+        android:translateY="16.33">
         <path android:pathData="M100,990 C108,975 114,955 114,935 C114,915 110,890 104,867 C96,845 88,830 83,821 C72,800 64,775 62,750 C61,725 62,710 65,699 C68,680 72,660 76,642 C80,620 84,600 88,588 C92,570 98,540 108,522 C114,512 118,506 125,500 C140,488 160,473 174,462 C188,451 200,440 212,432 C222,425 232,419 241,421 C252,424 258,436 255,450 C252,465 245,480 237,492 C230,503 222,515 215,526 L305,506" android:strokeColor="#FF000000" android:strokeWidth="20" android:strokeLineJoin="round" android:strokeLineCap="round" />
         <path android:pathData="M112,595 C125,575 135,560 147,549 C165,537 195,529 215,526" android:strokeColor="#FF000000" android:strokeWidth="20" android:strokeLineJoin="round" android:strokeLineCap="round" />
         <path android:pathData="M103.1,590.5 Q93,612 85,645 Q101,620 120.9,599.5 Z" android:fillColor="#FF000000" />
