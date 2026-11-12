@@ -18,9 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,31 +27,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.cantacard.R
 import dev.cantacard.ui.contentColorOn
-import dev.cantacard.ui.darken
-import dev.cantacard.ui.lighten
 
 /** Rapporto larghezza/altezza di una carta di credito (ISO/IEC 7810 ID-1). */
 const val CARD_RATIO = 1.586f
 
-/** Sfondo "carta": gradiente diagonale dal colore del negozio con due riflessi tondi. */
+/** Sfondo "carta": colore pieno del negozio, piatto come l'intestazione (niente sfumature né riflessi). */
 fun Modifier.cardSurface(color: Color, corner: Dp = 18.dp): Modifier = this
     .clip(RoundedCornerShape(corner))
-    .background(
-        Brush.linearGradient(listOf(color.lighten(0.14f), color, color.darken(0.22f))),
-    )
-    .drawBehind {
-        val shine = Color.White
-        drawCircle(
-            color = shine.copy(alpha = 0.13f),
-            radius = size.width * 0.55f,
-            center = Offset(size.width * 1.02f, -size.height * 0.08f),
-        )
-        drawCircle(
-            color = shine.copy(alpha = 0.07f),
-            radius = size.width * 0.38f,
-            center = Offset(size.width * 0.08f, size.height * 1.15f),
-        )
-    }
+    .background(color)
 
 /** Tondo con l'iniziale, come un piccolo logo sulla carta. */
 @Composable

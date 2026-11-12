@@ -231,7 +231,6 @@ private fun CardTile(card: Card, onClick: () -> Unit, modifier: Modifier = Modif
                 scaleX = scale
                 scaleY = scale
             }
-            .shadow(10.dp, RoundedCornerShape(18.dp), ambientColor = color, spotColor = color)
             .fillMaxWidth()
             .aspectRatio(CARD_RATIO)
             .clickable(interactionSource = interaction, indication = null, onClick = onClick)
@@ -304,7 +303,7 @@ private fun CardStackIllustration() {
                 modifier = Modifier
                     .offset(x = dx)
                     .graphicsLayer { rotationZ = angle }
-                    .shadow(12.dp, RoundedCornerShape(18.dp), ambientColor = color, spotColor = color)
+                    .shadow(3.dp, RoundedCornerShape(18.dp))
                     .width(width)
                     .aspectRatio(CARD_RATIO),
             )

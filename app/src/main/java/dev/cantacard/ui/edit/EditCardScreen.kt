@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
-import androidx.compose.ui.draw.shadow
 import dev.cantacard.ui.SectionLabelStyle
 import dev.cantacard.ui.components.CARD_RATIO
 import dev.cantacard.ui.components.CardArt
@@ -252,7 +251,6 @@ fun EditCardScreen(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .widthIn(max = 340.dp)
-                        .shadow(14.dp, RoundedCornerShape(18.dp), ambientColor = previewColor, spotColor = previewColor)
                         .fillMaxWidth()
                         .aspectRatio(CARD_RATIO),
                 )
