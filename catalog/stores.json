@@ -21,6 +21,7 @@
     {"id": "iperal", "name": "Iperal", "aliases": [], "domain": "iperal.it", "color": "#C8102E", "format": "", "countries": ["IT"]},
     {"id": "naturasi", "name": "NaturaSì", "aliases": ["Natura Sì"], "domain": "naturasi.it", "color": "#6EA820", "format": "", "countries": ["IT"]},
     {"id": "ali", "name": "Alì", "aliases": ["Alìper", "Alì Supermercati"], "domain": "alisupermercati.it", "color": "#E30613", "format": "", "countries": ["IT"]},
+    {"id": "castoro", "name": "Il Castoro Supermercati", "aliases": ["Castoro"], "domain": "ilcastorosupermercati.it", "color": "#035E4E", "format": "", "countries": ["IT"]},
 
     {"id": "sephora", "name": "Sephora", "aliases": [], "domain": "sephora.it", "color": "#111111", "format": "", "countries": ["IT"]},
     {"id": "douglas", "name": "Douglas", "aliases": [], "domain": "douglas.it", "color": "#1A1A1A", "format": "", "countries": ["IT"]},

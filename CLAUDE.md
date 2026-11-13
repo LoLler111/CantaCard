@@ -21,7 +21,7 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 - Fase 3 (aggiunta/scansione + modifica) completata: `EditCardActivity` (aggiungi e modifica),
   `scan.ScanActivity` (CameraX + ZXing, torcia, permesso chiesto solo lì), lettura da foto via
   Photo Picker. APK release 2,0 MB (CameraX è la parte più pesante del dex).
-- Fase 4 (catalogo) completata: `catalog/stores.json` (53 catene), `StorePickerActivity` con ricerca
+- Fase 4 (catalogo) completata: `catalog/stores.json` (53 catene, 54 con Il Castoro), `StorePickerActivity` con ricerca
   e "Altro negozio", negozio nel modulo (cambiabile), aggiornamento da GitHub. APK release 2,06 MB.
 - Fase 5 (immagini) completata: icona dal sito scaricata da sola alla scelta del negozio (+ "Aggiorna
   icona"), foto della tessera (`scan.PhotoActivity`) e galleria con ritaglio (`ui.edit.CropDialog`),
