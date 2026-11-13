@@ -168,6 +168,13 @@ Nessun permesso storage.
 - SDK in `%LOCALAPPDATA%\Android\Sdk` (platform 36 / 36.1, build-tools 36.1.0), AVD `Medium_Phone_API_36.1`.
 - `local.properties` (non versionato) contiene `sdk.dir=C:/Users/Utente/AppData/Local/Android/Sdk`.
 - Build da riga di comando: `./gradlew testDebugUnitTest assembleDebug assembleRelease`.
-- La release è firmata con la chiave di debug solo per provarla in locale: prima della
-  pubblicazione serve la chiave vera (fuori dal repo).
+- Firma della release: chiave vera creata dall'utente il 13/11/2026, **fuori dal repo** in
+  `%USERPROFILE%\cantacard-keys\` (`cantacard-release.jks`, alias `cantacard`, RSA 4096, CN=LoLler111,
+  validità 10000 giorni) con `keystore.properties` (password: non leggerlo mai, la usa solo Gradle;
+  percorso alternativo con la variabile `CANTACARD_SIGNING`). Senza quel file la release si firma con
+  la chiave di debug e Gradle avvisa: quell'APK non va mai distribuito. Impronte del certificato
+  (servono per OAuth/Play): SHA-1 `6c:ae:06:2b:7f:dd:4d:71:f1:b8:81:56:9a:dc:98:dd:61:8a:86:e1`,
+  SHA-256 `46:21:95:2d:9c:35:0b:f3:6e:c9:4d:22:35:94:45:3b:87:45:74:96:e7:73:67:8c:b8:ea:10:e9:0e:80:a6:e5`.
+  Con il Play Store (Play App Signing) questa diventa la chiave di caricamento, salvo caricare la
+  propria come chiave di firma: da decidere quando si sceglie la distribuzione.
 - Le build di debug mostrano nella lista vuota il pulsante "Aggiungi tessere di prova".

@@ -1,6 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+// Chiave di firma vera: fuori dal repo, in ~/cantacard-keys/keystore.properties (oppure nel file
+// indicato dalla variabile d'ambiente CANTACARD_SIGNING) con storeFile, storePassword, keyAlias e
+// keyPassword; storeFile può essere relativo alla cartella del file. Senza, la release viene
+// firmata con la chiave di debug (solo per provarla in locale, mai da distribuire).
+val signingFile: File = providers.environmentVariable("CANTACARD_SIGNING").orNull?.let(::File)
+    ?: File(System.getProperty("user.home"), "cantacard-keys/keystore.properties")
+val signing: Properties? = signingFile.takeIf { it.isFile }?.let { file ->
+    Properties().apply { file.inputStream().use(::load) }
 }
 
 android {
@@ -16,6 +28,19 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        if (signing != null) {
+            create("release") {
+                fun value(name: String) = signing.getProperty(name)?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: throw GradleException("Manca \"$name\" in $signingFile")
+                storeFile = signingFile.parentFile.resolve(value("storeFile"))
+                storePassword = value("storePassword")
+                keyAlias = value("keyAlias")
+                keyPassword = value("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -24,8 +49,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // Solo per provare la release in locale: va sostituita con la chiave di pubblicazione.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release")
+                ?: signingConfigs.getByName("debug").also {
+                    logger.warn("CantaCard: chiave di firma non trovata ($signingFile), release firmata con la chiave di debug")
+                }
         }
     }
 
