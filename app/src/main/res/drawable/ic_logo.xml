@@ -18,8 +18,8 @@
             <path android:pathData="M395,285 H897 A60,60 0 0,1 957,345 V678 A60,60 0 0,1 897,738 H395 A60,60 0 0,1 335,678 V345 A60,60 0 0,1 395,285 Z" android:fillColor="#33000000" />
             <path android:pathData="M375,255 H877 A60,60 0 0,1 937,315 V648 A60,60 0 0,1 877,708 H375 A60,60 0 0,1 315,648 V315 A60,60 0 0,1 375,255 Z" android:fillColor="#FFFFFF" android:strokeColor="#0B4F4A" android:strokeWidth="20" android:strokeLineJoin="round" />
             <path android:pathData="M325,338 H927 V405 H325 Z" android:fillColor="#0B4F4A" />
-            <path android:pathData="M565,550 L637,483 A99,99 0 1,0 637,620 Z" android:fillColor="#FF7A59" />
-            <path android:pathData="M532,505 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 Z" android:fillColor="#0B4F4A" />
+            <path android:pathData="M639,485 A99,99 0 1,0 646,610 A65,65 0 0,1 639,485 Z" android:fillColor="#FF7A59" />
+            <path android:pathData="M542,501 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 Z" android:fillColor="#0B4F4A" />
             <path android:pathData="M673,497 L741,462 M685,543 L757,538 M675,592 L742,622" android:strokeColor="#0B4F4A" android:strokeWidth="18" android:strokeLineCap="round" />
         </group>
     </group>

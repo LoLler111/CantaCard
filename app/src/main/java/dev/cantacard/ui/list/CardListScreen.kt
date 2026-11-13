@@ -166,7 +166,7 @@ private fun Header(
                 Image(
                     painter = painterResource(R.drawable.ic_logo),
                     contentDescription = null,
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(52.dp),
                 )
                 Spacer(Modifier.width(10.dp))
                 Text(

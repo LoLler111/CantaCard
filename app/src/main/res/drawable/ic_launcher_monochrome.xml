@@ -7,17 +7,17 @@
     android:viewportHeight="108">
     <!-- Tessera disegnata in px (centro 626,481.5), inclinata di 8 gradi e scalata al centro. -->
     <group
-        android:scaleX="0.07"
-        android:scaleY="0.07"
-        android:translateX="10.18"
-        android:translateY="20.29">
+        android:scaleX="0.085"
+        android:scaleY="0.085"
+        android:translateX="0.79"
+        android:translateY="13.07">
         <group
             android:pivotX="626"
             android:pivotY="481.5"
             android:rotation="-8">
             <path android:pathData="M375,255 H877 A60,60 0 0,1 937,315 V648 A60,60 0 0,1 877,708 H375 A60,60 0 0,1 315,648 V315 A60,60 0 0,1 375,255 Z" android:strokeColor="#FF000000" android:strokeWidth="20" android:strokeLineJoin="round" android:strokeLineCap="round" />
             <path android:pathData="M325,338 H927 V405 H325 Z" android:fillColor="#FF000000" />
-            <path android:pathData="M565,550 L637,483 A99,99 0 1,0 637,620 Z M532,505 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 Z" android:fillColor="#FF000000" android:fillType="evenOdd" />
+            <path android:pathData="M639,485 A99,99 0 1,0 646,610 A65,65 0 0,1 639,485 Z M542,501 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 Z" android:fillColor="#FF000000" android:fillType="evenOdd" />
             <path android:pathData="M673,497 L741,462 M685,543 L757,538 M675,592 L742,622" android:strokeColor="#FF000000" android:strokeWidth="18" android:strokeLineJoin="round" android:strokeLineCap="round" />
         </group>
     </group>

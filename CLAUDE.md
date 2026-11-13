@@ -32,7 +32,8 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 - Fase 7 (accesso rapido) completata: scorciatoie dinamiche (`shortcuts.CardShortcuts`), "Aggiungi alla schermata Home" nella schermata della tessera, widget "Tessere preferite" e "Tessera" (`widget.Widgets`, `widget.CardWidgetConfigActivity`), tessere disegnate come bitmap (`image.CardBitmaps`), aggiornati da `QuickAccess` solo quando cambia qualcosa di visibile. APK release 2,21 MB. Tutte le fasi previste sono fatte.
 - Icona: la tessera con la faccia che urla, inclinata di 8°, su verde acqua (vettoriale): icona
   adattiva + monocromatica + logo dell'intestazione. Le mani del concept "Carta canta" sono state
-  tolte su richiesta dell'utente. APK release 2,06 MB.
+  tolte su richiesta dell'utente. APK release 2,06 MB. Dal 13/11/2026 bocca a spicchio curvo (disegno
+  dell'utente, per non somigliare a Pac-Man), tessera dell'icona più grande e logo a 52 dp.
 - Repo: git locale su branch `main`, remote `origin` = https://github.com/LoLler111/CantaCard
   (pubblico). **Push solo su richiesta esplicita dell'utente.** Licenza GPL-3.0 (`LICENSE`,
   scelta dell'utente), `README.md` in italiano.
@@ -72,7 +73,7 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 | minSdk / target | minSdk 26, compileSdk 37, targetSdk 36 | minSdk 26 copre la quasi totalità dei dispositivi attivi (shortcut, icone adattive, `java.time`). compileSdk 37 è imposto dalle librerie Compose recenti. |
 | Toolchain | AGP 9.1.1 (Kotlin integrato in AGP), Gradle 9.3.1, Kotlin 2.4.21, Compose BOM 2026.09.00 | AGP 9.1 è l'ultimo supportato da Android Studio Panda 2 installato; per salire (9.5+) va aggiornato Studio. Versioni in `gradle/libs.versions.toml`. |
 | Aggiornamento catalogo | Controllo automatico in background al massimo una volta a settimana, solo all'apertura della scelta negozio, silenzioso; più "Aggiorna catalogo" nel menu della stessa schermata (scelta dell'utente) | Nessuna rete all'avvio; senza rete si usa sempre la copia locale. Copia scaricata in `files/catalog/stores.json`, vince la `version` più alta. |
-| Icona | Solo la tessera (banda magnetica, faccia corallo che urla) inclinata di 8° con ombra leggera; le mani del concept iniziale sono state scartate dall'utente. Vector drawable in coordinate px (tessera 315–937 × 255–708), scala 0,07 così gli angoli restano nella zona sicura: a 0,08 il launcher Pixel li tagliava. Niente PNG | Pochi KB, nitida a ogni densità. Da cambiare dopo la v0.1.0 (scelta dell'utente): la faccia di profilo con bocca a spicchio somiglia a Pac-Man (marchio registrato Bandai Namco); proposta: faccia di fronte con occhi e bocca a "O". |
+| Icona | Solo la tessera (banda magnetica, faccia corallo che urla) inclinata di 8° con ombra leggera; le mani del concept iniziale sono state scartate dall'utente. Vector drawable in coordinate px (tessera 315–937 × 255–708), scala 0,085 (translate 0,79 / 13,07, centro a 54,54): a 0,07 la tessera sembrava piccola sul telefono (osservazione dell'utente), a 0,09 l'angolo in alto a destra arrivava a filo del tondo del launcher Pixel. Bocca a spicchio **curvo** (disegno dell'utente): faccia `M639,485 A99,99 0 1,0 646,610 A65,65 0 0,1 639,485 Z`, occhio in 557,501; lo spicchio dritto con la punta al centro somigliava a Pac-Man (marchio registrato Bandai Namco). Logo dell'intestazione `ic_logo` mostrato a 52 dp. Niente PNG | Pochi KB, nitida a ogni densità. |
 | Lingue | `localeFilters = ["it"]` | Elimina dall'APK le traduzioni delle librerie. Aggiungere ogni nuova lingua quando si traduce. |
 | Moduli | Un solo modulo `:app` | Progetto piccolo, multi-modulo non porta benefici. |
 
