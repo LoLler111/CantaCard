@@ -118,9 +118,14 @@
     <string name="restore_add">Aggiungi alle attuali</string>
     <string name="restore_replace">Sostituisci tutte</string>
     <string name="restore_confirm">Ripristina</string>
+    <string name="restore_none_new">Nessuna tessera nuova</string>
     <plurals name="restore_done">
         <item quantity="one">Ripristinata %d tessera</item>
         <item quantity="other">Ripristinate %d tessere</item>
+    </plurals>
+    <plurals name="restore_updated">
+        <item quantity="one">%d aggiornata</item>
+        <item quantity="other">%d aggiornate</item>
     </plurals>
     <plurals name="restore_duplicates">
         <item quantity="one">%d già presente</item>

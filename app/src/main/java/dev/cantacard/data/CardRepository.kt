@@ -36,20 +36,22 @@ class CardRepository(
 
     fun find(id: String): Card? = _cards.value?.firstOrNull { it.id == id }
 
-    /** Aggiunge la tessera o sostituisce quella con lo stesso id. */
+    /** Aggiunge la tessera o sostituisce quella con lo stesso id (segna l'ora della modifica). */
     fun save(card: Card): Job = update { list ->
-        if (list.any { it.id == card.id }) list.map { if (it.id == card.id) card else it }
-        else list + card
+        val edited = card.copy(updatedAt = clock())
+        if (list.any { it.id == card.id }) list.map { if (it.id == card.id) edited else it }
+        else list + edited
     }
 
     fun addAll(cards: List<Card>): Job = update { list ->
         val ids = list.mapTo(HashSet()) { it.id }
-        list + cards.filter { it.id !in ids }
+        val now = clock()
+        list + cards.filter { it.id !in ids }.map { if (it.updatedAt == 0L) it.copy(updatedAt = now) else it }
     }
 
     fun delete(id: String): Job = update { list -> list.filterNot { it.id == id } }
 
-    fun toggleFavorite(id: String): Job = modify(id) { it.copy(favorite = !it.favorite) }
+    fun toggleFavorite(id: String): Job = modify(id) { it.copy(favorite = !it.favorite, updatedAt = clock()) }
 
     /** Da chiamare quando la tessera viene mostrata in cassa. */
     fun markUsed(id: String): Job = modify(id) {

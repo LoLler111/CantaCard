@@ -40,7 +40,7 @@ class Backup(
         internal val imageFiles: Map<String, File>,
     )
 
-    class Summary(val added: Int, val duplicates: Int, val skipped: Int)
+    class Summary(val added: Int, val updated: Int, val duplicates: Int, val skipped: Int)
 
     private val restoreDir = File(context.cacheDir, "restore")
 
@@ -105,7 +105,7 @@ class Backup(
             }
         }
         cancel()
-        Summary(merged.added.size, merged.duplicates, backup.content.skipped)
+        Summary(merged.added, merged.updated, merged.duplicates, backup.content.skipped)
     }
 
     fun cancel() {

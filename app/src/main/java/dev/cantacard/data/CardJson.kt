@@ -60,6 +60,7 @@ object CardJson {
         put("useCount", card.useCount)
         put("createdAt", card.createdAt)
         card.note?.let { put("note", it) }
+        if (card.updatedAt > 0) put("updatedAt", card.updatedAt)
     }
 
     /** `null` se mancano i campi indispensabili (id, numero, formato) o il record è malformato. */
@@ -84,6 +85,7 @@ object CardJson {
                 useCount = o.optInt("useCount", 0).coerceAtLeast(0),
                 createdAt = o.optLong("createdAt", 0L).coerceAtLeast(0L),
                 note = o.string("note"),
+                updatedAt = o.optLong("updatedAt", 0L).coerceAtLeast(0L),
             )
         }
     } catch (e: JSONException) {

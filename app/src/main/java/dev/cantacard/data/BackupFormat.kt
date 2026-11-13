@@ -83,32 +83,49 @@ object BackupMerge {
     class Result(
         /** Elenco finale delle tessere. */
         val cards: List<Card>,
-        /** Tessere del backup entrate nell'elenco. */
-        val added: List<Card>,
-        /** Tessere del backup lasciate fuori perché già presenti. */
+        /** Tessere nuove arrivate dal backup. */
+        val added: Int,
+        /** Tessere già presenti sostituite dalla versione del backup, più recente. */
+        val updated: Int,
+        /** Tessere del backup lasciate fuori: già presenti e non più recenti, o doppioni. */
         val duplicates: Int,
     )
 
     /**
-     * Con [RestoreMode.ADD] una tessera del backup è un doppione se nel telefono c'è già lo stesso
-     * id oppure lo stesso numero con lo stesso formato: in quel caso vince la versione del telefono.
+     * Con [RestoreMode.ADD]:
+     * - stesso id: è la stessa tessera, vince la versione modificata più di recente (`updatedAt`;
+     *   a parità, anche 0 per i dati vecchi, vince il telefono). Le statistiche d'uso si uniscono;
+     * - id diverso ma stesso numero e formato (la stessa tessera aggiunta a mano su due telefoni):
+     *   doppione, resta quella del telefono.
      */
     fun merge(current: List<Card>, incoming: List<Card>, mode: RestoreMode): Result {
-        if (mode == RestoreMode.REPLACE) return Result(incoming, incoming, 0)
-        val ids = current.mapTo(HashSet()) { it.id }
+        if (mode == RestoreMode.REPLACE) return Result(incoming, incoming.size, 0, 0)
+        val byId = LinkedHashMap<String, Card>()
+        current.forEach { byId[it.id] = it }
         val codes = current.mapTo(HashSet(), ::codeKey)
-        val added = ArrayList<Card>()
+        var added = 0
+        var updated = 0
         var duplicates = 0
         for (card in incoming) {
-            if (card.id in ids || codeKey(card) in codes) {
-                duplicates++
-            } else {
-                added += card
-                ids += card.id
-                codes += codeKey(card)
+            val mine = byId[card.id]
+            when {
+                mine != null && card.updatedAt > mine.updatedAt -> {
+                    byId[card.id] = card.copy(
+                        lastUsed = maxOf(card.lastUsed, mine.lastUsed),
+                        useCount = maxOf(card.useCount, mine.useCount),
+                    )
+                    codes += codeKey(card)
+                    updated++
+                }
+                mine != null || codeKey(card) in codes -> duplicates++
+                else -> {
+                    byId[card.id] = card
+                    codes += codeKey(card)
+                    added++
+                }
             }
         }
-        return Result(current + added, added, duplicates)
+        return Result(byId.values.toList(), added, updated, duplicates)
     }
 
     private fun codeKey(card: Card): String = card.formatName + "|" + card.number.trim()

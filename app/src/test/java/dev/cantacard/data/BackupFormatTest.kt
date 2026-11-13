@@ -72,16 +72,48 @@ class BackupFormatTest {
         )
         val result = BackupMerge.merge(current, incoming, RestoreMode.ADD)
         assertEquals(listOf("a", "b", "y", "z"), result.cards.map { it.id })
+        // Stesso id, nessuna data di modifica (dati vecchi): vince il telefono.
         assertEquals("111", result.cards[0].number)
-        assertEquals(listOf("y", "z"), result.added.map { it.id })
+        assertEquals(2, result.added)
+        assertEquals(0, result.updated)
         assertEquals(3, result.duplicates)
+    }
+
+    @Test
+    fun sameIdNewestVersionWins() {
+        val current = listOf(
+            card("a", number = "telefono").copy(updatedAt = 100, lastUsed = 900, useCount = 7),
+            card("b", number = "telefono").copy(updatedAt = 500),
+            card("c", number = "telefono").copy(updatedAt = 300),
+        )
+        val incoming = listOf(
+            card("a", number = "backup").copy(updatedAt = 200, lastUsed = 50, useCount = 2),
+            card("b", number = "backup").copy(updatedAt = 400),
+            card("c", number = "backup").copy(updatedAt = 300),
+        )
+        val result = BackupMerge.merge(current, incoming, RestoreMode.ADD)
+        // Ordine conservato; "a" più recente nel backup, "b" più recente sul telefono, "c" pari.
+        assertEquals(listOf("backup", "telefono", "telefono"), result.cards.map { it.number })
+        assertEquals(1, result.updated)
+        assertEquals(2, result.duplicates)
+        assertEquals(0, result.added)
+        // Statistiche d'uso unite: non si perde l'uso fatto sul telefono.
+        assertEquals(900L, result.cards[0].lastUsed)
+        assertEquals(7, result.cards[0].useCount)
+    }
+
+    @Test
+    fun updatedAtSurvivesJson() {
+        val original = card("a").copy(updatedAt = 1_794_000_000_000L)
+        val back = BackupFormat.decode(BackupFormat.encode(listOf(original), 1L) { false }).cards.single()
+        assertEquals(original.updatedAt, back.updatedAt)
     }
 
     @Test
     fun replaceTakesBackupAsIs() {
         val result = BackupMerge.merge(listOf(card("a")), listOf(card("b"), card("c")), RestoreMode.REPLACE)
         assertEquals(listOf("b", "c"), result.cards.map { it.id })
-        assertEquals(2, result.added.size)
+        assertEquals(2, result.added)
         assertEquals(0, result.duplicates)
     }
 }

@@ -100,7 +100,13 @@ class MainActivity : ComponentActivity() {
 
     private fun summaryText(summary: Backup.Summary): String {
         val res = app.resources
-        val parts = mutableListOf(res.getQuantityString(R.plurals.restore_done, summary.added, summary.added))
+        val parts = mutableListOf(
+            if (summary.added == 0) res.getString(R.string.restore_none_new)
+            else res.getQuantityString(R.plurals.restore_done, summary.added, summary.added),
+        )
+        if (summary.updated > 0) {
+            parts += res.getQuantityString(R.plurals.restore_updated, summary.updated, summary.updated)
+        }
         if (summary.duplicates > 0) {
             parts += res.getQuantityString(R.plurals.restore_duplicates, summary.duplicates, summary.duplicates)
         }

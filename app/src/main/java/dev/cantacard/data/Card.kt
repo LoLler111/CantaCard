@@ -25,6 +25,12 @@ data class Card(
     val useCount: Int = 0,
     val createdAt: Long = 0L,
     val note: String? = null,
+    /**
+     * Ultima modifica fatta dall'utente (epoch millis), 0 se sconosciuta (dati di versioni
+     * precedenti). Non cambia quando la tessera viene solo mostrata in cassa. Decide quale versione
+     * vince tra backup e telefono, e tra telefoni sincronizzati.
+     */
+    val updatedAt: Long = 0L,
 ) {
     val format: CodeFormat? get() = CodeFormat.fromName(formatName)
 
