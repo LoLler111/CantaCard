@@ -73,7 +73,7 @@ import dev.cantacard.ui.components.CARD_RATIO
 import dev.cantacard.ui.components.CardArt
 import dev.cantacard.ui.components.SearchField
 import dev.cantacard.ui.headerColor
-import dev.cantacard.update.AppUpdater
+import dev.cantacard.update.AppRelease
 
 @Composable
 fun CardListScreen(
@@ -83,8 +83,8 @@ fun CardListScreen(
     onExport: () -> Unit,
     onRestore: () -> Unit,
     onSync: () -> Unit,
-    update: AppUpdater.State,
-    onUpdate: () -> Unit,
+    update: AppRelease?,
+    onUpdate: (AppRelease) -> Unit,
 ) {
     val cards by repository.cards.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
@@ -242,8 +242,8 @@ private fun Header(
 private fun CardGrid(
     cards: List<Card>,
     grouped: Boolean,
-    update: AppUpdater.State,
-    onUpdate: () -> Unit,
+    update: AppRelease?,
+    onUpdate: (AppRelease) -> Unit,
     onOpen: (Card) -> Unit,
 ) {
     val favorites = if (grouped) cards.filter { it.favorite } else emptyList()
@@ -258,7 +258,7 @@ private fun CardGrid(
             .navigationBarsPadding(),
     ) {
         // In cima alla lista, non durante una ricerca.
-        if (grouped && update != AppUpdater.State.None) {
+        if (grouped && update != null) {
             item(key = "update", span = { GridItemSpan(maxLineSpan) }) {
                 UpdateRow(update, onUpdate, Modifier.animateItem().padding(top = 8.dp))
             }

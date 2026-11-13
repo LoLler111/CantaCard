@@ -194,13 +194,9 @@
 
     <!-- Aggiornamento dell'app -->
     <string name="update_available">Nuova versione disponibile: %1$s</string>
-    <string name="update_tap">Tocca per scaricarla e installarla · %1$s</string>
-    <string name="update_tap_no_size">Tocca per scaricarla e installarla</string>
-    <string name="update_downloading">Download della versione %1$s…</string>
-    <string name="update_installing">Avvio dell\'installazione…</string>
-    <string name="update_download_failed">Download non riuscito. Riprova quando hai la rete.</string>
-    <string name="update_invalid">Il file scaricato non è un aggiornamento valido di CantaCard.</string>
-    <string name="update_install_failed">Installazione non riuscita.</string>
+    <string name="update_tap">Tocca per scaricarla · %1$s</string>
+    <string name="update_tap_no_size">Tocca per scaricarla</string>
+    <string name="update_no_browser">Nessuna app per aprire il link dell\'aggiornamento</string>
 
     <!-- Solo build di debug -->
     <string name="debug_add_samples">Aggiungi tessere di prova</string>

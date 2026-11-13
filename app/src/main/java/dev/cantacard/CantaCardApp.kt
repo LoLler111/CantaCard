@@ -37,8 +37,8 @@ class CantaCardApp : Application() {
     /** Letto solo quando serve (scelta del negozio, modulo), non all'avvio. */
     val catalog: CatalogRepository by lazy { CatalogRepository(this, appScope) }
 
-    /** Controllo e installazione degli aggiornamenti dell'app (GitHub Releases). */
-    val updater: AppUpdater by lazy { AppUpdater(this, appScope) }
+    /** Controllo degli aggiornamenti dell'app (GitHub Releases). */
+    val updater: AppUpdater by lazy { AppUpdater(appScope) }
 
     override fun onCreate() {
         super.onCreate()

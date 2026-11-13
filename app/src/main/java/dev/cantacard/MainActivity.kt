@@ -1,5 +1,7 @@
 package dev.cantacard
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -53,7 +55,7 @@ class MainActivity : ComponentActivity() {
                     ActivityResultContracts.OpenDocument(),
                 ) { uri -> uri?.let(::enableSync) }
                 var showSync by rememberSaveable { mutableStateOf(false) }
-                val update by app.updater.state.collectAsState()
+                val update by app.updater.available.collectAsState()
 
                 CardListScreen(
                     repository = repository,
@@ -65,7 +67,7 @@ class MainActivity : ComponentActivity() {
                     onRestore = { restoreLauncher.launch(BACKUP_MIMES) },
                     onSync = { showSync = true },
                     update = update,
-                    onUpdate = app.updater::install,
+                    onUpdate = { release -> openUpdate(release.apkUrl) },
                 )
 
                 if (showSync) {
@@ -113,6 +115,15 @@ class MainActivity : ComponentActivity() {
         app.appScope.launch(Dispatchers.IO) { app.sync.onAppOpen() }
         // Una volta per avvio, in background: se c'è una versione nuova compare una riga nella lista.
         app.updater.checkOnStart()
+    }
+
+    /** Il download e l'installazione li fanno il browser e Android: l'app non installa niente. */
+    private fun openUpdate(apkUrl: String) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(apkUrl)))
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(this, R.string.update_no_browser, Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun enableSync(uri: Uri) {
