@@ -51,7 +51,7 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 | Navigazione | Stato Compose semplice (sealed class + `BackHandler`), niente Navigation Compose | Meno dipendenze. |
 | DI | Manuale (container nell'`Application`), niente Hilt/Koin | Meno dipendenze e avvio più rapido. |
 | Rete | `HttpURLConnection` del framework, niente OkHttp/Retrofit/Jsoup | La rete serve solo per icone e catalogo; parsing HTML minimo dei tag `<link>`. |
-| Immagini | Loader proprio (`image.ImageLoader`, LruCache 8 MB), niente Coil/Glide; ritaglio con composable proprio, niente uCrop. Icone ≤ 256 px; foto della tessera ritagliata al rapporto ID-1 e larga 512 px (riempie la tessera in lista, ~20–40 KB). Il tipo si deduce dal rapporto (largo = foto a tutta tessera, altrimenti icona nel tondo). Icona scaricata da sola quando si sceglie un negozio dal catalogo (scelta dell'utente) e mai sopra una foto; pulsante "Aggiorna icona" per riscaricarla. Foto con `ImageCapture` di CameraX già inclusa | Peso; nessun permesso storage. |
+| Immagini | Loader proprio (`image.ImageLoader`, LruCache 8 MB), niente Coil/Glide; ritaglio con composable proprio, niente uCrop. Icone ≤ 256 px; foto della tessera ritagliata al rapporto ID-1 e larga 512 px (riempie la tessera in lista, ~20–40 KB). Il tipo si deduce dal rapporto (largo = foto a tutta tessera, altrimenti icona nel tondo). Icona scaricata da sola quando si sceglie un negozio dal catalogo (scelta dell'utente) e mai sopra una foto; pulsante "Aggiorna icona" per riscaricarla (scelta dell'utente). Cache per dominio (`image.SiteIconCache`, `cache/site-icons/<dominio>.webp`, scelta dell'utente): la scelta del negozio la riusa per 30 giorni, poi la riscarica; senza rete usa la copia vecchia; "Aggiorna icona" scavalca sempre la cache. Il fetcher prova anche `www.<dominio>` se il dominio nudo non dà la pagina, legge solo i primi 256 KB della pagina (i `<link>` stanno in `<head>`; MediaWorld e Toys Center superano 1 MB) e, se il sito ha solo una favicon piccola (12–31 px, es. Esselunga 16×16), la usa ingrandita di un fattore intero senza filtro (pixel netti). Verifica sull'emulatore (13/11/2026): icona per 45 negozi su 51 con dominio; restano senza Douglas e Bricocenter (anti-bot), KIKO (solo SVG), Trony (certificato non accettato). Niente aggiramenti delle protezioni anti-bot dei siti (niente User-Agent finti da Chrome, niente servizi di terzi): chi blocca resta senza icona. Foto con `ImageCapture` di CameraX già inclusa | Peso; nessun permesso storage. |
 | Widget | `AppWidgetProvider` + `RemoteViews` classici, niente Glance | Peso. |
 | Visualizzazione tessera | `ShowCardActivity` separata e leggera | Apertura diretta da shortcut/widget; luminosità e schermo acceso limitati a quella finestra. |
 | Schermate | Un'Activity per schermata (lista, tessera, modifica, scanner), risultati via `ActivityResultContract` | Niente libreria di navigazione; ogni schermata si apre da sola (shortcut, condivisione). |
@@ -135,7 +135,8 @@ CantaCard/
 - Prima versione: 40–50 catene italiane (supermercati, profumerie, elettronica, abbigliamento,
   carburanti). **Se un dominio o un formato non è certo, lasciarlo vuoto/segnalarlo: mai inventarlo.**
 - Stato attuale: `format` vuoto per tutti (nessuno certo; vale quello scansionato). `domain` vuoto per
-  Trony, Maxi Zoo, Esso (siti non raggiungibili alla verifica). I colori sono approssimati dal sito o
+  Maxi Zoo (confluita in Arcaplanet, sito che non risponde) ed Esso (in Italia nessun sito; la
+  fedeltà passa da PAYBACK). Trony = `trony.it` dalla versione 2. I colori sono approssimati dal sito o
   dal marchio. Chi aggiorna il catalogo deve alzare `version`; il test `bundledCatalogIsValid` lo valida.
 
 ## Permessi

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "stores": [
     {"id": "esselunga", "name": "Esselunga", "aliases": ["Fidaty"], "domain": "esselunga.it", "color": "#005CA9", "format": "", "countries": ["IT"]},
     {"id": "conad", "name": "Conad", "aliases": ["Carta Insieme", "Conad Superstore", "Spazio Conad"], "domain": "conad.it", "color": "#E2001A", "format": "", "countries": ["IT"]},
@@ -33,7 +33,7 @@
     {"id": "unieuro", "name": "Unieuro", "aliases": [], "domain": "unieuro.it", "color": "#E2001A", "format": "", "countries": ["IT"]},
     {"id": "euronics", "name": "Euronics", "aliases": [], "domain": "euronics.it", "color": "#1D428A", "format": "", "countries": ["IT"]},
     {"id": "expert", "name": "Expert", "aliases": [], "domain": "expert.it", "color": "#EA5B0C", "format": "", "countries": ["IT"]},
-    {"id": "trony", "name": "Trony", "aliases": [], "domain": "", "color": "#E30613", "format": "", "countries": ["IT"]},
+    {"id": "trony", "name": "Trony", "aliases": [], "domain": "trony.it", "color": "#E30613", "format": "", "countries": ["IT"]},
 
     {"id": "ovs", "name": "OVS", "aliases": [], "domain": "ovs.it", "color": "#3A2AFF", "format": "", "countries": ["IT"]},
     {"id": "coin", "name": "Coin", "aliases": [], "domain": "coin.it", "color": "#1A1A1A", "format": "", "countries": ["IT"]},

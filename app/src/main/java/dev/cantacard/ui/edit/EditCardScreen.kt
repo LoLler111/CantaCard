@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import dev.cantacard.scan.PhotoActivity
 import dev.cantacard.image.rememberCardImage
-import dev.cantacard.image.SiteIconFetcher
+import dev.cantacard.image.SiteIconCache
 import dev.cantacard.image.ImageStore
 import dev.cantacard.image.Bitmaps
 import java.io.IOException
@@ -179,6 +179,7 @@ fun EditCardScreen(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
+    val siteIcons = remember { SiteIconCache(File(context.cacheDir, "site-icons")) }
     val snackbar = remember { SnackbarHostState() }
     val noCodeMessage = stringResource(R.string.photo_no_code)
     val unreadableMessage = stringResource(R.string.photo_error)
@@ -207,13 +208,35 @@ fun EditCardScreen(
         return ok
     }
 
-    /** Scarica l'icona dal sito del negozio (scelta dal catalogo o pulsante "Aggiorna icona"). */
-    fun fetchIcon(domain: String) {
+    /** Copia [source] (già in WebP) come immagine provvisoria della tessera. */
+    suspend fun usePendingCopy(source: File): Boolean {
+        val file = images.newTemp("webp")
+        val ok = withContext(Dispatchers.IO) {
+            try {
+                source.copyTo(file, overwrite = true)
+                true
+            } catch (e: IOException) {
+                false
+            }
+        }
+        if (ok) {
+            pendingImage?.let { File(it).delete() }
+            pendingImage = file.path
+            imageRemoved = false
+        }
+        return ok
+    }
+
+    /**
+     * Icona dal sito del negozio, dalla cache se recente (scelta dal catalogo); con [refresh]
+     * sempre riscaricata (pulsante "Aggiorna icona").
+     */
+    fun fetchIcon(domain: String, refresh: Boolean = false) {
         if (iconStatus == IconStatus.LOADING) return
         scope.launch {
             iconStatus = IconStatus.LOADING
-            val bitmap = SiteIconFetcher.fetch(domain)
-            iconStatus = if (bitmap != null && usePending(bitmap)) IconStatus.IDLE else IconStatus.FAILED
+            val file = siteIcons.get(domain, refresh)
+            iconStatus = if (file != null && usePendingCopy(file)) IconStatus.IDLE else IconStatus.FAILED
         }
     }
 
@@ -458,7 +481,8 @@ fun EditCardScreen(
                     iconStatus = iconStatus,
                     domain = store?.domain,
                     hasCamera = hasCamera,
-                    onIcon = { domain -> fetchIcon(domain) },
+                    // "Aggiorna icona" la riscarica; "Icona dal sito" (nessuna immagine) va bene dalla cache.
+                    onIcon = { domain -> fetchIcon(domain, refresh = cardImage != null) },
                     onCamera = {
                         focusManager.clearFocus()
                         cameraLauncher.launch(Unit)
