@@ -73,6 +73,7 @@ class ShowCardActivity : ComponentActivity() {
                             app.images.delete(card.image)
                             finish()
                         },
+                        isSynced = { app.sync.state.value.enabled },
                     )
                 }
             }

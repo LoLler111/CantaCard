@@ -22,15 +22,39 @@ object CardJson {
         val skipped: Int,
         /** Versione dichiarata dal documento (può essere più recente di [VERSION]). */
         val version: Int,
+        /** Tessere cancellate: id → ora della cancellazione (per la sincronizzazione). */
+        val deleted: Map<String, Long> = emptyMap(),
     )
 
-    fun encode(cards: List<Card>): String {
+    fun encode(cards: List<Card>, deleted: Map<String, Long> = emptyMap()): String {
         val array = JSONArray()
         cards.forEach { array.put(toJson(it)) }
-        return JSONObject()
+        val root = JSONObject()
             .put("version", VERSION)
             .put("cards", array)
-            .toString()
+        putDeleted(root, deleted)
+        return root.toString()
+    }
+
+    /** `"deleted": [{"id": ..., "at": <epoch ms>}]`, omesso se vuoto. */
+    fun putDeleted(root: JSONObject, deleted: Map<String, Long>) {
+        if (deleted.isEmpty()) return
+        val array = JSONArray()
+        deleted.forEach { (id, at) -> array.put(JSONObject().put("id", id).put("at", at)) }
+        root.put("deleted", array)
+    }
+
+    /** Legge `"deleted"` tollerando voci malformate (saltate). */
+    fun readDeleted(root: JSONObject): Map<String, Long> {
+        val array = root.optJSONArray("deleted") ?: return emptyMap()
+        val result = HashMap<String, Long>()
+        for (i in 0 until array.length()) {
+            val o = array.optJSONObject(i) ?: continue
+            val id = o.optString("id").takeIf { it.isNotEmpty() && !o.isNull("id") } ?: continue
+            val at = o.optLong("at", 0L).takeIf { it > 0 } ?: continue
+            result[id] = maxOf(at, result[id] ?: 0L)
+        }
+        return result
     }
 
     /** @throws JSONException se il testo non è un oggetto JSON. */
@@ -44,7 +68,7 @@ object CardJson {
             val card = array.optJSONObject(i)?.let(::fromJsonOrNull)
             if (card != null && seen.add(card.id)) cards += card else skipped++
         }
-        return Decoded(cards, skipped, root.optInt("version", 1))
+        return Decoded(cards, skipped, root.optInt("version", 1), readDeleted(root))
     }
 
     fun toJson(card: Card): JSONObject = JSONObject().apply {

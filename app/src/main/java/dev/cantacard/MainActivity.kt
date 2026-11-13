@@ -12,11 +12,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import dev.cantacard.data.Backup
 import dev.cantacard.data.RestoreMode
+import dev.cantacard.data.Sync
 import dev.cantacard.ui.CantaCardTheme
 import dev.cantacard.ui.list.CardListScreen
 import dev.cantacard.ui.list.RestoreDialog
+import dev.cantacard.ui.list.SyncDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -41,6 +46,13 @@ class MainActivity : ComponentActivity() {
                 val restoreLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.OpenDocument(),
                 ) { uri -> uri?.let(::readBackup) }
+                val syncCreateLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.CreateDocument(ZIP_MIME),
+                ) { uri -> uri?.let(::enableSync) }
+                val syncOpenLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.OpenDocument(),
+                ) { uri -> uri?.let(::enableSync) }
+                var showSync by rememberSaveable { mutableStateOf(false) }
 
                 CardListScreen(
                     repository = repository,
@@ -50,7 +62,30 @@ class MainActivity : ComponentActivity() {
                         exportLauncher.launch(getString(R.string.backup_file_name, LocalDate.now().toString()))
                     },
                     onRestore = { restoreLauncher.launch(BACKUP_MIMES) },
+                    onSync = { showSync = true },
                 )
+
+                if (showSync) {
+                    val syncState by app.sync.state.collectAsState()
+                    SyncDialog(
+                        state = syncState,
+                        onCreateFile = {
+                            showSync = false
+                            syncCreateLauncher.launch(getString(R.string.sync_file_name))
+                        },
+                        onUseExisting = {
+                            showSync = false
+                            syncOpenLauncher.launch(BACKUP_MIMES)
+                        },
+                        onSyncNow = ::syncNow,
+                        onDisable = {
+                            showSync = false
+                            app.sync.disable()
+                            Toast.makeText(this, R.string.sync_disabled, Toast.LENGTH_LONG).show()
+                        },
+                        onDismiss = { showSync = false },
+                    )
+                }
 
                 val pending by app.backup.pending.collectAsState()
                 val cards by repository.cards.collectAsState()
@@ -64,6 +99,39 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Fuori dal thread principale: legge le preferenze della sincronizzazione e, se attiva,
+        // rilegge il file poco dopo l'apertura (la lista si mostra comunque subito).
+        val app = app
+        app.appScope.launch(Dispatchers.IO) { app.sync.onAppOpen() }
+    }
+
+    private fun enableSync(uri: Uri) {
+        val app = app
+        app.appScope.launch(Dispatchers.Main) {
+            val message = when (app.sync.enable(uri)) {
+                Sync.EnableResult.OK -> R.string.sync_enabled
+                Sync.EnableResult.SYNC_FAILED -> R.string.sync_failed
+                Sync.EnableResult.INVALID_FILE -> R.string.sync_invalid
+                Sync.EnableResult.NO_PERMISSION -> R.string.sync_no_permission
+            }
+            Toast.makeText(app, message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun syncNow() {
+        val app = app
+        app.appScope.launch(Dispatchers.Main) {
+            val message = when (app.sync.syncNow()) {
+                null -> R.string.sync_done
+                Sync.Error.INVALID_FILE -> R.string.sync_invalid
+                Sync.Error.UNREACHABLE -> R.string.sync_failed
+            }
+            Toast.makeText(app, message, Toast.LENGTH_SHORT).show()
         }
     }
 

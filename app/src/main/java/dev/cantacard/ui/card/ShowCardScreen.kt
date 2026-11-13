@@ -81,6 +81,8 @@ fun ShowCardScreen(
     onToggleFavorite: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    /** Letto solo quando si chiede la conferma: la schermata della tessera resta leggera. */
+    isSynced: () -> Boolean = { false },
 ) {
     val format = card.format
     val matrix = remember(card.number, format) { format?.let { BarcodeEncoder.encode(card.number, it) } }
@@ -227,7 +229,10 @@ fun ShowCardScreen(
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
             title = { Text(stringResource(R.string.delete_title)) },
-            text = { Text(stringResource(R.string.delete_message, card.name)) },
+            text = {
+                val synced = remember { isSynced() }
+                Text(stringResource(if (synced) R.string.delete_message_synced else R.string.delete_message, card.name))
+            },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = false

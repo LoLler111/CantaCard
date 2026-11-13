@@ -35,6 +35,7 @@
     <string name="code_unknown_format">Formato %1$s non supportato da questa versione. Mostra il numero alla cassa per l\'inserimento manuale.</string>
     <string name="delete_title">Eliminare la tessera?</string>
     <string name="delete_message">«%1$s» verrà eliminata da questo telefono.</string>
+    <string name="delete_message_synced">«%1$s» verrà eliminata da questo telefono e dagli altri sincronizzati.</string>
 
     <!-- Aggiunta e modifica -->
     <string name="add_card_title">Nuova tessera</string>
@@ -135,6 +136,38 @@
         <item quantity="one">%d non leggibile</item>
         <item quantity="other">%d non leggibili</item>
     </plurals>
+
+    <!-- Sincronizzazione tra telefoni -->
+    <string name="sync_menu">Sincronizzazione</string>
+    <string name="sync_title_off">Sincronizza tra telefoni</string>
+    <string name="sync_body_off">Scegli un file nel tuo spazio di archiviazione, per esempio Google Drive: CantaCard lo aggiorna a ogni modifica e lo rilegge quando la apri. Sull\'altro telefono scegli lo stesso file con «Usa un file esistente».</string>
+    <string name="sync_note">Le modifiche arrivano sull\'altro telefono dopo che l\'app di archiviazione le ha caricate. Le tessere restano sempre anche su questo telefono.</string>
+    <string name="sync_create">Crea un nuovo file</string>
+    <string name="sync_use_existing">Usa un file esistente</string>
+    <string name="sync_file_name" translatable="false">cantacard-sync.zip</string>
+    <string name="sync_title_on">Sincronizzazione attiva</string>
+    <string name="sync_file">File: %1$s</string>
+    <string name="sync_last">Ultima sincronizzazione: %1$s</string>
+    <string name="sync_never">Non ancora sincronizzato</string>
+    <string name="sync_just_now">adesso</string>
+    <plurals name="sync_minutes_ago">
+        <item quantity="one">%d minuto fa</item>
+        <item quantity="other">%d minuti fa</item>
+    </plurals>
+    <plurals name="sync_hours_ago">
+        <item quantity="one">%d ora fa</item>
+        <item quantity="other">%d ore fa</item>
+    </plurals>
+    <string name="sync_running">Sincronizzazione in corso…</string>
+    <string name="sync_failed_unreachable">Ultima sincronizzazione non riuscita: il file non è raggiungibile. Riprova più tardi o scegli di nuovo il file.</string>
+    <string name="sync_now">Sincronizza ora</string>
+    <string name="sync_disable">Disattiva</string>
+    <string name="sync_enabled">Sincronizzazione attivata</string>
+    <string name="sync_done">Sincronizzato</string>
+    <string name="sync_failed">Sincronizzazione non riuscita: riproverò più tardi</string>
+    <string name="sync_invalid">Questo file non è un file di CantaCard</string>
+    <string name="sync_no_permission">Non si può usare questo file: scegline uno in un\'altra posizione</string>
+    <string name="sync_disabled">Sincronizzazione disattivata: le tessere restano su questo telefono</string>
 
     <!-- Scansione -->
     <string name="scan_hint">Inquadra il codice della tessera</string>

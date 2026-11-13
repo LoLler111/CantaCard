@@ -15,29 +15,29 @@ class CardStore(private val file: File) {
 
     private val atomic = AtomicFile(file)
 
-    fun read(): List<Card> {
+    fun read(): CardSnapshot {
         val text = try {
             atomic.readFully().decodeToString()
         } catch (e: FileNotFoundException) {
-            return emptyList()
+            return CardSnapshot(emptyList())
         }
         return try {
             val decoded = CardJson.decode(text)
             // Record scartati: teniamo una copia del file originale prima di riscriverlo.
             if (decoded.skipped > 0) setAside("partial")
-            decoded.cards
+            CardSnapshot(decoded.cards, decoded.deleted)
         } catch (e: JSONException) {
             // File illeggibile: lo mettiamo da parte invece di sovrascriverlo.
             setAside("corrupt")
-            emptyList()
+            CardSnapshot(emptyList())
         }
     }
 
     @Throws(IOException::class)
-    fun write(cards: List<Card>) {
+    fun write(snapshot: CardSnapshot) {
         val out = atomic.startWrite()
         try {
-            out.write(CardJson.encode(cards).toByteArray())
+            out.write(CardJson.encode(snapshot.cards, snapshot.deleted).toByteArray())
             atomic.finishWrite(out)
         } catch (e: IOException) {
             atomic.failWrite(out)

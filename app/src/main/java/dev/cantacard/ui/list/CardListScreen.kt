@@ -81,6 +81,7 @@ fun CardListScreen(
     onAdd: () -> Unit,
     onExport: () -> Unit,
     onRestore: () -> Unit,
+    onSync: () -> Unit,
 ) {
     val cards by repository.cards.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
@@ -103,6 +104,7 @@ fun CardListScreen(
                 canExport = !all.isNullOrEmpty(),
                 onExport = onExport,
                 onRestore = onRestore,
+                onSync = onSync,
             )
             when {
                 // Caricamento: dura pochi millisecondi.
@@ -147,6 +149,7 @@ private fun Header(
     canExport: Boolean,
     onExport: () -> Unit,
     onRestore: () -> Unit,
+    onSync: () -> Unit,
 ) {
     Box(
         Modifier
@@ -195,6 +198,13 @@ private fun Header(
                             onClick = {
                                 menu = false
                                 onRestore()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.sync_menu)) },
+                            onClick = {
+                                menu = false
+                                onSync()
                             },
                         )
                     }

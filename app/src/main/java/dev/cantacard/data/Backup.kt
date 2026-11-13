@@ -8,17 +8,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import org.json.JSONException
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.io.InputStream
 import java.io.OutputStream
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
-import java.util.zip.ZipOutputStream
 
 /**
  * Backup e ripristino su un file `.zip` scelto dall'utente con lo Storage Access Framework
@@ -48,29 +41,27 @@ class Backup(
     @Throws(IOException::class)
     suspend fun export(uri: Uri): Int = withContext(Dispatchers.IO) {
         val cards = repository.cards.value ?: throw IOException("Tessere non ancora caricate")
-        val imageFiles = cards.mapNotNull { card ->
-            card.image?.let(images::file)?.takeIf { it.isFile }?.let { card.id to it }
-        }.toMap()
-        val json = BackupFormat.encode(cards, clock()) { it.id in imageFiles }
-        openOutput(uri).use { raw ->
-            ZipOutputStream(BufferedOutputStream(raw)).use { zip ->
-                zip.putNextEntry(ZipEntry(BackupFormat.JSON_ENTRY))
-                zip.write(json.toByteArray())
-                zip.closeEntry()
-                for (card in cards) {
-                    val file = imageFiles[card.id] ?: continue
-                    zip.putNextEntry(ZipEntry(BackupFormat.imageEntryFor(card.id)))
-                    file.inputStream().use { it.copyTo(zip) }
-                    zip.closeEntry()
-                }
-            }
-        }
+        val imageFiles = imageEntries(cards, images)
+        val json = BackupFormat.encode(cards, clock()) { BackupFormat.imageEntryFor(it.id) in imageFiles }
+        openOutput(context, uri).use { BackupZip.write(it, json, imageFiles) }
         cards.size
     }
 
     /** Legge il backup in [uri] e lo mette in [pending]; `false` se non è un backup valido. */
     suspend fun read(uri: Uri): Boolean = withContext(Dispatchers.IO) {
-        val result = readBlocking(uri)
+        val result = try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                BackupZip.read(input, restoreDir)?.let { zip ->
+                    Pending(BackupFormat.decode(zip.json), zip.images)
+                }
+            }
+        } catch (e: IOException) {
+            null
+        } catch (e: JSONException) {
+            null
+        } catch (e: SecurityException) {
+            null
+        }
         if (result == null) restoreDir.deleteRecursively()
         pending.value = result
         result != null
@@ -82,29 +73,20 @@ class Backup(
         // Il dialogo si chiude subito: niente secondo tocco mentre il ripristino è in corso.
         pending.value = null
         // Prima le immagini tra quelle definitive, poi l'elenco in un colpo solo.
-        val committed = HashMap<String, String>()
-        for (card in backup.content.cards) {
-            val file = card.image?.let { backup.imageFiles[it] } ?: continue
-            try {
-                committed[card.id] = images.commit(card.id, file)
-            } catch (e: IOException) {
-                // Tessera ripristinata senza immagine.
-            }
-        }
+        val committed = commitImages(backup.content.cards, backup.imageFiles, images)
         val incoming = backup.content.cards.map { it.copy(image = committed[it.id]) }
-        val (merged, previousImages) = repository.replace { current ->
-            val merged = BackupMerge.merge(current, incoming, mode)
-            merged.cards to (merged to current.mapNotNull { it.image })
+        val (merged, previous) = repository.replace { current ->
+            val merged = BackupMerge.merge(current.cards, incoming, mode)
+            val now = clock()
+            val ids = merged.cards.mapTo(HashSet()) { it.id }
+            // Una tessera ripristinata che era stata cancellata qui torna "modificata adesso",
+            // così la sincronizzazione non la ricancella; quelle sostituite contano come cancellate.
+            val cards = merged.cards.map { if (it.id in current.deleted) it.copy(updatedAt = maxOf(it.updatedAt, now)) else it }
+            val removed = current.cards.filter { it.id !in ids }.associate { it.id to now }
+            CardSnapshot(cards, current.deleted - ids + removed) to (merged to current.cards)
         }
-        // Via le immagini non più usate: tessere sostituite e doppioni lasciati fuori.
-        val used = merged.cards.mapNotNullTo(HashSet()) { it.image }
-        for (name in previousImages + committed.values) {
-            if (name !in used) {
-                ImageLoader.evict(images.file(name))
-                images.delete(name)
-            }
-        }
-        cancel()
+        deleteUnusedImages(previous.mapNotNull { it.image } + committed.values, merged.cards, images)
+        restoreDir.deleteRecursively()
         Summary(merged.added, merged.updated, merged.duplicates, backup.content.skipped)
     }
 
@@ -113,80 +95,50 @@ class Backup(
         restoreDir.deleteRecursively()
     }
 
-    private fun openOutput(uri: Uri): OutputStream {
-        val resolver = context.contentResolver
-        // "wt" tronca un file esistente; alcuni provider accettano solo "w".
-        val stream = try {
-            resolver.openOutputStream(uri, "wt")
-        } catch (e: FileNotFoundException) {
-            null
-        } catch (e: IllegalArgumentException) {
-            null
-        } ?: resolver.openOutputStream(uri, "w")
-        return stream ?: throw IOException("Impossibile scrivere $uri")
-    }
+    internal companion object {
+        /** Voce dello zip → file immagine, per le tessere che hanno davvero l'immagine. */
+        fun imageEntries(cards: List<Card>, images: ImageStore): Map<String, File> =
+            cards.mapNotNull { card ->
+                card.image?.let(images::file)?.takeIf { it.isFile }?.let { BackupFormat.imageEntryFor(card.id) to it }
+            }.toMap()
 
-    private fun readBlocking(uri: Uri): Pending? {
-        restoreDir.deleteRecursively()
-        restoreDir.mkdirs()
-        var json: String? = null
-        val files = HashMap<String, File>()
-        var total = 0L
-        var entries = 0
-        try {
-            val input = context.contentResolver.openInputStream(uri) ?: return null
-            ZipInputStream(BufferedInputStream(input)).use { zip ->
-                while (true) {
-                    val entry = zip.nextEntry ?: break
-                    if (++entries > MAX_ENTRIES) return null
-                    val name = entry.name
-                    if (entry.isDirectory) continue
-                    if (name == BackupFormat.JSON_ENTRY) {
-                        json = zip.readAtMost(MAX_JSON_BYTES)?.decodeToString() ?: return null
-                    } else if (BackupFormat.isImageEntry(name) && name !in files) {
-                        // Immagine troppo grande: la tessera torna senza.
-                        val bytes = zip.readAtMost(MAX_IMAGE_BYTES) ?: continue
-                        total += bytes.size
-                        if (total > MAX_TOTAL_BYTES) return null
-                        val file = File(restoreDir, "${files.size}.webp")
-                        file.writeBytes(bytes)
-                        files[name] = file
-                    }
+        /** Sposta tra le immagini definitive quelle dello zip; id tessera → nuovo nome file. */
+        fun commitImages(cards: List<Card>, files: Map<String, File>, images: ImageStore): Map<String, String> {
+            val committed = HashMap<String, String>()
+            for (card in cards) {
+                val file = card.image?.let { files[it] } ?: continue
+                try {
+                    committed[card.id] = images.commit(card.id, file)
+                } catch (e: IOException) {
+                    // Tessera senza immagine.
                 }
             }
-        } catch (e: IOException) {
-            return null
-        } catch (e: IllegalArgumentException) {
-            // Nomi di voce non validi nello zip.
-            return null
-        } catch (e: SecurityException) {
-            return null
+            return committed
         }
-        val content = try {
-            BackupFormat.decode(json ?: return null)
-        } catch (e: JSONException) {
-            return null
-        }
-        return Pending(content, files)
-    }
 
-    /** Legge la voce corrente fino a [limit] byte; `null` se è più grande. */
-    private fun InputStream.readAtMost(limit: Int): ByteArray? {
-        val out = ByteArrayOutputStream()
-        val buffer = ByteArray(8 * 1024)
-        while (true) {
-            val n = read(buffer)
-            if (n < 0) break
-            out.write(buffer, 0, n)
-            if (out.size() > limit) return null
+        /** Cancella i file in [candidates] che nessuna tessera di [cards] usa più. */
+        fun deleteUnusedImages(candidates: Collection<String>, cards: List<Card>, images: ImageStore) {
+            val used = cards.mapNotNullTo(HashSet()) { it.image }
+            for (name in candidates) {
+                if (name !in used) {
+                    ImageLoader.evict(images.file(name))
+                    images.delete(name)
+                }
+            }
         }
-        return out.toByteArray()
-    }
 
-    private companion object {
-        const val MAX_ENTRIES = 5_000
-        const val MAX_JSON_BYTES = 10 * 1024 * 1024
-        const val MAX_IMAGE_BYTES = 2 * 1024 * 1024
-        const val MAX_TOTAL_BYTES = 200L * 1024 * 1024
+        @Throws(IOException::class)
+        fun openOutput(context: Context, uri: Uri): OutputStream {
+            val resolver = context.contentResolver
+            // "wt" tronca un file esistente; alcuni provider accettano solo "w".
+            val stream = try {
+                resolver.openOutputStream(uri, "wt")
+            } catch (e: FileNotFoundException) {
+                null
+            } catch (e: IllegalArgumentException) {
+                null
+            } ?: resolver.openOutputStream(uri, "w")
+            return stream ?: throw IOException("Impossibile scrivere $uri")
+        }
     }
 }

@@ -27,6 +27,8 @@ object BackupFormat {
         val cards: List<Card>,
         /** Tessere scartate perché illeggibili o con id ripetuto. */
         val skipped: Int,
+        /** Tessere cancellate (solo nel file di sincronizzazione). */
+        val deleted: Map<String, Long> = emptyMap(),
     ) {
         val isNewer: Boolean get() = formatVersion > FORMAT_VERSION
     }
@@ -37,7 +39,12 @@ object BackupFormat {
     fun isImageEntry(name: String): Boolean = imageEntry.matches(name)
 
     /** @param hasImage se la tessera ha davvero un file immagine da mettere nello zip. */
-    fun encode(cards: List<Card>, exportedAt: Long, hasImage: (Card) -> Boolean): String {
+    fun encode(
+        cards: List<Card>,
+        exportedAt: Long,
+        deleted: Map<String, Long> = emptyMap(),
+        hasImage: (Card) -> Boolean,
+    ): String {
         val array = JSONArray()
         for (card in cards) {
             val json = CardJson.toJson(card)
@@ -45,11 +52,12 @@ object BackupFormat {
             if (card.image != null && hasImage(card)) json.put("image", imageEntryFor(card.id))
             array.put(json)
         }
-        return JSONObject()
+        val root = JSONObject()
             .put("formatVersion", FORMAT_VERSION)
             .put("exportedAt", exportedAt)
             .put("cards", array)
-            .toString()
+        CardJson.putDeleted(root, deleted)
+        return root.toString()
     }
 
     /** @throws JSONException se il testo non è un backup (non è un oggetto JSON con le tessere). */
@@ -66,6 +74,7 @@ object BackupFormat {
             exportedAt = root.optLong("exportedAt", 0L),
             cards = cards,
             skipped = decoded.skipped,
+            deleted = decoded.deleted,
         )
     }
 }
