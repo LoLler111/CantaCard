@@ -21,7 +21,7 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 - Fase 3 (aggiunta/scansione + modifica) completata: `EditCardActivity` (aggiungi e modifica),
   `scan.ScanActivity` (CameraX + ZXing, torcia, permesso chiesto solo lì), lettura da foto via
   Photo Picker. APK release 2,0 MB (CameraX è la parte più pesante del dex).
-- Fase 4 (catalogo) completata: `catalog/stores.json` (53 catene; ampliato a 81 con catene regionali, versione 3), `StorePickerActivity` con ricerca
+- Fase 4 (catalogo) completata: `catalog/stores.json` (53 catene; ampliato a 81 con catene regionali, versione 3; a 95 nella versione 4), `StorePickerActivity` con ricerca
   e "Altro negozio", negozio nel modulo (cambiabile), aggiornamento da GitHub. APK release 2,06 MB.
 - Fase 5 (immagini) completata: icona dal sito scaricata da sola alla scelta del negozio (+ "Aggiorna
   icona"), foto della tessera (`scan.PhotoActivity`) e galleria con ritaglio (`ui.edit.CropDialog`),
@@ -153,6 +153,7 @@ CantaCard/
 - Prima versione: 40–50 catene italiane (supermercati, profumerie, elettronica, abbigliamento,
   carburanti). **Se un dominio o un formato non è certo, lasciarlo vuoto/segnalarlo: mai inventarlo.**
 - Ampliamento (versione 3, scelta dell'utente): 27 catene regionali e di settore aggiunte solo se il dominio risponde con il sito della catena **e** il sito cita la tessera fedeltà (es. Il Castoro "Fidelity Card", Pewex "Carta IN", Oasi Tigre "Carta Unika", Sigma "Prèmiaty"). Scartate per dominio incerto o irraggiungibile: Sisa, Tosano, Elite, Tuodì, U2, Sidis, Mercatò, Scarpe&Scarpe; GameStop Italia ora è GameLife. Colori: da `theme-color` o dai colori più usati nel sito; dove non c'era un colore chiaro (Ethos, Kiabi) grigio neutro `#37474F`.
+- Versione 4 (13/11/2026, elenco dell'utente, stesse regole): PittaRosso, Action (carta cliente digitale nell'app), UCI Cinemas (myUCI), Sport85 (85FAN), Stroili, Nuvolari, Casabalò e le insegne del consorzio romano GROS con tessera verificata (CTS, PIM, IperTriscount, DEM, MA, Sacoph, Idromarket; con Castoro e Pewex hanno l'alias "Gros"). Scartate: Top Supermercati, Effepiù e Ipercarni (GROS, nessuna tessera citata nel sito), Scarpe&Scarpe (certificato del sito non verificabile), Stellazeta (nessun sito ufficiale trovato; `stellazeta.com` rimanda a un altro sito). Panorama era già alias di Pam, Conbipel già presente.
 - Stato attuale: `format` vuoto per tutti (nessuno certo; vale quello scansionato). `domain` vuoto per
   Maxi Zoo (confluita in Arcaplanet, sito che non risponde) ed Esso (in Italia nessun sito; la
   fedeltà passa da PAYBACK). Trony = `trony.it` dalla versione 2. I colori sono approssimati dal sito o
