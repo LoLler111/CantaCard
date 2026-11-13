@@ -30,6 +30,7 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 - Fase 6 (backup) completata: `data.Backup` + `data.BackupFormat` (zip via SAF con `cantacard.json` + `images/<id>.webp`), menu ⋮ della lista ("Esporta backup", "Ripristina backup") e "Hai un backup? Ripristinalo" nella lista vuota; al ripristino `RestoreDialog` chiede "Aggiungi alle attuali" o "Sostituisci tutte". APK release 2,18 MB.
 - Fase 6b (sincronizzazione) completata: `data.Sync` (file scelto con il SAF, permesso persistente, all'apertura e 2 s dopo ogni modifica, file riscritto solo se cambia), `data.SyncMerge` (regole, testate), cancellate in `cards.json` (`"deleted"`, tenute un anno), zip in comune con il backup (`data.BackupZip`), `ui.list.SyncDialog`. APK release 2,20 MB.
 - Fase 7 (accesso rapido) completata: scorciatoie dinamiche (`shortcuts.CardShortcuts`), "Aggiungi alla schermata Home" nella schermata della tessera, widget "Tessere preferite" e "Tessera" (`widget.Widgets`, `widget.CardWidgetConfigActivity`), tessere disegnate come bitmap (`image.CardBitmaps`), aggiornati da `QuickAccess` solo quando cambia qualcosa di visibile. APK release 2,21 MB. Tutte le fasi previste sono fatte.
+- Aggiornamento dell'app (13/11/2026, dopo la 0.1.1): `update.AppUpdater` controlla GitHub Releases a ogni avvio e, se c'è una versione più nuova, mostra in cima alla lista la riga "Nuova versione disponibile" (`ui.list.UpdateRow`, sempre visibile, non chiudibile); toccandola scarica l'APK e lo installa con il `PackageInstaller` (`update.UpdateStatusReceiver`). Provato sull'emulatore fino alla richiesta del permesso "installa app sconosciute" (anche "Annulla"); la conferma finale e l'installazione non ancora. APK release 2,23 MB.
 - Icona: la tessera con la faccia che urla, inclinata di 8°, su verde acqua (vettoriale): icona
   adattiva + monocromatica + logo dell'intestazione. Le mani del concept "Carta canta" sono state
   tolte su richiesta dell'utente. APK release 2,06 MB. Dal 13/11/2026 bocca a spicchio curvo (disegno
@@ -41,7 +42,9 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
   chiave vera, chiamato `CantaCard-<versionName>.apk`. Le 0.x escono come pre-release finché non è
   provata su telefoni veri. Per una nuova versione: alzare `versionCode` (+1) e `versionName` in
   `app/build.gradle.kts`, build e test, verificare il certificato con `apksigner`, commit, push,
-  poi `gh release create v<versionName>` con l'APK e le note in italiano. Prima release: v0.1.0
+  poi `gh release create v<versionName>` con l'APK e le note in italiano (il tag deve essere
+  esattamente `v<versionName>` e l'APK un asset `.apk`: li legge il controllo aggiornamenti
+  dell'app, che avvisa subito tutti, pre-release comprese). Prima release: v0.1.0
   (13/11/2026). Play Store, F-Droid e Obtainium-friendly in seguito, da decidere.
 - Identità git del repo (config locale, scelta dall'utente): `LoLler111`
   `<59455683+LoLler111@users.noreply.github.com>`.
@@ -72,6 +75,7 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 | Letture fotocamera | Formati senza checksum robusto (Code 39/93, Codabar, ITF) confermati su 2 frame uguali | Evita letture sbagliate. Un frame su due è provato ruotato di 90°. |
 | minSdk / target | minSdk 26, compileSdk 37, targetSdk 36 | minSdk 26 copre la quasi totalità dei dispositivi attivi (shortcut, icone adattive, `java.time`). compileSdk 37 è imposto dalle librerie Compose recenti. |
 | Toolchain | AGP 9.1.1 (Kotlin integrato in AGP), Gradle 9.3.1, Kotlin 2.4.21, Compose BOM 2026.09.00 | AGP 9.1 è l'ultimo supportato da Android Studio Panda 2 installato; per salire (9.5+) va aggiornato Studio. Versioni in `gradle/libs.versions.toml`. |
+| Aggiornamento app | Controllo a ogni avvio dell'app (una volta per processo, da `MainActivity.onStart`, in background a lista già mostrata) su `api.github.com/repos/LoLler111/CantaCard/releases`, **pre-release comprese**, bozze escluse; vale il `tag_name` (`v<versionName>`) più alto con un asset `.apk`. Riga sempre visibile in cima alla lista (non chiudibile), nascosta durante una ricerca. Al tocco: download in `cache/updates/update.apk` (con avanzamento), verifica che sia lo stesso pacchetto con `versionCode` maggiore, installazione con una sessione `PackageInstaller` (niente FileProvider); Android chiede sempre conferma e, la prima volta, il permesso "installa app sconosciute", e accetta solo la stessa chiave di firma. Senza rete o con errori il controllo non mostra nulla (scelte dell'utente) | Eccezione voluta alla regola "nessuna rete all'avvio": non blocca mai la lista né la visualizzazione delle tessere. Costo ~17 KB. Per Play Store/F-Droid andrà tolto in quelle build (le regole vietano l'auto-aggiornamento e `REQUEST_INSTALL_PACKAGES`), per esempio con un flavor. |
 | Aggiornamento catalogo | Controllo automatico in background al massimo una volta a settimana, solo all'apertura della scelta negozio, silenzioso; più "Aggiorna catalogo" nel menu della stessa schermata (scelta dell'utente) | Nessuna rete all'avvio; senza rete si usa sempre la copia locale. Copia scaricata in `files/catalog/stores.json`, vince la `version` più alta. |
 | Icona | Solo la tessera (banda magnetica, faccia corallo che urla) inclinata di 8° con ombra leggera; le mani del concept iniziale sono state scartate dall'utente. Vector drawable in coordinate px (tessera 315–937 × 255–708), scala 0,085 (translate 0,79 / 13,07, centro a 54,54): a 0,07 la tessera sembrava piccola sul telefono (osservazione dell'utente), a 0,09 l'angolo in alto a destra arrivava a filo del tondo del launcher Pixel. Bocca a spicchio **curvo** (disegno dell'utente): faccia `M639,485 A99,99 0 1,0 646,610 A65,65 0 0,1 639,485 Z`, occhio in 557,501; lo spicchio dritto con la punta al centro somigliava a Pac-Man (marchio registrato Bandai Namco). Logo dell'intestazione `ic_logo` mostrato a 52 dp. Niente PNG | Pochi KB, nitida a ogni densità. |
 | Lingue | `localeFilters = ["it"]` | Elimina dall'APK le traduzioni delle librerie. Aggiungere ogni nuova lingua quando si traduce. |
@@ -156,8 +160,9 @@ CantaCard/
 
 ## Permessi
 
-Solo `CAMERA` (scansione e foto) e `INTERNET` (icone e catalogo, sempre opzionali).
-Nessun permesso storage.
+Solo `CAMERA` (scansione e foto), `INTERNET` (icone, catalogo e controllo aggiornamenti, sempre
+opzionali) e `REQUEST_INSTALL_PACKAGES` (solo per installare un aggiornamento di CantaCard quando
+l'utente tocca la riga; scelta dell'utente). Nessun permesso storage.
 
 ## Modo di lavorare
 

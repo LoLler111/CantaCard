@@ -6,8 +6,11 @@
     <uses-feature
         android:name="android.hardware.camera.any"
         android:required="false" />
-    <!-- Solo per il catalogo negozi (e, più avanti, le icone): sempre facoltativa. -->
+    <!-- Catalogo negozi, icone e controllo aggiornamenti: sempre facoltativa. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Solo per installare un aggiornamento di CantaCard scaricato da GitHub, su richiesta
+         dell'utente; Android chiede comunque conferma. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".CantaCardApp"
@@ -93,6 +96,11 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_card_info" />
         </receiver>
+
+        <!-- Esito dell'installazione di un aggiornamento (PackageInstaller). -->
+        <receiver
+            android:name=".update.UpdateStatusReceiver"
+            android:exported="false" />
 
         <activity
             android:name=".widget.CardWidgetConfigActivity"

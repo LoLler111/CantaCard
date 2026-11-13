@@ -53,6 +53,7 @@ class MainActivity : ComponentActivity() {
                     ActivityResultContracts.OpenDocument(),
                 ) { uri -> uri?.let(::enableSync) }
                 var showSync by rememberSaveable { mutableStateOf(false) }
+                val update by app.updater.state.collectAsState()
 
                 CardListScreen(
                     repository = repository,
@@ -63,6 +64,8 @@ class MainActivity : ComponentActivity() {
                     },
                     onRestore = { restoreLauncher.launch(BACKUP_MIMES) },
                     onSync = { showSync = true },
+                    update = update,
+                    onUpdate = app.updater::install,
                 )
 
                 if (showSync) {
@@ -108,6 +111,8 @@ class MainActivity : ComponentActivity() {
         // rilegge il file poco dopo l'apertura (la lista si mostra comunque subito).
         val app = app
         app.appScope.launch(Dispatchers.IO) { app.sync.onAppOpen() }
+        // Una volta per avvio, in background: se c'è una versione nuova compare una riga nella lista.
+        app.updater.checkOnStart()
     }
 
     private fun enableSync(uri: Uri) {

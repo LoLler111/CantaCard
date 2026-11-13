@@ -8,6 +8,7 @@ import dev.cantacard.data.CardRepository
 import dev.cantacard.data.CardStore
 import dev.cantacard.data.CatalogRepository
 import dev.cantacard.image.ImageStore
+import dev.cantacard.update.AppUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import java.io.File
@@ -35,6 +36,9 @@ class CantaCardApp : Application() {
 
     /** Letto solo quando serve (scelta del negozio, modulo), non all'avvio. */
     val catalog: CatalogRepository by lazy { CatalogRepository(this, appScope) }
+
+    /** Controllo e installazione degli aggiornamenti dell'app (GitHub Releases). */
+    val updater: AppUpdater by lazy { AppUpdater(this, appScope) }
 
     override fun onCreate() {
         super.onCreate()

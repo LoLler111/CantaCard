@@ -73,6 +73,7 @@ import dev.cantacard.ui.components.CARD_RATIO
 import dev.cantacard.ui.components.CardArt
 import dev.cantacard.ui.components.SearchField
 import dev.cantacard.ui.headerColor
+import dev.cantacard.update.AppUpdater
 
 @Composable
 fun CardListScreen(
@@ -82,6 +83,8 @@ fun CardListScreen(
     onExport: () -> Unit,
     onRestore: () -> Unit,
     onSync: () -> Unit,
+    update: AppUpdater.State,
+    onUpdate: () -> Unit,
 ) {
     val cards by repository.cards.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
@@ -109,17 +112,26 @@ fun CardListScreen(
             when {
                 // Caricamento: dura pochi millisecondi.
                 all == null || visible == null -> Unit
-                all.isEmpty() -> EmptyState(
-                    onAdd = onAdd,
-                    onRestore = onRestore,
-                    onAddSamples = if (BuildConfig.DEBUG) {
-                        { repository.addAll(SampleCards.create()) }
-                    } else {
-                        null
-                    },
-                )
+                all.isEmpty() -> {
+                    UpdateRow(update, onUpdate, Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp))
+                    EmptyState(
+                        onAdd = onAdd,
+                        onRestore = onRestore,
+                        onAddSamples = if (BuildConfig.DEBUG) {
+                            { repository.addAll(SampleCards.create()) }
+                        } else {
+                            null
+                        },
+                    )
+                }
                 visible.isEmpty() -> NoResults(query)
-                else -> CardGrid(cards = visible, grouped = query.isBlank(), onOpen = onOpen)
+                else -> CardGrid(
+                    cards = visible,
+                    grouped = query.isBlank(),
+                    update = update,
+                    onUpdate = onUpdate,
+                    onOpen = onOpen,
+                )
             }
         }
 
@@ -227,7 +239,13 @@ private fun Header(
 }
 
 @Composable
-private fun CardGrid(cards: List<Card>, grouped: Boolean, onOpen: (Card) -> Unit) {
+private fun CardGrid(
+    cards: List<Card>,
+    grouped: Boolean,
+    update: AppUpdater.State,
+    onUpdate: () -> Unit,
+    onOpen: (Card) -> Unit,
+) {
     val favorites = if (grouped) cards.filter { it.favorite } else emptyList()
     val others = if (grouped && favorites.isNotEmpty()) cards.filterNot { it.favorite } else cards
     LazyVerticalGrid(
@@ -239,6 +257,12 @@ private fun CardGrid(cards: List<Card>, grouped: Boolean, onOpen: (Card) -> Unit
             .fillMaxSize()
             .navigationBarsPadding(),
     ) {
+        // In cima alla lista, non durante una ricerca.
+        if (grouped && update != AppUpdater.State.None) {
+            item(key = "update", span = { GridItemSpan(maxLineSpan) }) {
+                UpdateRow(update, onUpdate, Modifier.animateItem().padding(top = 8.dp))
+            }
+        }
         if (favorites.isNotEmpty()) {
             section(R.string.section_favorites)
             cardItems(favorites, onOpen)
