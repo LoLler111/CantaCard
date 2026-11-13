@@ -34,7 +34,14 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
   adattiva + monocromatica + logo dell'intestazione. Le mani del concept "Carta canta" sono state
   tolte su richiesta dell'utente. APK release 2,06 MB.
 - Repo: git locale su branch `main`, remote `origin` = https://github.com/LoLler111/CantaCard
-  (pubblico, vuoto). **Push solo su richiesta esplicita dell'utente.**
+  (pubblico). **Push solo su richiesta esplicita dell'utente.** Licenza GPL-3.0 (`LICENSE`,
+  scelta dell'utente), `README.md` in italiano.
+- Distribuzione: per ora solo **GitHub Releases** (scelta dell'utente), APK release firmato con la
+  chiave vera, chiamato `CantaCard-<versionName>.apk`. Le 0.x escono come pre-release finché non è
+  provata su telefoni veri. Per una nuova versione: alzare `versionCode` (+1) e `versionName` in
+  `app/build.gradle.kts`, build e test, verificare il certificato con `apksigner`, commit, push,
+  poi `gh release create v<versionName>` con l'APK e le note in italiano. Prima release: v0.1.0
+  (13/11/2026). Play Store, F-Droid e Obtainium-friendly in seguito, da decidere.
 - Identità git del repo (config locale, scelta dall'utente): `LoLler111`
   `<59455683+LoLler111@users.noreply.github.com>`.
 - `applicationId`: **`io.github.loller111.cantacard`, definitivo** (scelto dall'utente il 13/11/2026:
@@ -65,7 +72,7 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 | minSdk / target | minSdk 26, compileSdk 37, targetSdk 36 | minSdk 26 copre la quasi totalità dei dispositivi attivi (shortcut, icone adattive, `java.time`). compileSdk 37 è imposto dalle librerie Compose recenti. |
 | Toolchain | AGP 9.1.1 (Kotlin integrato in AGP), Gradle 9.3.1, Kotlin 2.4.21, Compose BOM 2026.09.00 | AGP 9.1 è l'ultimo supportato da Android Studio Panda 2 installato; per salire (9.5+) va aggiornato Studio. Versioni in `gradle/libs.versions.toml`. |
 | Aggiornamento catalogo | Controllo automatico in background al massimo una volta a settimana, solo all'apertura della scelta negozio, silenzioso; più "Aggiorna catalogo" nel menu della stessa schermata (scelta dell'utente) | Nessuna rete all'avvio; senza rete si usa sempre la copia locale. Copia scaricata in `files/catalog/stores.json`, vince la `version` più alta. |
-| Icona | Solo la tessera (banda magnetica, faccia corallo che urla) inclinata di 8° con ombra leggera; le mani del concept iniziale sono state scartate dall'utente. Vector drawable in coordinate px (tessera 315–937 × 255–708), scala 0,07 così gli angoli restano nella zona sicura: a 0,08 il launcher Pixel li tagliava. Niente PNG | Pochi KB, nitida a ogni densità. Prima della pubblicazione valutare di differenziare la faccia (somiglia a Pac-Man, marchio registrato). |
+| Icona | Solo la tessera (banda magnetica, faccia corallo che urla) inclinata di 8° con ombra leggera; le mani del concept iniziale sono state scartate dall'utente. Vector drawable in coordinate px (tessera 315–937 × 255–708), scala 0,07 così gli angoli restano nella zona sicura: a 0,08 il launcher Pixel li tagliava. Niente PNG | Pochi KB, nitida a ogni densità. Da cambiare dopo la v0.1.0 (scelta dell'utente): la faccia di profilo con bocca a spicchio somiglia a Pac-Man (marchio registrato Bandai Namco); proposta: faccia di fronte con occhi e bocca a "O". |
 | Lingue | `localeFilters = ["it"]` | Elimina dall'APK le traduzioni delle librerie. Aggiungere ogni nuova lingua quando si traduce. |
 | Moduli | Un solo modulo `:app` | Progetto piccolo, multi-modulo non porta benefici. |
 
