@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.io.IOException
 
 /**
@@ -59,18 +60,31 @@ class CardRepository(
         list.map { if (it.id == id) change(it) else it }
     }
 
+    /**
+     * Applica [transform] all'elenco attuale e aspetta che sia salvato (ripristino da backup).
+     * @return il valore calcolato da [transform] insieme al nuovo elenco.
+     */
+    suspend fun <T> replace(transform: (List<Card>) -> Pair<List<Card>, T>): T = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            val (next, result) = transform(_cards.value ?: store.read())
+            commit(next)
+            result
+        }
+    }
+
     private fun update(transform: (List<Card>) -> List<Card>): Job =
         scope.launch(Dispatchers.IO) {
-            mutex.withLock {
-                val next = transform(_cards.value ?: store.read())
-                _cards.value = next
-                try {
-                    store.write(next)
-                } catch (e: IOException) {
-                    Log.e(TAG, "Salvataggio tessere fallito", e)
-                }
-            }
+            mutex.withLock { commit(transform(_cards.value ?: store.read())) }
         }
+
+    private fun commit(next: List<Card>) {
+        _cards.value = next
+        try {
+            store.write(next)
+        } catch (e: IOException) {
+            Log.e(TAG, "Salvataggio tessere fallito", e)
+        }
+    }
 
     private companion object {
         const val TAG = "CardRepository"

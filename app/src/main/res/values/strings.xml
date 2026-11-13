@@ -93,6 +93,44 @@
     <string name="share_label">Nuova tessera CantaCard</string>
     <string name="share_unreadable">Immagine non leggibile</string>
 
+    <!-- Backup e ripristino -->
+    <string name="backup_export">Esporta backup</string>
+    <string name="backup_restore">Ripristina backup</string>
+    <string name="backup_file_name" translatable="false">cantacard-backup-%1$s.zip</string>
+    <plurals name="backup_exported">
+        <item quantity="one">Backup salvato: %d tessera</item>
+        <item quantity="other">Backup salvato: %d tessere</item>
+    </plurals>
+    <string name="backup_export_failed">Backup non riuscito. Prova a salvarlo in un\'altra posizione.</string>
+    <string name="backup_invalid">Questo file non è un backup di CantaCard</string>
+    <string name="list_empty_restore">Hai un backup? Ripristinalo</string>
+    <string name="restore_title">Ripristinare il backup?</string>
+    <plurals name="restore_count">
+        <item quantity="one">Il backup contiene %d tessera.</item>
+        <item quantity="other">Il backup contiene %d tessere.</item>
+    </plurals>
+    <string name="restore_newer">È stato creato da una versione più recente di CantaCard: alcune informazioni potrebbero non essere lette.</string>
+    <plurals name="restore_current">
+        <item quantity="one">Sul telefono c\'è già %d tessera: puoi aggiungere quelle del backup (senza doppioni) oppure sostituirla.</item>
+        <item quantity="other">Sul telefono ci sono già %d tessere: puoi aggiungere quelle del backup (senza doppioni) oppure sostituirle tutte.</item>
+    </plurals>
+    <string name="restore_empty">Il backup non contiene tessere.</string>
+    <string name="restore_add">Aggiungi alle attuali</string>
+    <string name="restore_replace">Sostituisci tutte</string>
+    <string name="restore_confirm">Ripristina</string>
+    <plurals name="restore_done">
+        <item quantity="one">Ripristinata %d tessera</item>
+        <item quantity="other">Ripristinate %d tessere</item>
+    </plurals>
+    <plurals name="restore_duplicates">
+        <item quantity="one">%d già presente</item>
+        <item quantity="other">%d già presenti</item>
+    </plurals>
+    <plurals name="restore_skipped">
+        <item quantity="one">%d non leggibile</item>
+        <item quantity="other">%d non leggibili</item>
+    </plurals>
+
     <!-- Scansione -->
     <string name="scan_hint">Inquadra il codice della tessera</string>
     <string name="torch_on">Accendi la torcia</string>

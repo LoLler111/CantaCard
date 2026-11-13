@@ -2,6 +2,7 @@ package dev.cantacard
 
 import android.app.Application
 import android.content.Context
+import dev.cantacard.data.Backup
 import dev.cantacard.data.CardRepository
 import dev.cantacard.data.CardStore
 import dev.cantacard.data.CatalogRepository
@@ -21,6 +22,9 @@ class CantaCardApp : Application() {
 
     /** File delle immagini delle tessere (definitive e provvisorie). */
     val images: ImageStore by lazy { ImageStore(this) }
+
+    /** Backup e ripristino su file (creato solo quando si usa il menu). */
+    val backup: Backup by lazy { Backup(this, cards, images) }
 
     /** Letto solo quando serve (scelta del negozio, modulo), non all'avvio. */
     val catalog: CatalogRepository by lazy { CatalogRepository(this, appScope) }

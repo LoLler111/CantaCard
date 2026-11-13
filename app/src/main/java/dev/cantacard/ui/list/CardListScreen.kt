@@ -30,6 +30,9 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -76,6 +79,8 @@ fun CardListScreen(
     repository: CardRepository,
     onOpen: (Card) -> Unit,
     onAdd: () -> Unit,
+    onExport: () -> Unit,
+    onRestore: () -> Unit,
 ) {
     val cards by repository.cards.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
@@ -95,12 +100,16 @@ fun CardListScreen(
                 query = query,
                 onQueryChange = { query = it },
                 showSearch = !all.isNullOrEmpty(),
+                canExport = !all.isNullOrEmpty(),
+                onExport = onExport,
+                onRestore = onRestore,
             )
             when {
                 // Caricamento: dura pochi millisecondi.
                 all == null || visible == null -> Unit
                 all.isEmpty() -> EmptyState(
                     onAdd = onAdd,
+                    onRestore = onRestore,
                     onAddSamples = if (BuildConfig.DEBUG) {
                         { repository.addAll(SampleCards.create()) }
                     } else {
@@ -135,6 +144,9 @@ private fun Header(
     query: String,
     onQueryChange: (String) -> Unit,
     showSearch: Boolean,
+    canExport: Boolean,
+    onExport: () -> Unit,
+    onRestore: () -> Unit,
 ) {
     Box(
         Modifier
@@ -158,7 +170,35 @@ private fun Header(
                     text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.headlineSmall,
                     color = Color.White,
+                    modifier = Modifier.weight(1f),
                 )
+                Box {
+                    var menu by remember { mutableStateOf(false) }
+                    IconButton(onClick = { menu = true }) {
+                        Icon(
+                            painterResource(R.drawable.ic_more_vert),
+                            contentDescription = stringResource(R.string.more_options),
+                            tint = Color.White,
+                        )
+                    }
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.backup_export)) },
+                            enabled = canExport,
+                            onClick = {
+                                menu = false
+                                onExport()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.backup_restore)) },
+                            onClick = {
+                                menu = false
+                                onRestore()
+                            },
+                        )
+                    }
+                }
             }
             if (count != null && count > 0) {
                 Text(
@@ -247,7 +287,7 @@ private fun CardTile(card: Card, onClick: () -> Unit, modifier: Modifier = Modif
 }
 
 @Composable
-private fun EmptyState(onAdd: () -> Unit, onAddSamples: (() -> Unit)?) {
+private fun EmptyState(onAdd: () -> Unit, onRestore: () -> Unit, onAddSamples: (() -> Unit)?) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -282,6 +322,9 @@ private fun EmptyState(onAdd: () -> Unit, onAddSamples: (() -> Unit)?) {
             Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.list_empty_cta))
+        }
+        TextButton(onClick = onRestore, modifier = Modifier.padding(top = 8.dp)) {
+            Text(stringResource(R.string.list_empty_restore))
         }
         if (onAddSamples != null) {
             TextButton(onClick = onAddSamples, modifier = Modifier.padding(top = 8.dp)) {
