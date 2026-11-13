@@ -37,8 +37,9 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
   (pubblico, vuoto). **Push solo su richiesta esplicita dell'utente.**
 - Identità git del repo (config locale, scelta dall'utente): `LoLler111`
   `<59455683+LoLler111@users.noreply.github.com>`.
-- `applicationId`: **provvisorio `dev.cantacard`**, da decidere prima della pubblicazione (è permanente
-  dopo). Il `namespace` Kotlin/R resta `dev.cantacard` anche se l'applicationId cambia.
+- `applicationId`: **`io.github.loller111.cantacard`, definitivo** (scelto dall'utente il 13/11/2026:
+  convenzione per chi non ha un dominio, legato all'account GitHub). Non cambiarlo mai: dopo la
+  pubblicazione sarebbe un'altra app. Il `namespace` Kotlin/R resta `dev.cantacard` (invisibile).
 - URL di aggiornamento del catalogo:
   `https://raw.githubusercontent.com/LoLler111/CantaCard/main/catalog/stores.json`.
 

@@ -8,8 +8,8 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        // PROVVISORIO: da decidere prima della pubblicazione (poi è permanente).
-        applicationId = "dev.cantacard"
+        // Definitivo (scelto dall'utente): dopo la pubblicazione non si può più cambiare.
+        applicationId = "io.github.loller111.cantacard"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

@@ -31,7 +31,7 @@
         <activity
             android:name=".ShowCardActivity"
             android:exported="false"
-            android:taskAffinity="dev.cantacard.card"
+            android:taskAffinity="io.github.loller111.cantacard.card"
             android:theme="@style/Theme.CantaCard.Code" />
 
         <activity
