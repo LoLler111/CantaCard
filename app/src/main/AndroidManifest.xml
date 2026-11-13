@@ -27,9 +27,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Da scorciatoie e widget si apre in un task suo: non chiude la lista o un modulo aperti. -->
         <activity
             android:name=".ShowCardActivity"
             android:exported="false"
+            android:taskAffinity="dev.cantacard.card"
             android:theme="@style/Theme.CantaCard.Code" />
 
         <activity
@@ -66,6 +68,41 @@
             android:name=".scan.ScanActivity"
             android:exported="false"
             android:theme="@style/Theme.CantaCard.Scan" />
+
+        <!-- Widget: tessere preferite e tessera singola (RemoteViews classici). -->
+        <receiver
+            android:name=".widget.FavoritesWidget"
+            android:exported="false"
+            android:label="@string/widget_favorites_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_favorites_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.CardWidget"
+            android:exported="false"
+            android:label="@string/widget_card_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_card_info" />
+        </receiver>
+
+        <activity
+            android:name=".widget.CardWidgetConfigActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

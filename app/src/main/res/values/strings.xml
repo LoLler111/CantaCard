@@ -169,6 +169,19 @@
     <string name="sync_no_permission">Non si può usare questo file: scegline uno in un\'altra posizione</string>
     <string name="sync_disabled">Sincronizzazione disattivata: le tessere restano su questo telefono</string>
 
+    <!-- Accesso rapido: scorciatoie e widget -->
+    <string name="pin_home">Aggiungi alla schermata Home</string>
+    <string name="shortcut_card_deleted">Tessera eliminata</string>
+    <string name="widget_favorites_label">Tessere preferite</string>
+    <string name="widget_favorites_description">Le tessere preferite, poi le più usate: tocca e mostrala in cassa</string>
+    <string name="widget_card_label">Tessera</string>
+    <string name="widget_card_description">Una tessera a scelta, sempre a portata di dito</string>
+    <string name="widget_empty">Nessuna tessera: aggiungine una in CantaCard</string>
+    <string name="widget_card_missing">Tessera eliminata. Tocca per aprire CantaCard</string>
+    <string name="widget_pick_title">Scegli la tessera</string>
+    <string name="widget_pick_empty">Non hai ancora tessere. Aggiungine una in CantaCard, poi crea di nuovo il widget.</string>
+    <string name="open_app">Apri CantaCard</string>
+
     <!-- Scansione -->
     <string name="scan_hint">Inquadra il codice della tessera</string>
     <string name="torch_on">Accendi la torcia</string>

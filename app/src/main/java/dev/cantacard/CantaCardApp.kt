@@ -30,6 +30,9 @@ class CantaCardApp : Application() {
     /** Sincronizzazione tra telefoni (creata alla prima apertura della lista, fuori dal thread principale). */
     val sync: Sync by lazy { Sync(this, cards, images, appScope) }
 
+    /** Scorciatoie e widget allineati alle tessere. */
+    private val quickAccess by lazy { QuickAccess(this, cards, images, appScope) }
+
     /** Letto solo quando serve (scelta del negozio, modulo), non all'avvio. */
     val catalog: CatalogRepository by lazy { CatalogRepository(this, appScope) }
 
@@ -37,6 +40,7 @@ class CantaCardApp : Application() {
         super.onCreate()
         // Avvia subito la lettura in background, così la lista è pronta al primo frame utile.
         cards
+        quickAccess.start()
     }
 }
 

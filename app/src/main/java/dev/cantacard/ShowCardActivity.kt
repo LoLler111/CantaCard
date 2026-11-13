@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import dev.cantacard.ui.CantaCardTheme
+import dev.cantacard.shortcuts.CardShortcuts
 import dev.cantacard.ui.card.ShowCardScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -44,10 +45,12 @@ class ShowCardActivity : ComponentActivity() {
             return
         }
         val repository = app.cards
+        val canPin = CardShortcuts.canPin(this)
         if (savedInstanceState == null) {
             lifecycleScope.launch {
                 repository.cards.first { it != null }
                 repository.markUsed(cardId)
+                CardShortcuts.reportUsed(this@ShowCardActivity, cardId)
             }
         }
 
@@ -74,6 +77,11 @@ class ShowCardActivity : ComponentActivity() {
                             finish()
                         },
                         isSynced = { app.sync.state.value.enabled },
+                        onPin = if (canPin) {
+                            { CardShortcuts.requestPin(this@ShowCardActivity, card, app.images) }
+                        } else {
+                            null
+                        },
                     )
                 }
             }

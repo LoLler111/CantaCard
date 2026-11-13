@@ -83,6 +83,8 @@ fun ShowCardScreen(
     onDelete: () -> Unit,
     /** Letto solo quando si chiede la conferma: la schermata della tessera resta leggera. */
     isSynced: () -> Boolean = { false },
+    /** "Aggiungi alla schermata Home", `null` se il launcher non lo permette. */
+    onPin: (() -> Unit)? = null,
 ) {
     val format = card.format
     val matrix = remember(card.number, format) { format?.let { BarcodeEncoder.encode(card.number, it) } }
@@ -115,6 +117,7 @@ fun ShowCardScreen(
                 onToggleFavorite = onToggleFavorite,
                 onEdit = onEdit,
                 onDelete = { confirmDelete = true },
+                onPin = onPin,
             )
             if (!landscape) {
                 Row(
@@ -282,6 +285,7 @@ private fun TopBar(
     onToggleFavorite: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    onPin: (() -> Unit)?,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -315,6 +319,11 @@ private fun TopBar(
                 ),
                 tint = tint,
             )
+        }
+        if (onPin != null) {
+            IconButton(onClick = onPin) {
+                Icon(painterResource(R.drawable.ic_add_home), stringResource(R.string.pin_home), tint = tint)
+            }
         }
         IconButton(onClick = onEdit) {
             Icon(painterResource(R.drawable.ic_edit), stringResource(R.string.action_edit), tint = tint)

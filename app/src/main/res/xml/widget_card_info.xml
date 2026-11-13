@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="dev.cantacard.widget.CardWidgetConfigActivity"
+    android:description="@string/widget_card_description"
+    android:initialLayout="@layout/widget_card"
+    android:minWidth="110dp"
+    android:minHeight="50dp"
+    android:minResizeWidth="60dp"
+    android:minResizeHeight="40dp"
+    android:previewLayout="@layout/widget_preview_card"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="2"
+    android:targetCellHeight="1"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable" />
