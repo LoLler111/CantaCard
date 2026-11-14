@@ -127,9 +127,14 @@ CantaCard/
    finché è aperta, numero leggibile sotto.
 3. **Aggiunta**: negozio da catalogo con ricerca (stile Google Wallet) con voce "Altro negozio" sempre
    visibile; poi scansione offline o inserimento manuale con scelta del formato. Il formato rilevato
-   dalla scansione prevale su quello suggerito dal catalogo.
+   dalla scansione prevale su quello suggerito dal catalogo. **Doppioni** (dalla 0.1.6, richiesta
+   dell'utente): prima di salvare, se c'è già una tessera con lo stesso numero (spazi e maiuscole
+   ignorati) per lo stesso negozio (stesso `storeId`, oppure stesso nome per "Altro negozio"),
+   il dialogo "Tessera già presente" chiede "Aggiungi comunque" / "Annulla" (`CardQuery.findDuplicate`).
+   In modifica avvisa solo se è la modifica a creare il doppione.
 4. **Immagine**, in ordine di preferenza:
-   1. icona dal sito del negozio, scaricata una volta alla scelta: manifest PWA → apple-touch-icon →
+   1. icona dal sito del negozio, scaricata una volta alla scelta: prima l'eventuale `icon` del
+      catalogo, poi manifest PWA → apple-touch-icon →
       `link rel="icon"` → `/favicon.ico` (solo HTTPS, timeout brevi, limite di dimensione, SVG scartati);
    2. foto del fronte della tessera con ritaglio;
    3. galleria tramite Photo Picker (nessun permesso storage);
@@ -147,13 +152,22 @@ CantaCard/
 ## Catalogo negozi
 
 - `catalog/stores.json`: `{"version": N, "stores": [{ "id", "name", "aliases": [], "domain",
-  "color": "#RRGGBB", "format", "countries": ["IT"] }]}`.
+  "color": "#RRGGBB", "format", "countries": ["IT"], "icon"? }]}`.
+- `icon` (facoltativo, dalla versione 5, scelta dell'utente): indirizzo HTTPS di un'immagine del logo
+  **sul sito del negozio** (stesso dominio o sottodominio, mai servizi di terzi, niente SVG), provato
+  prima della ricerca automatica; serve per i siti che dichiarano solo icone SVG. Bordi trasparenti
+  tagliati e logo centrato su un quadrato trasparente (resta un'icona nel tondo bianco, non una foto).
+  Stessa cache per dominio delle altre icone. Un indirizzo non valido viene ignorato (il test
+  `bundledCatalogIsValid` lo segnala). Oggi solo CTS (`cts_logo_350x100.png`, l'`og:image` del sito).
+  Le versioni dell'app prima della 0.1.6 ignorano il campo.
 - Incluso nell'APK; aggiornamento opzionale scaricando lo stesso file raw da questo repo GitHub.
   Si usa la copia con `version` più alta tra inclusa e scaricata; senza rete si usa sempre la copia locale.
 - Prima versione: 40–50 catene italiane (supermercati, profumerie, elettronica, abbigliamento,
   carburanti). **Se un dominio o un formato non è certo, lasciarlo vuoto/segnalarlo: mai inventarlo.**
 - Ampliamento (versione 3, scelta dell'utente): 27 catene regionali e di settore aggiunte solo se il dominio risponde con il sito della catena **e** il sito cita la tessera fedeltà (es. Il Castoro "Fidelity Card", Pewex "Carta IN", Oasi Tigre "Carta Unika", Sigma "Prèmiaty"). Scartate per dominio incerto o irraggiungibile: Sisa, Tosano, Elite, Tuodì, U2, Sidis, Mercatò, Scarpe&Scarpe; GameStop Italia ora è GameLife. Colori: da `theme-color` o dai colori più usati nel sito; dove non c'era un colore chiaro (Ethos, Kiabi) grigio neutro `#37474F`.
 - Versione 4 (13/11/2026, elenco dell'utente, stesse regole): PittaRosso, Action (carta cliente digitale nell'app), UCI Cinemas (myUCI), Sport85 (85FAN), Stroili, Nuvolari, Casabalò e le insegne del consorzio romano GROS con tessera verificata (CTS, PIM, IperTriscount, DEM, MA, Sacoph, Idromarket; con Castoro e Pewex hanno l'alias "Gros"). Scartate: Top Supermercati, Effepiù e Ipercarni (GROS, nessuna tessera citata nel sito), Scarpe&Scarpe (certificato del sito non verificabile), Stellazeta (nessun sito ufficiale trovato; `stellazeta.com` rimanda a un altro sito). Panorama era già alias di Pam, Conbipel già presente.
+- Versione 5 (14/11/2026): `icon` per CTS, il cui sito offre il logo solo come SVG (anche come
+  `/favicon.ico`). KIKO, Piazza Italia e Pittarello restano senza: nessun PNG del logo sul loro sito.
 - Stato attuale: `format` vuoto per tutti (nessuno certo; vale quello scansionato). `domain` vuoto per
   Maxi Zoo (confluita in Arcaplanet, sito che non risponde) ed Esso (in Italia nessun sito; la
   fedeltà passa da PAYBACK). Trony = `trony.it` dalla versione 2. I colori sono approssimati dal sito o

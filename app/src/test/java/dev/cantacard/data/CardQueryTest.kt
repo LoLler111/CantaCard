@@ -1,6 +1,7 @@
 package dev.cantacard.data
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class CardQueryTest {
@@ -49,5 +50,33 @@ class CardQueryTest {
     fun blankQueryReturnsEverything() {
         val cards = listOf(card("A"), card("B"))
         assertEquals(cards, CardQuery.filter(cards, "   "))
+    }
+
+    private fun stored(id: String, name: String, number: String, storeId: String?) =
+        card(name, number).copy(id = id, storeId = storeId)
+
+    @Test
+    fun duplicateNeedsSameNumberAndSameStore() {
+        val cards = listOf(
+            stored("1", "CTS Supermercati", "1234 5678", "cts"),
+            stored("2", "Bar Sport", "999", null),
+        )
+        assertEquals("1", CardQuery.findDuplicate(cards, "12345678", "cts", "CTS")?.id)
+        assertNull(CardQuery.findDuplicate(cards, "12345678", "pim", "PIM"))
+        assertNull(CardQuery.findDuplicate(cards, "12345679", "cts", "CTS"))
+        assertNull(CardQuery.findDuplicate(cards, "", "cts", "CTS"))
+    }
+
+    @Test
+    fun duplicateWithoutStoreComparesTheName() {
+        val cards = listOf(stored("2", "Bar Sport", "AB 99", null), stored("3", "Altro", "AB99", "cts"))
+        assertEquals("2", CardQuery.findDuplicate(cards, "ab99", null, "  bar sport ")?.id)
+        assertNull(CardQuery.findDuplicate(cards, "ab99", null, "Bar Centrale"))
+    }
+
+    @Test
+    fun cardBeingEditedIsNotItsOwnDuplicate() {
+        val cards = listOf(stored("1", "CTS", "123", "cts"))
+        assertNull(CardQuery.findDuplicate(cards, "123", "cts", "CTS", excludeId = "1"))
     }
 }

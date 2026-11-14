@@ -3,10 +3,13 @@ package dev.cantacard.data
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.net.URI
+import java.net.URISyntaxException
+import java.util.Locale
 
 /**
  * Lettura del catalogo negozi (`catalog/stores.json`):
- * `{"version": N, "stores": [{"id", "name", "aliases", "domain", "color", "format", "countries"}]}`.
+ * `{"version": N, "stores": [{"id", "name", "aliases", "domain", "color", "format", "countries", "icon"?}]}`.
  *
  * Tollerante come [CardJson]: campi sconosciuti ignorati, un negozio senza id o nome viene
  * scartato senza bloccare gli altri, id duplicati tengono il primo.
@@ -47,18 +50,37 @@ object CatalogJson {
         if (id == null || name == null) {
             null
         } else {
+            val domain = o.string("domain")
             Store(
                 id = id,
                 name = name,
                 aliases = o.optJSONArray("aliases").strings(),
-                domain = o.string("domain"),
+                domain = domain,
                 color = CardColors.parse(o.string("color")),
                 formatName = o.string("format"),
                 countries = o.optJSONArray("countries").strings(),
+                icon = iconOrNull(o.string("icon"), domain),
             )
         }
     } catch (e: JSONException) {
         null
+    }
+
+    /**
+     * L'indirizzo dell'icona solo se è HTTPS, non SVG e sul sito del negozio ([domain] o un suo
+     * sottodominio): mai immagini da servizi di terzi. Altrimenti `null` (si cerca come sempre).
+     */
+    fun iconOrNull(url: String?, domain: String?): String? {
+        if (url == null || domain == null) return null
+        val uri = try {
+            URI(url)
+        } catch (e: URISyntaxException) {
+            return null
+        }
+        val host = uri.host?.lowercase(Locale.ROOT) ?: return null
+        val ownSite = host == domain || host.endsWith(".$domain")
+        val svg = uri.path.orEmpty().endsWith(".svg", ignoreCase = true)
+        return url.takeIf { uri.scheme.equals("https", ignoreCase = true) && ownSite && !svg }
     }
 
     private fun JSONArray?.strings(): List<String> {

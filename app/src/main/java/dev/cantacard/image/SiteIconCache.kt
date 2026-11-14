@@ -18,16 +18,17 @@ class SiteIconCache(private val dir: File) {
 
     /**
      * File WebP con l'icona di [domain], da copiare tra le immagini provvisorie; `null` se non si
-     * trova. Con [refresh] si scarica sempre di nuovo (pulsante "Aggiorna icona").
+     * trova. Con [refresh] si scarica sempre di nuovo (pulsante "Aggiorna icona"). [iconUrl] è
+     * l'immagine del logo indicata dal catalogo, se c'è (stessa cache del dominio).
      */
-    suspend fun get(domain: String, refresh: Boolean = false): File? = withContext(Dispatchers.IO) {
+    suspend fun get(domain: String, refresh: Boolean = false, iconUrl: String? = null): File? = withContext(Dispatchers.IO) {
         val name = fileName(domain) ?: return@withContext null
         val file = File(dir, name)
         val cached = file.takeIf { it.isFile && it.length() > 0 }
         if (!refresh && cached != null && isFresh(cached.lastModified(), System.currentTimeMillis())) {
             return@withContext cached
         }
-        val bitmap = SiteIconFetcher.fetch(domain)
+        val bitmap = SiteIconFetcher.fetch(domain, iconUrl)
         if (bitmap != null) {
             try {
                 Bitmaps.writeWebp(bitmap, file)

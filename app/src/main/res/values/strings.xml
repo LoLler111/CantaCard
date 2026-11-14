@@ -56,6 +56,10 @@
     <string name="photo_error">Impossibile aprire l\'immagine</string>
     <string name="discard_title">Scartare le modifiche?</string>
     <string name="discard_confirm">Scarta</string>
+    <string name="duplicate_title">Tessera già presente</string>
+    <string name="duplicate_body">Hai già la tessera «%1$s» con questo numero per lo stesso negozio. Vuoi salvarla lo stesso?</string>
+    <string name="duplicate_add">Aggiungi comunque</string>
+    <string name="duplicate_save">Salva comunque</string>
 
     <!-- Scelta del negozio (catalogo) -->
     <string name="store_picker_title">Scegli il negozio</string>

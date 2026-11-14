@@ -30,6 +30,31 @@ object CardQuery {
         }
     }
 
+    /**
+     * Una tessera già salvata con lo stesso numero (ignorando spazi e maiuscole) per lo stesso
+     * negozio: stesso `storeId` del catalogo oppure, per "Altro negozio", stesso nome. [excludeId]
+     * è la tessera in modifica. `null` se non ce n'è.
+     */
+    fun findDuplicate(
+        cards: List<Card>,
+        number: String,
+        storeId: String?,
+        name: String,
+        excludeId: String? = null,
+    ): Card? {
+        val key = compactNumber(number)
+        if (key.isEmpty()) return null
+        val cardName = normalize(name.trim())
+        return cards.firstOrNull { card ->
+            card.id != excludeId &&
+                compactNumber(card.number) == key &&
+                if (storeId != null) card.storeId == storeId else card.storeId == null && normalize(card.name.trim()) == cardName
+        }
+    }
+
+    private fun compactNumber(number: String): String =
+        number.filterNot { it.isWhitespace() }.lowercase(Locale.ROOT)
+
     fun normalize(text: String): String =
         Normalizer.normalize(text, Normalizer.Form.NFD)
             .replace(diacritics, "")

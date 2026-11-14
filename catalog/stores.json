@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "stores": [
     {"id": "esselunga", "name": "Esselunga", "aliases": ["Fidaty"], "domain": "esselunga.it", "color": "#005CA9", "format": "", "countries": ["IT"]},
     {"id": "conad", "name": "Conad", "aliases": ["Carta Insieme", "Conad Superstore", "Spazio Conad"], "domain": "conad.it", "color": "#E2001A", "format": "", "countries": ["IT"]},
@@ -32,7 +32,7 @@
     {"id": "oasitigre", "name": "Oasi Tigre", "aliases": ["Oasi", "Tigre", "Tigre Amico", "Carta Unika"], "domain": "oasitigre.it", "color": "#E95A0C", "format": "", "countries": ["IT"]},
     {"id": "pan", "name": "Pan", "aliases": ["Superpan", "Iperpan", "Club Pan"], "domain": "supermercatipan.it", "color": "#006F44", "format": "", "countries": ["IT"]},
     {"id": "deco", "name": "Decò", "aliases": ["Deco", "Supermercati Decò"], "domain": "supermercatideco.it", "color": "#003399", "format": "", "countries": ["IT"]},
-    {"id": "cts", "name": "CTS Supermercati", "aliases": ["CTS", "Gros"], "domain": "ctssupermercati.it", "color": "#F06C00", "format": "", "countries": ["IT"]},
+    {"id": "cts", "name": "CTS Supermercati", "aliases": ["CTS", "Gros"], "domain": "ctssupermercati.it", "color": "#F06C00", "format": "", "countries": ["IT"], "icon": "https://www.ctssupermercati.it/wp-content/uploads/2022/01/cts_logo_350x100.png"},
     {"id": "pim", "name": "Supermercati PIM", "aliases": ["PIM", "Pim Supermercati", "IperFamily", "Gros"], "domain": "supermercatipim.com", "color": "#2BA955", "format": "", "countries": ["IT"]},
     {"id": "ipertriscount", "name": "IperTriscount", "aliases": ["Iper Triscount", "Triscount", "Gros"], "domain": "ipertriscount.it", "color": "#FF5329", "format": "", "countries": ["IT"]},
     {"id": "dem", "name": "Supermercati DEM", "aliases": ["DEM", "Gros"], "domain": "supermercatidem.com", "color": "#1863AE", "format": "", "countries": ["IT"]},

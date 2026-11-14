@@ -78,5 +78,27 @@ class CatalogJsonTest {
                 assertTrue("${store.id}: dominio senza schema/percorso", it.matches(Regex("[a-z0-9.-]+[.][a-z]{2,}")))
             }
         }
+        // Un'icona scritta nel catalogo ma scartata dalla validazione sarebbe un errore silenzioso.
+        for (i in 0 until raw.length()) {
+            val o = raw.getJSONObject(i)
+            if (o.has("icon")) {
+                val store = catalog.find(o.getString("id"))!!
+                assertTrue("${store.id}: icona valida (HTTPS, sito del negozio, non SVG)", store.icon != null)
+            }
+        }
+        assertTrue("CTS ha l'icona", catalog.find("cts")?.icon != null)
+    }
+
+    @Test
+    fun iconOnlyFromTheStoreSiteOverHttps() {
+        val ok = "https://www.ctssupermercati.it/wp-content/uploads/logo.png"
+        assertEquals(ok, CatalogJson.iconOrNull(ok, "ctssupermercati.it"))
+        assertEquals("https://ctssupermercati.it/l.png", CatalogJson.iconOrNull("https://ctssupermercati.it/l.png", "ctssupermercati.it"))
+        assertNull(CatalogJson.iconOrNull("http://www.ctssupermercati.it/logo.png", "ctssupermercati.it"))
+        assertNull(CatalogJson.iconOrNull("https://www.google.com/s2/favicons?domain=ctssupermercati.it", "ctssupermercati.it"))
+        assertNull(CatalogJson.iconOrNull("https://evilctssupermercati.it/logo.png", "ctssupermercati.it"))
+        assertNull(CatalogJson.iconOrNull("https://www.ctssupermercati.it/logo.svg", "ctssupermercati.it"))
+        assertNull(CatalogJson.iconOrNull(ok, null))
+        assertNull(CatalogJson.iconOrNull("non un indirizzo", "ctssupermercati.it"))
     }
 }

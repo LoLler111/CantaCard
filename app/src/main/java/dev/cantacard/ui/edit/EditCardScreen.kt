@@ -93,6 +93,7 @@ import dev.cantacard.data.Store
 import dev.cantacard.ui.store.StoreBadge
 import dev.cantacard.data.CardColors
 import dev.cantacard.data.CardInput
+import dev.cantacard.data.CardQuery
 import dev.cantacard.data.CodeFormat
 import dev.cantacard.scan.ImageBarcodeReader
 import dev.cantacard.scan.ScanActivity
@@ -108,6 +109,8 @@ import kotlinx.coroutines.withContext
 @Composable
 fun EditCardScreen(
     original: Card?,
+    /** Tutte le tessere salvate, per avvisare dei doppioni. */
+    cards: List<Card>,
     catalog: Catalog,
     /** Negozio scelto prima di aprire il modulo (solo per una tessera nuova). */
     initialStoreId: String?,
@@ -140,6 +143,8 @@ fun EditCardScreen(
     var iconStatus by remember { mutableStateOf(IconStatus.IDLE) }
     var note by rememberSaveable { mutableStateOf(original?.note.orEmpty()) }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
+    // Nome della tessera già salvata con lo stesso numero e negozio (conferma prima di salvare).
+    var duplicateOf by rememberSaveable { mutableStateOf<String?>(null) }
 
     // Formato scelto (o letto) oppure, per una tessera nuova, dedotto dal numero.
     val format: CodeFormat? = formatName?.let(CodeFormat::fromName)
@@ -229,13 +234,13 @@ fun EditCardScreen(
 
     /**
      * Icona dal sito del negozio, dalla cache se recente (scelta dal catalogo); con [refresh]
-     * sempre riscaricata (pulsante "Aggiorna icona").
+     * sempre riscaricata (pulsante "Aggiorna icona"). [iconUrl]: logo indicato dal catalogo.
      */
-    fun fetchIcon(domain: String, refresh: Boolean = false) {
+    fun fetchIcon(domain: String, iconUrl: String?, refresh: Boolean = false) {
         if (iconStatus == IconStatus.LOADING) return
         scope.launch {
             iconStatus = IconStatus.LOADING
-            val file = siteIcons.get(domain, refresh)
+            val file = siteIcons.get(domain, refresh, iconUrl)
             iconStatus = if (file != null && usePendingCopy(file)) IconStatus.IDLE else IconStatus.FAILED
         }
     }
@@ -245,7 +250,7 @@ fun EditCardScreen(
         val domain = store?.domain
         if (original == null && !autoIconDone && domain != null && cropSource == null) {
             autoIconDone = true
-            fetchIcon(domain)
+            fetchIcon(domain, store?.icon)
         }
     }
 
@@ -260,7 +265,7 @@ fun EditCardScreen(
             newStore?.format?.let { if (number.isBlank()) formatName = it.name }
             // Cambio negozio: nuova icona, ma senza mai sostituire una foto della tessera.
             val domain = newStore?.domain
-            if (changed && domain != null && cardImage?.isPhoto != true) fetchIcon(domain)
+            if (changed && domain != null && cardImage?.isPhoto != true) fetchIcon(domain, newStore?.icon)
         }
     }
     val cameraLauncher = rememberLauncherForActivityResult(PhotoActivity.Contract()) { path ->
@@ -297,9 +302,24 @@ fun EditCardScreen(
         }
     }
 
-    fun save() {
+    fun save(force: Boolean = false) {
         val trimmedName = name.trim()
         val savedFormat = format?.name ?: formatName ?: return
+        // Stesso numero per lo stesso negozio: si chiede prima di salvare un doppione. In modifica
+        // solo se è la modifica a crearlo (un doppione già esistente non viene richiesto ogni volta).
+        if (!force) {
+            val wasDuplicate = original != null &&
+                CardQuery.findDuplicate(cards, original.number, original.storeId, original.name, original.id) != null
+            val duplicate = if (wasDuplicate) {
+                null
+            } else {
+                CardQuery.findDuplicate(cards, cleanNumber, storeId, trimmedName, original?.id)
+            }
+            if (duplicate != null) {
+                duplicateOf = duplicate.name
+                return
+            }
+        }
         val card = if (original == null) {
             Card(
                 id = Card.newId(),
@@ -352,7 +372,7 @@ fun EditCardScreen(
                         .padding(horizontal = 4.dp),
                 )
                 Button(
-                    onClick = ::save,
+                    onClick = { save() },
                     enabled = canSave,
                     modifier = Modifier.padding(end = 8.dp),
                 ) { Text(stringResource(R.string.action_save)) }
@@ -482,7 +502,7 @@ fun EditCardScreen(
                     domain = store?.domain,
                     hasCamera = hasCamera,
                     // "Aggiorna icona" la riscarica; "Icona dal sito" (nessuna immagine) va bene dalla cache.
-                    onIcon = { domain -> fetchIcon(domain, refresh = cardImage != null) },
+                    onIcon = { domain -> fetchIcon(domain, store?.icon, refresh = cardImage != null) },
                     onCamera = {
                         focusManager.clearFocus()
                         cameraLauncher.launch(Unit)
@@ -537,6 +557,25 @@ fun EditCardScreen(
             onCancel = {
                 cropSource = null
                 source.delete()
+            },
+        )
+    }
+
+    duplicateOf?.let { other ->
+        AlertDialog(
+            onDismissRequest = { duplicateOf = null },
+            title = { Text(stringResource(R.string.duplicate_title)) },
+            text = { Text(stringResource(R.string.duplicate_body, other)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    duplicateOf = null
+                    save(force = true)
+                }) {
+                    Text(stringResource(if (original == null) R.string.duplicate_add else R.string.duplicate_save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { duplicateOf = null }) { Text(stringResource(R.string.action_cancel)) }
             },
         )
     }

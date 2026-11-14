@@ -54,6 +54,7 @@ class EditCardActivity : ComponentActivity() {
             CantaCardTheme {
                 EditCardScreen(
                     original = original,
+                    cards = loaded,
                     catalog = stores,
                     initialStoreId = initialStoreId,
                     initialName = initialName,

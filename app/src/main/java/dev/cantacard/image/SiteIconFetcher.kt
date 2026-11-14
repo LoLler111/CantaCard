@@ -28,8 +28,22 @@ object SiteIconFetcher {
     // Alcuni siti rifiutano i client sconosciuti: intestazione da browser generico, nessun dato personale.
     private const val USER_AGENT = "Mozilla/5.0 (Linux; Android) AppleWebKit/537.36 (KHTML, like Gecko) Mobile"
 
-    /** Icona di [domain] (es. "esselunga.it") già ridotta a [ImageStore.ICON_MAX_SIDE]. */
-    suspend fun fetch(domain: String): Bitmap? = withContext(Dispatchers.IO) {
+    /**
+     * Icona di [domain] (es. "esselunga.it") già ridotta a [ImageStore.ICON_MAX_SIDE]. Se il
+     * catalogo indica un'immagine del logo ([iconUrl], già validata), si prova prima quella:
+     * un logo largo viene centrato su un quadrato trasparente, così resta un'icona nel tondo.
+     */
+    suspend fun fetch(domain: String, iconUrl: String? = null): Bitmap? = withContext(Dispatchers.IO) {
+        iconUrl?.let { url ->
+            val logo = try {
+                get(URL(url), MAX_IMAGE_BYTES, "image/*")?.bytes?.let(Bitmaps::decodeBytes)
+            } catch (e: MalformedURLException) {
+                null
+            }
+            if (logo != null && maxOf(logo.width, logo.height) >= MIN_SIDE) {
+                return@withContext Bitmaps.fit(Bitmaps.padToSquare(Bitmaps.trimTransparent(logo)), ImageStore.ICON_MAX_SIDE)
+            }
+        }
         val tried = HashSet<String>()
         var small: Bitmap? = null
         // Alcuni siti rispondono solo su "www." (il dominio nudo non risolve o non ha HTTPS):

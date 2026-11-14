@@ -3,8 +3,10 @@ package dev.cantacard.image
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.graphics.ImageDecoder
 import android.graphics.Matrix
+import android.graphics.Paint
 import android.net.Uri
 import android.os.Build
 import java.io.File
@@ -64,6 +66,48 @@ object Bitmaps {
             (bitmap.height * ratio).roundToInt().coerceAtLeast(1),
             true,
         )
+    }
+
+    /** Toglie i bordi del tutto trasparenti attorno a un logo (resta com'è se non ce ne sono). */
+    fun trimTransparent(bitmap: Bitmap): Bitmap {
+        if (!bitmap.hasAlpha()) return bitmap
+        val w = bitmap.width
+        val h = bitmap.height
+        val pixels = IntArray(w * h)
+        bitmap.getPixels(pixels, 0, w, 0, 0, w, h)
+        var left = w
+        var right = -1
+        var top = h
+        var bottom = -1
+        for (y in 0 until h) {
+            for (x in 0 until w) {
+                if (pixels[y * w + x] ushr 24 > ALPHA_THRESHOLD) {
+                    if (x < left) left = x
+                    if (x > right) right = x
+                    if (y < top) top = y
+                    if (y > bottom) bottom = y
+                }
+            }
+        }
+        if (right < 0) return bitmap
+        if (left == 0 && top == 0 && right == w - 1 && bottom == h - 1) return bitmap
+        return Bitmap.createBitmap(bitmap, left, top, right - left + 1, bottom - top + 1)
+    }
+
+    private const val ALPHA_THRESHOLD = 8
+
+    /** Centra l'immagine su un quadrato trasparente (un logo largo resta un'icona, non una foto). */
+    fun padToSquare(bitmap: Bitmap): Bitmap {
+        if (bitmap.width == bitmap.height) return bitmap
+        val side = max(bitmap.width, bitmap.height)
+        val square = Bitmap.createBitmap(side, side, Bitmap.Config.ARGB_8888)
+        Canvas(square).drawBitmap(
+            bitmap,
+            (side - bitmap.width) / 2f,
+            (side - bitmap.height) / 2f,
+            Paint(Paint.FILTER_BITMAP_FLAG),
+        )
+        return square
     }
 
     fun rotate(bitmap: Bitmap, degrees: Int): Bitmap {

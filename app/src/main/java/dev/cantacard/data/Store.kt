@@ -13,6 +13,11 @@ data class Store(
     /** Nome dell'enum ZXing suggerito (es. `"EAN_13"`); il formato scansionato prevale. */
     val formatName: String? = null,
     val countries: List<String> = emptyList(),
+    /**
+     * Indirizzo HTTPS di un'immagine del logo sul sito del negozio (stesso dominio), provato prima
+     * della ricerca automatica: per i siti che dichiarano solo icone SVG (es. CTS).
+     */
+    val icon: String? = null,
 ) {
     val initial: String get() = Card.initialOf(name)
 
