@@ -18,6 +18,11 @@ data class Store(
      * della ricerca automatica: per i siti che dichiarano solo icone SVG (es. CTS).
      */
     val icon: String? = null,
+    /**
+     * Colori che il negozio aveva in versioni precedenti del catalogo: una tessera salvata con uno
+     * di questi ha ancora il colore automatico (non scelto dall'utente) e segue quello nuovo.
+     */
+    val formerColors: List<Int> = emptyList(),
 ) {
     val initial: String get() = Card.initialOf(name)
 

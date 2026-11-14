@@ -15,6 +15,8 @@ import dev.cantacard.image.rememberCardImage
 import dev.cantacard.image.SiteIconCache
 import dev.cantacard.image.ImageStore
 import dev.cantacard.image.Bitmaps
+import dev.cantacard.image.IconColors
+import dev.cantacard.image.ImageLoader
 import java.io.IOException
 import java.io.File
 import android.graphics.Bitmap
@@ -157,20 +159,35 @@ fun EditCardScreen(
     val codeOk = cleanNumber.isNotEmpty() && (matrix != null || (format == null && formatName != null))
     val canSave = name.isNotBlank() && codeOk
     val store = catalog.find(storeId)
-    // Colore automatico: quello del negozio in catalogo, altrimenti uno stabile dal nome.
-    fun autoColor(cardName: String, id: String?): Int = catalog.find(id)?.color ?: CardColors.forName(cardName)
-    val originalAuto = original != null &&
-        (original.color == autoColor(original.name, original.storeId) || original.color == CardColors.forName(original.name))
-    // Colore scelto a mano dall'utente; `null` = automatico.
-    var colorChoice by rememberSaveable {
-        mutableStateOf(if (original != null && !originalAuto) original.color else null)
-    }
-    val automaticColor = autoColor(name.trim(), storeId)
-    val cardColor = colorChoice ?: automaticColor
 
     val imageFile: File? = pendingImage?.let(::File)
         ?: original?.image?.takeUnless { imageRemoved }?.let(images::file)
     val cardImage = rememberCardImage(imageFile)
+
+    // Colore automatico: quello dell'icona del negozio, altrimenti quello del catalogo, altrimenti
+    // uno stabile dal nome. Il colore del catalogo vince se compare nel logo (es. Lidl resta blu).
+    val iconColor = remember(cardImage, store?.color) { IconColors.of(cardImage, store?.color) }
+    val automaticColor = iconColor ?: store?.color ?: CardColors.forName(name.trim())
+    // Colore scelto a mano dall'utente; `null` = automatico.
+    var colorChoice by rememberSaveable { mutableStateOf<Int?>(null) }
+    var colorPicked by rememberSaveable { mutableStateOf(false) }
+    // Se il colore di una tessera salvata era automatico (anche un colore del catalogo di una
+    // versione precedente). Con un'icona salvata serve leggerla: fino ad allora resta il suo colore.
+    var colorKnown by rememberSaveable {
+        mutableStateOf(original == null || original.color in autoColorsWithoutIcon(original, catalog))
+    }
+    LaunchedEffect(Unit) {
+        if (colorKnown || original == null) return@LaunchedEffect
+        val saved = original.image?.let(images::file)?.let { ImageLoader.load(it) }
+        val savedIconColor = withContext(Dispatchers.Default) {
+            IconColors.of(saved, catalog.find(original.storeId)?.color)
+        }
+        if (!colorKnown) {
+            if (savedIconColor != original.color) colorChoice = original.color
+            colorKnown = true
+        }
+    }
+    val cardColor = if (!colorKnown && original != null) original.color else colorChoice ?: automaticColor
 
     val dirty = if (original == null) {
         name.trim() != prefilledName || number.isNotBlank() || note.isNotBlank() || storeId != initialStoreId ||
@@ -178,7 +195,9 @@ fun EditCardScreen(
     } else {
         name != original.name || number != original.number || storeId != original.storeId ||
             formatName != original.formatName || note != original.note.orEmpty() ||
-            pendingImage != null || imageRemoved || cardColor != original.color
+            // Il colore conta solo se scelto a mano: quello automatico può cambiare da solo
+            // (catalogo corretto, icona letta) senza che l'utente abbia modificato niente.
+            pendingImage != null || imageRemoved || colorPicked
     }
 
     val context = LocalContext.current
@@ -521,7 +540,11 @@ fun EditCardScreen(
                 ColorPicker(
                     automatic = automaticColor,
                     selected = cardColor,
-                    onSelect = { color -> colorChoice = color.takeUnless { it == automaticColor } },
+                    onSelect = { color ->
+                        colorChoice = color.takeUnless { it == automaticColor }
+                        colorPicked = true
+                        colorKnown = true
+                    },
                 )
 
                 SectionTitle(R.string.section_details)
@@ -806,7 +829,20 @@ private fun ImageButton(icon: Int, label: Int, enabled: Boolean = true, onClick:
     }
 }
 
-/** Tavolozza del colore della tessera: il primo è quello automatico (negozio o nome). */
+/**
+ * Colori automatici possibili di una tessera salvata senza guardare la sua icona: dal nome, dal
+ * catalogo attuale o da una versione precedente del catalogo ([dev.cantacard.data.Store.formerColors]).
+ */
+private fun autoColorsWithoutIcon(card: Card, catalog: Catalog): Set<Int> {
+    val store = catalog.find(card.storeId)
+    return buildSet {
+        add(CardColors.forName(card.name))
+        store?.color?.let(::add)
+        store?.formerColors?.let(::addAll)
+    }
+}
+
+/** Tavolozza del colore della tessera: il primo è quello automatico (icona, negozio o nome). */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ColorPicker(automatic: Int, selected: Int, onSelect: (Int) -> Unit) {

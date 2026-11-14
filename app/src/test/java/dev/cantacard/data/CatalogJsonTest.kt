@@ -87,6 +87,26 @@ class CatalogJsonTest {
             }
         }
         assertTrue("CTS ha l'icona", catalog.find("cts")?.icon != null)
+        // Colori precedenti: tutti validi e mai uguali a quello attuale.
+        for (i in 0 until raw.length()) {
+            val o = raw.getJSONObject(i)
+            val former = o.optJSONArray("formerColors") ?: continue
+            val store = catalog.find(o.getString("id"))!!
+            assertEquals("${store.id}: colori precedenti validi", former.length(), store.formerColors.size)
+            assertTrue("${store.id}: colore precedente diverso dall'attuale", store.color !in store.formerColors)
+        }
+    }
+
+    @Test
+    fun formerColorsAreReadAndToleratedWhenWrong() {
+        val catalog = CatalogJson.decode(
+            """{"version": 1, "stores": [
+                {"id": "a", "name": "A", "color": "#FF602E", "formerColors": ["#DF1B7C", "non un colore"]},
+                {"id": "b", "name": "B", "color": "#111111"}
+            ]}""",
+        )
+        assertEquals(listOf(CardColors.parse("#DF1B7C")), catalog.find("a")?.formerColors)
+        assertEquals(emptyList<Int>(), catalog.find("b")?.formerColors)
     }
 
     @Test

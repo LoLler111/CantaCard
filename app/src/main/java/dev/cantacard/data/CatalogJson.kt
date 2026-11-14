@@ -9,7 +9,7 @@ import java.util.Locale
 
 /**
  * Lettura del catalogo negozi (`catalog/stores.json`):
- * `{"version": N, "stores": [{"id", "name", "aliases", "domain", "color", "format", "countries", "icon"?}]}`.
+ * `{"version": N, "stores": [{"id", "name", "aliases", "domain", "color", "format", "countries", "icon"?, "formerColors"?}]}`.
  *
  * Tollerante come [CardJson]: campi sconosciuti ignorati, un negozio senza id o nome viene
  * scartato senza bloccare gli altri, id duplicati tengono il primo.
@@ -60,6 +60,7 @@ object CatalogJson {
                 formatName = o.string("format"),
                 countries = o.optJSONArray("countries").strings(),
                 icon = iconOrNull(o.string("icon"), domain),
+                formerColors = o.optJSONArray("formerColors").strings().mapNotNull(CardColors::parse),
             )
         }
     } catch (e: JSONException) {
