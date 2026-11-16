@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -18,8 +19,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  * visibili. L'app non installa niente: la riga nella lista apre nel browser il link dell'APK della
  * versione più recente, letto qui a ogni controllo, e l'installazione la fa Android.
  * (Un'app con `REQUEST_INSTALL_PACKAGES` che scarica APK viene segnalata da Play Protect.)
+ *
+ * La risposta resta in [cacheDir] con il suo `ETag`: al controllo successivo GitHub risponde
+ * `304 Not Modified` se non è cambiato niente, una risposta vuota che non conta nel limite di
+ * 60 richieste l'ora per indirizzo IP.
  */
-class AppUpdater(private val scope: CoroutineScope) {
+class AppUpdater(private val scope: CoroutineScope, cacheDir: File) {
+
+    private val cache = UpdateCache(File(cacheDir, "update"))
 
     private val _available = MutableStateFlow<AppRelease?>(null)
 
@@ -37,19 +44,28 @@ class AppUpdater(private val scope: CoroutineScope) {
         }
     }
 
-    /** Elenco delle release dall'API di GitHub, con timeout brevi; `null` se fallisce. */
+    /**
+     * Elenco delle release dall'API di GitHub, con timeout brevi; con `304` quello salvato
+     * dall'ultima risposta. `null` se fallisce.
+     */
     private fun fetch(): String? {
         var connection: HttpURLConnection? = null
         return try {
+            val cached = cache.read()
             connection = (URL(RELEASES_URL).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 5_000
                 readTimeout = 10_000
                 useCaches = false
                 setRequestProperty("Accept", "application/vnd.github+json")
                 setRequestProperty("User-Agent", "CantaCard")
+                cached?.let { setRequestProperty("If-None-Match", it.etag) }
             }
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) return null
-            connection.inputStream.use { input ->
+            when (connection.responseCode) {
+                HttpURLConnection.HTTP_NOT_MODIFIED -> return cached?.body
+                HttpURLConnection.HTTP_OK -> Unit
+                else -> return null
+            }
+            val body = connection.inputStream.use { input ->
                 val out = ByteArrayOutputStream()
                 val buffer = ByteArray(8 * 1024)
                 while (true) {
@@ -60,6 +76,8 @@ class AppUpdater(private val scope: CoroutineScope) {
                 }
                 out.toByteArray().decodeToString()
             }
+            cache.write(connection.getHeaderField("ETag"), body)
+            body
         } catch (e: IOException) {
             null
         } catch (e: RuntimeException) {
