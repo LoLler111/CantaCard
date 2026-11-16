@@ -76,7 +76,7 @@ class CardWidgetConfigActivity : ComponentActivity() {
             CantaCardTheme {
                 val cards by repository.cards.collectAsState()
                 CardPicker(
-                    cards = cards?.let(CardQuery::sorted),
+                    cards = cards?.let(CardQuery::quickAccess),
                     onPick = { card -> pick(widgetId, card) },
                     onOpenApp = {
                         startActivity(Intent(this, MainActivity::class.java))

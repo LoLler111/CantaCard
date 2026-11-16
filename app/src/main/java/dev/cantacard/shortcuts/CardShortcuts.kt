@@ -31,10 +31,11 @@ object CardShortcuts {
         val manager = context.getSystemService(ShortcutManager::class.java) ?: return
         try {
             val max = minOf(MAX_DYNAMIC, manager.maxShortcutCountPerActivity)
-            val chosen = CardQuery.sorted(cards).take(max)
+            val chosen = CardQuery.quickAccess(cards).take(max)
             manager.dynamicShortcuts = chosen.mapIndexed { rank, card -> build(context, card, images, rank) }
 
-            // Scorciatoie fissate in Home: aggiornate (nome, icona) o disattivate se la tessera non c'è più.
+            // Scorciatoie fissate in Home: aggiornate (nome, icona) o disattivate se la tessera non c'è più
+            // (un'archiviata resta: si può ancora aprire, come dalla lista delle archiviate).
             val byId = cards.associateBy { it.id }
             val pinned = manager.pinnedShortcuts
             val revived = pinned.filter { !it.isEnabled && it.id in byId }.map { it.id }

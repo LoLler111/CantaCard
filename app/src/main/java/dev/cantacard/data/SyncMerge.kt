@@ -88,7 +88,9 @@ object SyncMerge {
         a.deleted == b.deleted && normalized(a.cards) == normalized(b.cards)
 
     private fun normalized(cards: List<Card>): List<Card> =
-        cards.map { it.copy(image = if (it.image != null) "*" else null) }.sortedBy { it.id }
+        cards.map {
+            it.copy(image = if (it.image != null) "*" else null, backImage = if (it.backImage != null) "*" else null)
+        }.sortedBy { it.id }
 
     private fun Card.withStatsOf(other: Card): Card =
         copy(lastUsed = maxOf(lastUsed, other.lastUsed), useCount = maxOf(useCount, other.useCount))

@@ -74,6 +74,7 @@ class ShowCardActivity : ComponentActivity() {
                         onDelete = {
                             repository.delete(card.id)
                             app.images.delete(card.image)
+                            app.images.delete(card.backImage)
                             finish()
                         },
                         isSynced = { app.sync.state.value.enabled },

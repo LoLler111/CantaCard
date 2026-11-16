@@ -79,4 +79,61 @@ class CardQueryTest {
         val cards = listOf(stored("1", "CTS", "123", "cts"))
         assertNull(CardQuery.findDuplicate(cards, "123", "cts", "CTS", excludeId = "1"))
     }
+
+    @Test
+    fun nameOrderKeepsFavoritesFirst() {
+        val cards = listOf(card("zeta", lastUsed = 9), card("Beta", favorite = true), card("alfa"), card("Àrea"))
+        assertEquals(listOf("Beta", "alfa", "Àrea", "zeta"), CardQuery.sorted(cards, SortOrder.NAME).map { it.name })
+    }
+
+    @Test
+    fun manualOrderPutsNeverMovedLast() {
+        val cards = listOf(
+            card("nuova").copy(createdAt = 5),
+            card("seconda").copy(rank = 2.0),
+            card("prima").copy(rank = 1.0),
+            card("vecchia").copy(createdAt = 1),
+        )
+        assertEquals(
+            listOf("prima", "seconda", "vecchia", "nuova"),
+            CardQuery.sorted(cards, SortOrder.MANUAL).map { it.name },
+        )
+    }
+
+    @Test
+    fun reorderMovesOnlyTheCardWhenAllHaveRanks() {
+        val cards = listOf(card("a").copy(rank = 1.0), card("b").copy(rank = 2.0), card("c").copy(rank = 3.0))
+        assertEquals(mapOf("c" to 1.5), CardQuery.reorder(cards, from = 2, to = 1))
+        assertEquals(mapOf("c" to 0.0), CardQuery.reorder(cards, from = 2, to = 0))
+        assertEquals(mapOf("a" to 4.0), CardQuery.reorder(cards, from = 0, to = 2))
+        assertEquals(emptyMap<String, Double>(), CardQuery.reorder(cards, from = 1, to = 1))
+    }
+
+    @Test
+    fun reorderRenumbersWhenSomeHaveNoRank() {
+        val cards = listOf(card("a").copy(rank = 1.0), card("b"), card("c"))
+        // Nuovo ordine a, c, b: "a" ha già 1.0 e non cambia.
+        assertEquals(mapOf("c" to 2.0, "b" to 3.0), CardQuery.reorder(cards, from = 2, to = 1))
+    }
+
+    @Test
+    fun reorderRenumbersWhenThereIsNoRoom() {
+        val cards = listOf(card("a").copy(rank = 1.0), card("b").copy(rank = Math.nextUp(1.0)), card("c").copy(rank = 3.0))
+        val result = CardQuery.reorder(cards, from = 2, to = 1)
+        assertEquals(mapOf("c" to 2.0, "b" to 3.0), result)
+    }
+
+    @Test
+    fun searchAndFilterByLabel() {
+        val cards = listOf(card("A").copy(labels = listOf("Spesa")), card("B").copy(labels = listOf("Viaggi")), card("C"))
+        assertEquals(listOf("A"), CardQuery.filter(cards, "spes").map { it.name })
+        assertEquals(listOf("B"), CardQuery.withLabel(cards, "VIAGGI").map { it.name })
+        assertEquals(listOf("Spesa", "Viaggi"), CardQuery.labels(cards + card("D").copy(labels = listOf("spesa"))))
+    }
+
+    @Test
+    fun quickAccessSkipsArchived() {
+        val cards = listOf(card("A").copy(archived = true), card("B"))
+        assertEquals(listOf("B"), CardQuery.quickAccess(cards).map { it.name })
+    }
 }

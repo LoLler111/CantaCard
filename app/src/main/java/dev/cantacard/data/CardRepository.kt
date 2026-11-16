@@ -65,6 +65,17 @@ class CardRepository(
 
     fun toggleFavorite(id: String): Job = modify(id) { it.copy(favorite = !it.favorite, updatedAt = clock()) }
 
+    fun setArchived(id: String, archived: Boolean): Job = modify(id) { it.copy(archived = archived, updatedAt = clock()) }
+
+    /** Nuove posizioni nell'ordine personalizzato (id → posizione), vedi [CardQuery.reorder]. */
+    fun setRanks(ranks: Map<String, Double>): Job = update { snapshot ->
+        if (ranks.isEmpty()) return@update snapshot
+        val now = clock()
+        snapshot.copy(
+            cards = snapshot.cards.map { card -> ranks[card.id]?.let { card.copy(rank = it, updatedAt = now) } ?: card },
+        )
+    }
+
     /** Da chiamare quando la tessera viene mostrata in cassa. */
     fun markUsed(id: String): Job = modify(id) {
         it.copy(lastUsed = clock(), useCount = it.useCount + 1)

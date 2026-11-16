@@ -17,7 +17,7 @@ class BackupFormatTest {
     fun roundTripKeepsCardsAndPointsImagesInsideZip() {
         val cards = listOf(card("a", image = "a-1700000000000.webp"), card("b", image = "b-1.webp"), card("c"))
         // "b" ha un nome immagine ma il file non c'è: niente riferimento nel backup.
-        val text = BackupFormat.encode(cards, exportedAt = 42L) { it.id == "a" }
+        val text = BackupFormat.encode(cards, exportedAt = 42L) { it == "images/a.webp" }
         val content = BackupFormat.decode(text)
         assertEquals(BackupFormat.FORMAT_VERSION, content.formatVersion)
         assertEquals(42L, content.exportedAt)

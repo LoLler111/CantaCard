@@ -2,7 +2,25 @@ package dev.cantacard.data
 
 import java.text.Collator
 import java.text.Normalizer
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.Locale
+
+/** Ordine della lista scelto dall'utente; le preferite restano sempre in cima. */
+enum class SortOrder {
+    /** Usate più di recente prima (predefinito). */
+    RECENT,
+
+    /** In ordine alfabetico. */
+    NAME,
+
+    /** Nell'ordine deciso dall'utente trascinando le tessere ([Card.rank]). */
+    MANUAL;
+
+    companion object {
+        fun fromName(name: String?): SortOrder = entries.firstOrNull { it.name == name } ?: RECENT
+    }
+}
 
 /** Ordinamento e ricerca della lista tessere (funzioni pure, testate in JVM). */
 object CardQuery {
@@ -12,23 +30,85 @@ object CardQuery {
     }
     private val diacritics = Regex("\\p{Mn}+")
 
-    /** Preferite in cima, poi per uso più recente, poi (mai usate) per nome. */
-    fun sorted(cards: List<Card>): List<Card> = cards.sortedWith(
-        compareByDescending<Card> { it.favorite }
-            .thenByDescending { it.lastUsed }
-            .thenBy(collator) { it.name },
-    )
+    /**
+     * Preferite in cima, poi secondo [order]: per uso più recente (le mai usate per nome), per nome,
+     * o nell'ordine personalizzato (le mai spostate in fondo, dalla più vecchia).
+     */
+    fun sorted(cards: List<Card>, order: SortOrder = SortOrder.RECENT): List<Card> {
+        val favoritesFirst = compareByDescending<Card> { it.favorite }
+        val comparator = when (order) {
+            SortOrder.RECENT -> favoritesFirst.thenByDescending { it.lastUsed }.thenBy(collator) { it.name }
+            SortOrder.NAME -> favoritesFirst.thenBy(collator) { it.name }.thenBy { it.createdAt }
+            SortOrder.MANUAL -> favoritesFirst
+                .thenBy { it.rank == null }
+                .thenBy { it.rank ?: 0.0 }
+                .thenBy { it.createdAt }
+                .thenBy(collator) { it.name }
+        }
+        return cards.sortedWith(comparator)
+    }
 
-    /** Cerca nel nome (senza distinguere maiuscole e accenti) e nel numero (ignorando gli spazi). */
+    /** Tessere per scorciatoie, widget e riquadro rapido: le archiviate no. */
+    fun quickAccess(cards: List<Card>): List<Card> = sorted(cards.filterNot { it.archived })
+
+    /**
+     * Cerca nel nome (senza distinguere maiuscole e accenti), nelle etichette e nel numero
+     * (ignorando gli spazi).
+     */
     fun filter(cards: List<Card>, query: String): List<Card> {
         val q = normalize(query.trim())
         if (q.isEmpty()) return cards
         val digits = q.replace(" ", "")
         return cards.filter { card ->
             normalize(card.name).contains(q) ||
+                card.labels.any { normalize(it).contains(q) } ||
                 card.number.replace(" ", "").lowercase(Locale.ROOT).contains(digits)
         }
     }
+
+    /** Tutte le etichette usate, in ordine alfabetico, senza doppioni (maiuscole ignorate). */
+    fun labels(cards: List<Card>): List<String> =
+        Card.cleanLabels(cards.flatMap { it.labels }).sortedWith(collator)
+
+    /** Le tessere con l'etichetta [label] (maiuscole ignorate). */
+    fun withLabel(cards: List<Card>, label: String): List<Card> =
+        cards.filter { card -> card.labels.any { it.equals(label, ignoreCase = true) } }
+
+    /**
+     * Nuove posizioni dopo aver spostato la tessera da [from] a [to] in [ordered] (l'ordine che si
+     * vede). Di solito cambia solo la tessera spostata (posizione a metà tra le vicine); se le
+     * vicine non hanno ancora una posizione, o non c'è più spazio tra i numeri, si rinumera tutto
+     * [ordered]. Restituisce solo le posizioni cambiate: id → nuova posizione.
+     */
+    fun reorder(ordered: List<Card>, from: Int, to: Int): Map<String, Double> {
+        if (from == to || from !in ordered.indices || to !in ordered.indices) return emptyMap()
+        val list = ordered.toMutableList()
+        val moved = list.removeAt(from)
+        list.add(to, moved)
+        val before = list.getOrNull(to - 1)
+        val after = list.getOrNull(to + 1)
+        val ranked = list.all { it.rank != null }
+        if (ranked) {
+            val low = before?.rank
+            val high = after?.rank
+            val rank = when {
+                low != null && high != null -> (low + high) / 2
+                low != null -> low + 1.0
+                high != null -> high - 1.0
+                else -> 0.0
+            }
+            val roomy = (low == null || rank > low) && (high == null || rank < high)
+            if (roomy) return mapOf(moved.id to rank)
+        }
+        return list.mapIndexedNotNull { index, card ->
+            val rank = (index + 1).toDouble()
+            if (card.rank != rank) card.id to rank else null
+        }.toMap()
+    }
+
+    /** Giorni che mancano alla scadenza (0 = scade oggi, negativo = scaduta), `null` se non ha scadenza. */
+    fun daysToExpiry(card: Card, today: LocalDate): Long? =
+        card.expiryDate?.let { ChronoUnit.DAYS.between(today, it) }
 
     /**
      * Una tessera già salvata con lo stesso numero (ignorando spazi e maiuscole) per lo stesso

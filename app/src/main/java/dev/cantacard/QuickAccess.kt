@@ -45,6 +45,6 @@ class QuickAccess(
         const val DEBOUNCE_MS = 800L
 
         fun visibleKey(cards: List<Card>): Int =
-            CardQuery.sorted(cards).map { listOf(it.id, it.name, it.color, it.image, it.favorite) }.hashCode()
+            CardQuery.quickAccess(cards).map { listOf(it.id, it.name, it.color, it.image, it.favorite) }.hashCode()
     }
 }

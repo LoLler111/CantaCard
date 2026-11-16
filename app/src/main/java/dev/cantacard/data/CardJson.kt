@@ -85,6 +85,12 @@ object CardJson {
         put("createdAt", card.createdAt)
         card.note?.let { put("note", it) }
         if (card.updatedAt > 0) put("updatedAt", card.updatedAt)
+        // Campi della 0.2.0: scritti solo se diversi dal default, le versioni precedenti li ignorano.
+        card.backImage?.let { put("backImage", it) }
+        card.expiry?.let { put("expiry", it) }
+        if (card.labels.isNotEmpty()) put("labels", JSONArray(card.labels))
+        if (card.archived) put("archived", true)
+        card.rank?.let { put("rank", it) }
     }
 
     /** `null` se mancano i campi indispensabili (id, numero, formato) o il record è malformato. */
@@ -110,11 +116,28 @@ object CardJson {
                 createdAt = o.optLong("createdAt", 0L).coerceAtLeast(0L),
                 note = o.string("note"),
                 updatedAt = o.optLong("updatedAt", 0L).coerceAtLeast(0L),
+                backImage = o.string("backImage"),
+                // Una data non valida (es. da una versione futura con un altro formato) si scarta.
+                expiry = o.string("expiry")?.takeIf { Card.parseDate(it) != null },
+                labels = readLabels(o),
+                archived = o.optBoolean("archived", false),
+                rank = o.optDouble("rank", Double.NaN).takeIf { it.isFinite() },
             )
         }
     } catch (e: JSONException) {
         null
     }
+
+    private fun readLabels(o: JSONObject): List<String> {
+        val array = o.optJSONArray("labels") ?: return emptyList()
+        val labels = ArrayList<String>(array.length())
+        for (i in 0 until array.length()) {
+            if (!array.isNull(i)) array.optString(i).takeIf { it.isNotEmpty() }?.let(labels::add)
+        }
+        return Card.cleanLabels(labels).take(MAX_LABELS)
+    }
+
+    private const val MAX_LABELS = 50
 
     /** Stringa non vuota o `null` (evita il `"null"` che `optString` restituisce per JSON null). */
     private fun JSONObject.string(key: String): String? =

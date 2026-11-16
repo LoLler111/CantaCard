@@ -1,5 +1,7 @@
 package dev.cantacard.data
 
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 import java.util.UUID
 
 /** Una tessera fedeltà. Immutabile: le modifiche passano da [CardRepository]. */
@@ -31,8 +33,24 @@ data class Card(
      * vince tra backup e telefono, e tra telefoni sincronizzati.
      */
     val updatedAt: Long = 0L,
+    /** Foto del retro della tessera in `files/images/`, se presente (dalla 0.2.0). */
+    val backImage: String? = null,
+    /** Scadenza della tessera o del buono, data ISO `yyyy-MM-dd` (dalla 0.2.0). */
+    val expiry: String? = null,
+    /** Etichette scelte dall'utente, senza doppioni (dalla 0.2.0). */
+    val labels: List<String> = emptyList(),
+    /** Archiviata: non compare nella lista principale, in scorciatoie e widget (dalla 0.2.0). */
+    val archived: Boolean = false,
+    /**
+     * Posizione nell'ordine personalizzato (più piccola = prima), `null` se mai spostata. Numero
+     * con la virgola: spostare una tessera tra due altre cambia solo lei (dalla 0.2.0).
+     */
+    val rank: Double? = null,
 ) {
     val format: CodeFormat? get() = CodeFormat.fromName(formatName)
+
+    /** [expiry] come data, `null` se manca o non è valida. */
+    val expiryDate: LocalDate? get() = parseDate(expiry)
 
     /** Lettera o cifra mostrata quando non c'è un'immagine. */
     val initial: String get() = initialOf(name)
@@ -42,5 +60,21 @@ data class Card(
 
         fun initialOf(name: String): String =
             name.trim().firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "?"
+
+        fun parseDate(text: String?): LocalDate? = try {
+            text?.let(LocalDate::parse)
+        } catch (e: DateTimeParseException) {
+            null
+        }
+
+        /** Etichette pulite: spazi tolti, vuote e doppioni (senza distinguere maiuscole) scartati. */
+        fun cleanLabels(labels: List<String>): List<String> {
+            val seen = HashSet<String>()
+            return labels.map { it.trim().replace(spaces, " ").take(MAX_LABEL_LENGTH) }
+                .filter { it.isNotEmpty() && seen.add(it.lowercase()) }
+        }
+
+        const val MAX_LABEL_LENGTH = 30
+        private val spaces = Regex("\\s+")
     }
 }

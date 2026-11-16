@@ -8,7 +8,9 @@ import org.json.JSONObject
  * Contenuto del file di backup (funzioni pure, testate in JVM). Lo zip contiene:
  * - `cantacard.json` = `{"formatVersion": 1, "exportedAt": <epoch ms>, "cards": [...]}`, con lo
  *   stesso schema per tessera di `cards.json` ([CardJson]);
- * - `images/<idTessera>.webp` per le tessere con immagine (nel JSON `"image": "images/<id>.webp"`).
+ * - `images/<idTessera>.webp` per le tessere con immagine (nel JSON `"image": "images/<id>.webp"`);
+ * - dalla 0.2.0 `images/<idTessera>-back.webp` per la foto del retro (`"backImage"`): le versioni
+ *   precedenti accettano la voce ma la ignorano.
  *
  * La lettura tollera versioni future: campi sconosciuti ignorati, tessere illeggibili saltate una
  * per una, [Content.isNewer] per avvisare l'utente.
@@ -35,21 +37,27 @@ object BackupFormat {
 
     fun imageEntryFor(cardId: String): String = "images/$cardId.webp"
 
+    fun backImageEntryFor(cardId: String): String = "images/$cardId-back.webp"
+
     /** `true` per i nomi di voce accettati come immagini (niente percorsi strani). */
     fun isImageEntry(name: String): Boolean = imageEntry.matches(name)
 
-    /** @param hasImage se la tessera ha davvero un file immagine da mettere nello zip. */
+    /** @param hasEntry se la voce dello zip (immagine o retro) c'è davvero. */
     fun encode(
         cards: List<Card>,
         exportedAt: Long,
         deleted: Map<String, Long> = emptyMap(),
-        hasImage: (Card) -> Boolean,
+        hasEntry: (String) -> Boolean,
     ): String {
         val array = JSONArray()
         for (card in cards) {
             val json = CardJson.toJson(card)
             json.remove("image")
-            if (card.image != null && hasImage(card)) json.put("image", imageEntryFor(card.id))
+            json.remove("backImage")
+            if (card.image != null && hasEntry(imageEntryFor(card.id))) json.put("image", imageEntryFor(card.id))
+            if (card.backImage != null && hasEntry(backImageEntryFor(card.id))) {
+                json.put("backImage", backImageEntryFor(card.id))
+            }
             array.put(json)
         }
         val root = JSONObject()
@@ -67,7 +75,10 @@ object BackupFormat {
         val decoded = CardJson.decode(text)
         val cards = decoded.cards.map { card ->
             // Accetta solo riferimenti a immagini dentro lo zip.
-            if (card.image != null && !isImageEntry(card.image)) card.copy(image = null) else card
+            card.copy(
+                image = card.image?.takeIf(::isImageEntry),
+                backImage = card.backImage?.takeIf(::isImageEntry),
+            )
         }
         return Content(
             formatVersion = root.optInt("formatVersion", 1),

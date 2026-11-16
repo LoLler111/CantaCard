@@ -13,6 +13,7 @@ import org.junit.Test
  *
  * - `v0.1.0-*`: formato delle versioni 0.1.0–0.1.6 (`cards.json`, `cantacard.json` del backup e del
  *   file di sincronizzazione);
+ * - `v0.2.0-*`: dalla 0.2.0, con retro, scadenza, etichette, archivio e ordine personalizzato;
  * - `prerelease-cards.json`: prima della 0.1.0, senza `updatedAt` né `deleted` (mai pubblicato,
  *   tenuto perché più povero di tutti).
  */
@@ -97,6 +98,47 @@ class DataCompatibilityTest {
             ),
             content.deleted,
         )
+    }
+
+    @Test
+    fun cardsOf010HaveDefaultsForNewFields() {
+        CardJson.decode(fixture("v0.1.0-cards.json")).cards.forEach { card ->
+            assertNull(card.backImage)
+            assertNull(card.expiry)
+            assertEquals(emptyList<String>(), card.labels)
+            assertFalse(card.archived)
+            assertNull(card.rank)
+        }
+    }
+
+    @Test
+    fun readsCardsFileOf020() {
+        val decoded = CardJson.decode(fixture("v0.2.0-cards.json"))
+        assertEquals(0, decoded.skipped)
+        assertEquals(
+            listOf(
+                esselunga.copy(
+                    backImage = "6f1c2a9e-1b2c-4d3e-8f90-0a1b2c3d4e5f-back-1794500000001.webp",
+                    expiry = "2027-03-31",
+                    labels = listOf("Spesa", "Famiglia"),
+                    rank = 1.5,
+                ),
+                palestra.copy(archived = true),
+            ),
+            decoded.cards,
+        )
+        val again = CardJson.decode(CardJson.encode(decoded.cards))
+        assertEquals(decoded.cards, again.cards)
+    }
+
+    @Test
+    fun readsBackupOf020() {
+        val card = BackupFormat.decode(fixture("v0.2.0-backup.json")).cards.single()
+        assertEquals("images/${esselunga.id}.webp", card.image)
+        assertEquals("images/${esselunga.id}-back.webp", card.backImage)
+        assertEquals("2027-03-31", card.expiry)
+        assertEquals(listOf("Spesa", "Famiglia"), card.labels)
+        assertEquals(1.5, card.rank!!, 0.0)
     }
 
     @Test

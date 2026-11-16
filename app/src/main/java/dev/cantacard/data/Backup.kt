@@ -42,7 +42,7 @@ class Backup(
     suspend fun export(uri: Uri): Int = withContext(Dispatchers.IO) {
         val cards = repository.cards.value ?: throw IOException("Tessere non ancora caricate")
         val imageFiles = imageEntries(cards, images)
-        val json = BackupFormat.encode(cards, clock()) { BackupFormat.imageEntryFor(it.id) in imageFiles }
+        val json = BackupFormat.encode(cards, clock()) { it in imageFiles }
         openOutput(context, uri).use { BackupZip.write(it, json, imageFiles) }
         cards.size
     }
@@ -74,7 +74,7 @@ class Backup(
         pending.value = null
         // Prima le immagini tra quelle definitive, poi l'elenco in un colpo solo.
         val committed = commitImages(backup.content.cards, backup.imageFiles, images)
-        val incoming = backup.content.cards.map { it.copy(image = committed[it.id]) }
+        val incoming = backup.content.cards.map { it.withImages(committed[it.id]) }
         val (merged, previous) = repository.replace { current ->
             val merged = BackupMerge.merge(current.cards, incoming, mode)
             val now = clock()
@@ -85,7 +85,8 @@ class Backup(
             val removed = current.cards.filter { it.id !in ids }.associate { it.id to now }
             CardSnapshot(cards, current.deleted - ids + removed) to (merged to current.cards)
         }
-        deleteUnusedImages(previous.mapNotNull { it.image } + committed.values, merged.cards, images)
+        val candidates = previous.flatMap { it.imageFiles() } + committed.values.flatMap { it.files() }
+        deleteUnusedImages(candidates, merged.cards, images)
         restoreDir.deleteRecursively()
         Summary(merged.added, merged.updated, merged.duplicates, backup.content.skipped)
     }
@@ -95,30 +96,46 @@ class Backup(
         restoreDir.deleteRecursively()
     }
 
-    internal companion object {
-        /** Voce dello zip → file immagine, per le tessere che hanno davvero l'immagine. */
-        fun imageEntries(cards: List<Card>, images: ImageStore): Map<String, File> =
-            cards.mapNotNull { card ->
-                card.image?.let(images::file)?.takeIf { it.isFile }?.let { BackupFormat.imageEntryFor(card.id) to it }
-            }.toMap()
+    /** File definitivi delle immagini di una tessera arrivata da uno zip. */
+    data class CardImages(val front: String?, val back: String?) {
+        fun files(): List<String> = listOfNotNull(front, back)
+    }
 
-        /** Sposta tra le immagini definitive quelle dello zip; id tessera → nuovo nome file. */
-        fun commitImages(cards: List<Card>, files: Map<String, File>, images: ImageStore): Map<String, String> {
-            val committed = HashMap<String, String>()
+    internal companion object {
+        /** Voce dello zip → file immagine (fronte e retro), per le tessere che hanno davvero il file. */
+        fun imageEntries(cards: List<Card>, images: ImageStore): Map<String, File> = buildMap {
             for (card in cards) {
-                val file = card.image?.let { files[it] } ?: continue
-                try {
-                    committed[card.id] = images.commit(card.id, file)
-                } catch (e: IOException) {
-                    // Tessera senza immagine.
+                card.image?.let(images::file)?.takeIf { it.isFile }?.let { put(BackupFormat.imageEntryFor(card.id), it) }
+                card.backImage?.let(images::file)?.takeIf { it.isFile }?.let {
+                    put(BackupFormat.backImageEntryFor(card.id), it)
                 }
+            }
+        }
+
+        /** Sposta tra le immagini definitive quelle dello zip; id tessera → nuovi nomi dei file. */
+        fun commitImages(cards: List<Card>, files: Map<String, File>, images: ImageStore): Map<String, CardImages> {
+            val committed = HashMap<String, CardImages>()
+            for (card in cards) {
+                val front = commitOne(card.image?.let { files[it] }, card.id, images)
+                val back = commitOne(card.backImage?.let { files[it] }, card.id + "-back", images)
+                if (front != null || back != null) committed[card.id] = CardImages(front, back)
             }
             return committed
         }
 
+        private fun commitOne(file: File?, prefix: String, images: ImageStore): String? {
+            file ?: return null
+            return try {
+                images.commit(prefix, file)
+            } catch (e: IOException) {
+                // Tessera senza questa immagine.
+                null
+            }
+        }
+
         /** Cancella i file in [candidates] che nessuna tessera di [cards] usa più. */
         fun deleteUnusedImages(candidates: Collection<String>, cards: List<Card>, images: ImageStore) {
-            val used = cards.mapNotNullTo(HashSet()) { it.image }
+            val used = cards.flatMapTo(HashSet()) { it.imageFiles() }
             for (name in candidates) {
                 if (name !in used) {
                     ImageLoader.evict(images.file(name))
@@ -142,3 +159,9 @@ class Backup(
         }
     }
 }
+
+/** Nomi dei file immagine (fronte e retro) di una tessera. */
+fun Card.imageFiles(): List<String> = listOfNotNull(image, backImage)
+
+/** La tessera con le immagini arrivate da uno zip (nessuna se [images] è `null`). */
+internal fun Card.withImages(images: Backup.CardImages?): Card = copy(image = images?.front, backImage = images?.back)

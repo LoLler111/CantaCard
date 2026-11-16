@@ -181,20 +181,18 @@ class Sync(
             val result = SyncMerge.merge(current, remote, clock())
             val incoming = result.snapshot.cards.filter { it.id in result.fromRemote }
             val committed = Backup.commitImages(incoming, zip?.images.orEmpty(), images)
-            val cards = result.snapshot.cards.map { if (it.id in result.fromRemote) it.copy(image = committed[it.id]) else it }
+            val cards = result.snapshot.cards.map { if (it.id in result.fromRemote) it.withImages(committed[it.id]) else it }
             val next = CardSnapshot(cards, result.snapshot.deleted)
             // Prima del salvataggio: la modifica che arriva dal file non fa ripartire un'altra sincronizzazione.
             syncedKey = triggerKey(cards)
-            next to (next to (current.cards.mapNotNull { it.image } + committed.values))
+            next to (next to (current.cards.flatMap { it.imageFiles() } + committed.values.flatMap { it.files() }))
         }
         Backup.deleteUnusedImages(replaced, merged.cards, images)
 
         // 3. Il file si riscrive solo se è cambiato qualcosa (meno caricamenti su Drive).
         if (zip == null || !SyncMerge.sameContent(merged, remote)) {
             val imageFiles = Backup.imageEntries(merged.cards, images)
-            val json = BackupFormat.encode(merged.cards, clock(), merged.deleted) {
-                BackupFormat.imageEntryFor(it.id) in imageFiles
-            }
+            val json = BackupFormat.encode(merged.cards, clock(), merged.deleted) { it in imageFiles }
             Backup.openOutput(context, uri).use { BackupZip.write(it, json, imageFiles) }
         }
         syncedKey = triggerKey(merged.cards)
