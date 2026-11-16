@@ -25,6 +25,51 @@
     <string name="section_all">Le tue tessere</string>
     <string name="card_favorite">Preferita</string>
     <string name="add_card">Aggiungi</string>
+    <string name="filter_all">Tutte</string>
+    <string name="filter_archived">Archiviate · %1$d</string>
+    <string name="list_filter_empty">Nessuna tessera qui</string>
+    <string name="list_empty_import">Arrivi da Catima? Importa le tessere</string>
+    <string name="expiry_badge_expired">Scaduta</string>
+    <string name="expiry_badge_today">Scade oggi</string>
+    <plurals name="expiry_badge_days">
+        <item quantity="one">Scade domani</item>
+        <item quantity="other">Scade tra %d giorni</item>
+    </plurals>
+
+    <!-- Ordine e riordino -->
+    <string name="sort_menu">Ordina le tessere</string>
+    <string name="sort_title">Ordina le tessere</string>
+    <string name="sort_recent">Usate di recente</string>
+    <string name="sort_name">Per nome</string>
+    <string name="sort_manual">Personalizzato</string>
+    <string name="sort_favorites_note">Le preferite restano sempre in cima.</string>
+    <string name="reorder_menu">Riordina le tessere</string>
+    <string name="reorder_title">Riordina</string>
+    <string name="reorder_done">Fine</string>
+    <string name="reorder_hint">Trascina le tessere tenendo la maniglia a destra.</string>
+    <string name="reorder_up">Sposta su</string>
+    <string name="reorder_down">Sposta giù</string>
+
+    <!-- Importazione da altre app -->
+    <string name="import_menu">Importa da Catima</string>
+    <string name="import_title">Importare le tessere?</string>
+    <plurals name="import_count">
+        <item quantity="one">Trovata %1$d tessera di %2$s: verrà aggiunta alle tue, senza doppioni.</item>
+        <item quantity="other">Trovate %1$d tessere di %2$s: verranno aggiunte alle tue, senza doppioni.</item>
+    </plurals>
+    <string name="import_empty">Il file di %1$s non contiene tessere.</string>
+    <string name="import_confirm">Importa</string>
+    <plurals name="import_done">
+        <item quantity="one">Importata %d tessera</item>
+        <item quantity="other">Importate %d tessere</item>
+    </plurals>
+    <string name="import_encrypted">Il file è protetto da password: esportalo di nuovo da Catima senza password.</string>
+    <string name="import_not_supported">Questo file non è un\'esportazione di Catima</string>
+    <string name="import_unreadable">Impossibile leggere il file</string>
+
+    <!-- Segnalazione di un problema -->
+    <string name="report_menu">Segnala un problema</string>
+    <string name="report_body">**Cosa è successo?**\n\n\n**Cosa ti aspettavi?**\n\n\n---\nCantaCard %1$s · Android %2$s (API %3$d) · %4$s</string>
 
     <!-- Visualizzazione tessera -->
     <string name="favorite_add">Aggiungi alle preferite</string>
@@ -33,6 +78,15 @@
     <string name="show_hint">Luminosità al massimo · avvicina allo scanner</string>
     <string name="code_invalid">Il numero non è valido per il formato %1$s. Mostra il numero alla cassa per l\'inserimento manuale.</string>
     <string name="code_unknown_format">Formato %1$s non supportato da questa versione. Mostra il numero alla cassa per l\'inserimento manuale.</string>
+    <string name="code_rotate">Ruota il codice</string>
+    <string name="code_straighten">Codice dritto</string>
+    <string name="show_back">Retro</string>
+    <string name="expires_on">Scade il %1$s</string>
+    <string name="expired_on">Scaduta il %1$s</string>
+    <string name="archive">Archivia</string>
+    <string name="unarchive">Togli dall\'archivio</string>
+    <string name="archived_done">Tessera archiviata: la trovi in «Archiviate»</string>
+    <string name="unarchived_done">Tessera tolta dall\'archivio</string>
     <string name="delete_title">Eliminare la tessera?</string>
     <string name="delete_message">«%1$s» verrà eliminata da questo telefono.</string>
     <string name="delete_message_synced">«%1$s» verrà eliminata da questo telefono e dagli altri sincronizzati.</string>
@@ -49,7 +103,19 @@
     <string name="format_more">Altri formati</string>
     <string name="save_new">Aggiungi tessera</string>
     <string name="save_edit">Salva modifiche</string>
-    <string name="section_details">Note</string>
+    <string name="section_details">Dettagli</string>
+    <string name="section_back">Retro della tessera</string>
+    <string name="back_hint">Una foto del retro, se c\'è qualcosa che serve in cassa o allo sportello.</string>
+    <string name="back_photo">Fotografa il retro</string>
+    <string name="back_photo_again">Rifai la foto</string>
+    <string name="field_expiry">Scadenza</string>
+    <string name="expiry_none">Nessuna scadenza</string>
+    <string name="expiry_clear">Togli la scadenza</string>
+    <string name="expiry_set">Imposta</string>
+    <string name="field_labels">Etichette</string>
+    <string name="label_new">Nuova etichetta</string>
+    <string name="label_name">Nome dell\'etichetta</string>
+    <string name="label_add">Aggiungi</string>
     <string name="scan_camera">Scansiona</string>
     <string name="scan_camera_hint">Con la fotocamera</string>
     <string name="scan_photo">Da una foto</string>
@@ -95,6 +161,7 @@
     <string name="field_color">Colore</string>
     <string name="color_automatic">Colore automatico</string>
     <string name="photo_hint">Inquadra il fronte della tessera</string>
+    <string name="photo_hint_back">Inquadra il retro della tessera</string>
     <string name="photo_shutter">Scatta la foto</string>
     <string name="crop_hint">Sposta e ingrandisci la foto per farla stare nel riquadro</string>
     <string name="crop_rotate">Ruota</string>
@@ -179,6 +246,8 @@
 
     <!-- Accesso rapido: scorciatoie e widget -->
     <string name="pin_home">Aggiungi alla schermata Home</string>
+    <string name="tile_label">Tessere</string>
+    <string name="tile_subtitle_empty">Nessuna tessera</string>
     <string name="shortcut_card_deleted">Tessera eliminata</string>
     <string name="widget_favorites_label">Tessere preferite</string>
     <string name="widget_favorites_description">Le tessere preferite, poi le più usate: tocca e mostrala in cassa</string>

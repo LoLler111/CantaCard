@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -103,9 +104,14 @@ fun CardArt(
     modifier: Modifier = Modifier,
     image: CardImage? = null,
     compact: Boolean = true,
+    corner: Dp = 18.dp,
+    /** Dimensione dell'iniziale o dell'icona, per le miniature; `null` = secondo [compact]. */
+    markSize: Dp? = null,
+    /** Avviso in alto (es. scadenza), `null` se non serve. */
+    badge: CardBadge? = null,
 ) {
     val content = contentColorOn(color)
-    Box(modifier.cardSurface(color)) {
+    Box(modifier.cardSurface(color, corner)) {
         if (image != null && image.isPhoto) {
             Image(
                 bitmap = image.bitmap,
@@ -114,6 +120,9 @@ fun CardArt(
                 filterQuality = FilterQuality.Medium,
                 modifier = Modifier.fillMaxSize(),
             )
+            if (badge != null) {
+                BadgePill(badge, Modifier.align(Alignment.BottomStart).padding(if (compact) 8.dp else 12.dp))
+            }
             if (favorite) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -137,11 +146,15 @@ fun CardArt(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(if (compact) 12.dp else 18.dp),
+                .padding(if (markSize != null) 6.dp else if (compact) 12.dp else 18.dp),
         ) {
             Row(verticalAlignment = Alignment.Top, modifier = Modifier.fillMaxWidth()) {
-                StoreMark(initial, color, image, if (compact) 36.dp else 48.dp)
+                StoreMark(initial, color, image, markSize ?: if (compact) 36.dp else 48.dp)
                 Spacer(Modifier.weight(1f))
+                if (badge != null) {
+                    BadgePill(badge)
+                    if (favorite) Spacer(Modifier.width(6.dp))
+                }
                 if (favorite) {
                     Icon(
                         painter = painterResource(R.drawable.ic_star),
@@ -152,13 +165,33 @@ fun CardArt(
                 }
             }
             Spacer(Modifier.weight(1f))
-            Text(
-                text = name,
-                color = content,
-                style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (name.isNotEmpty()) {
+                Text(
+                    text = name,
+                    color = content,
+                    style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
+}
+
+/** Avviso piccolo sulla tessera: [alert] rosso (scaduta), altrimenti giallo (scade presto). */
+class CardBadge(val text: String, val alert: Boolean)
+
+@Composable
+private fun BadgePill(badge: CardBadge, modifier: Modifier = Modifier) {
+    Text(
+        text = badge.text,
+        color = if (badge.alert) Color.White else Color(0xFF3D2A00),
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.Bold,
+        maxLines = 1,
+        modifier = modifier
+            .clip(CircleShape)
+            .background(if (badge.alert) Color(0xFFB3261E) else Color(0xFFFFC857))
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+    )
 }

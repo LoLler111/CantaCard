@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -54,11 +55,19 @@ class MainActivity : ComponentActivity() {
                 val syncOpenLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.OpenDocument(),
                 ) { uri -> uri?.let(::enableSync) }
+                val importLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.OpenDocument(),
+                ) { uri -> uri?.let(::readImport) }
                 var showSync by rememberSaveable { mutableStateOf(false) }
                 val update by app.updater.available.collectAsState()
+                val sortOrder by app.listPrefs.sortOrder.collectAsState()
 
                 CardListScreen(
                     repository = repository,
+                    sortOrder = sortOrder,
+                    onSortChange = app.listPrefs::setSortOrder,
+                    onImport = { importLauncher.launch(IMPORT_MIMES) },
+                    onReport = ::reportProblem,
                     onOpen = { card -> startActivity(ShowCardActivity.intent(this, card.id)) },
                     onAdd = { startActivity(StorePickerActivity.add(this)) },
                     onExport = {
@@ -99,8 +108,9 @@ class MainActivity : ComponentActivity() {
                         backupCount = backup.content.cards.size,
                         currentCount = cards?.size ?: 0,
                         isNewer = backup.content.isNewer,
-                        onChoose = ::restore,
+                        onChoose = { mode -> restore(mode, imported = backup.source != Backup.Source.BACKUP) },
                         onDismiss = app.backup::cancel,
+                        fromApp = if (backup.source == Backup.Source.CATIMA) CATIMA else null,
                     )
                 }
             }
@@ -115,6 +125,40 @@ class MainActivity : ComponentActivity() {
         app.appScope.launch(Dispatchers.IO) { app.sync.onAppOpen() }
         // Una volta per avvio, in background: se c'è una versione nuova compare una riga nella lista.
         app.updater.checkOnStart()
+    }
+
+    /**
+     * "Segnala un problema": apre nel browser una nuova segnalazione su GitHub con versione dell'app,
+     * di Android e modello del telefono già scritti (niente dati personali, li vede l'utente prima
+     * di inviare). Nessun invio automatico.
+     */
+    private fun reportProblem() {
+        val body = getString(
+            R.string.report_body,
+            BuildConfig.VERSION_NAME,
+            Build.VERSION.RELEASE,
+            Build.VERSION.SDK_INT,
+            "${Build.MANUFACTURER} ${Build.MODEL}",
+        )
+        val uri = Uri.parse(ISSUES_URL).buildUpon().appendQueryParameter("body", body).build()
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, uri))
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(this, R.string.update_no_browser, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun readImport(uri: Uri) {
+        val app = app
+        app.appScope.launch(Dispatchers.Main) {
+            val message = when (app.backup.readImport(uri)) {
+                Backup.ImportResult.OK -> return@launch
+                Backup.ImportResult.ENCRYPTED -> R.string.import_encrypted
+                Backup.ImportResult.NOT_SUPPORTED -> R.string.import_not_supported
+                Backup.ImportResult.UNREADABLE -> R.string.import_unreadable
+            }
+            Toast.makeText(app, message, Toast.LENGTH_LONG).show()
+        }
     }
 
     /** Il download e l'installazione li fanno il browser e Android: l'app non installa niente. */
@@ -174,19 +218,20 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun restore(mode: RestoreMode) {
+    private fun restore(mode: RestoreMode, imported: Boolean) {
         val app = app
         app.appScope.launch(Dispatchers.Main) {
             val summary = app.backup.restore(mode) ?: return@launch
-            Toast.makeText(app, summaryText(summary), Toast.LENGTH_LONG).show()
+            Toast.makeText(app, summaryText(summary, imported), Toast.LENGTH_LONG).show()
         }
     }
 
-    private fun summaryText(summary: Backup.Summary): String {
+    private fun summaryText(summary: Backup.Summary, imported: Boolean): String {
         val res = app.resources
+        val done = if (imported) R.plurals.import_done else R.plurals.restore_done
         val parts = mutableListOf(
             if (summary.added == 0) res.getString(R.string.restore_none_new)
-            else res.getQuantityString(R.plurals.restore_done, summary.added, summary.added),
+            else res.getQuantityString(done, summary.added, summary.added),
         )
         if (summary.updated > 0) {
             parts += res.getQuantityString(R.plurals.restore_updated, summary.updated, summary.updated)
@@ -205,5 +250,11 @@ class MainActivity : ComponentActivity() {
 
         // Alcune app di archiviazione non riconoscono lo zip e lo indicano come file generico.
         val BACKUP_MIMES = arrayOf(ZIP_MIME, "application/x-zip-compressed", "application/octet-stream")
+
+        /** Esportazione di Catima: zip, oppure il solo CSV. */
+        val IMPORT_MIMES = BACKUP_MIMES + arrayOf("text/csv", "text/comma-separated-values", "text/plain")
+
+        const val CATIMA = "Catima"
+        const val ISSUES_URL = "https://github.com/LoLler111/CantaCard/issues/new"
     }
 }

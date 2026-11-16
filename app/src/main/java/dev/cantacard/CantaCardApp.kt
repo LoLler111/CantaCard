@@ -37,6 +37,9 @@ class CantaCardApp : Application() {
     /** Letto solo quando serve (scelta del negozio, modulo), non all'avvio. */
     val catalog: CatalogRepository by lazy { CatalogRepository(this, appScope) }
 
+    /** Ordine della lista (solo su questo telefono). */
+    val listPrefs: ListPrefs by lazy { ListPrefs(this) }
+
     /** Controllo degli aggiornamenti dell'app (GitHub Releases). */
     val updater: AppUpdater by lazy { AppUpdater(appScope, cacheDir) }
 

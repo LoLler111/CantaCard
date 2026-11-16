@@ -123,8 +123,8 @@ fun EditCardScreen(
     initialCode: ScannedCode?,
     images: ImageStore,
     hasCamera: Boolean,
-    /** Tessera da salvare, eventuale nuova immagine provvisoria, `true` se l'immagine va tolta. */
-    onSave: (Card, File?, Boolean) -> Unit,
+    /** Tessera da salvare e immagini (fronte e retro) nuove o da togliere. */
+    onSave: (Card, ImageChanges) -> Unit,
     onClose: () -> Unit,
 ) {
     val prefilledName = remember {
@@ -141,6 +141,14 @@ fun EditCardScreen(
     var pendingImage by rememberSaveable { mutableStateOf<String?>(null) }
     var imageRemoved by rememberSaveable { mutableStateOf(false) }
     var cropSource by rememberSaveable { mutableStateOf(initialCrop) }
+    // Foto del retro: nuova provvisoria, tolta, o da ritagliare.
+    var pendingBack by rememberSaveable { mutableStateOf<String?>(null) }
+    var backRemoved by rememberSaveable { mutableStateOf(false) }
+    var backCropSource by rememberSaveable { mutableStateOf<String?>(null) }
+    var expiry by rememberSaveable { mutableStateOf(original?.expiry) }
+    var labels by rememberSaveable { mutableStateOf(ArrayList(original?.labels.orEmpty())) }
+    var pickExpiry by rememberSaveable { mutableStateOf(false) }
+    var newLabel by rememberSaveable { mutableStateOf(false) }
     var autoIconDone by rememberSaveable { mutableStateOf(false) }
     var iconStatus by remember { mutableStateOf(IconStatus.IDLE) }
     var note by rememberSaveable { mutableStateOf(original?.note.orEmpty()) }
@@ -163,6 +171,9 @@ fun EditCardScreen(
     val imageFile: File? = pendingImage?.let(::File)
         ?: original?.image?.takeUnless { imageRemoved }?.let(images::file)
     val cardImage = rememberCardImage(imageFile)
+    val backFile: File? = pendingBack?.let(::File)
+        ?: original?.backImage?.takeUnless { backRemoved }?.let(images::file)
+    val backImage = rememberCardImage(backFile)
 
     // Colore automatico: quello dell'icona del negozio, altrimenti quello del catalogo, altrimenti
     // uno stabile dal nome. Il colore del catalogo vince se compare nel logo (es. Lidl resta blu).
@@ -191,13 +202,14 @@ fun EditCardScreen(
 
     val dirty = if (original == null) {
         name.trim() != prefilledName || number.isNotBlank() || note.isNotBlank() || storeId != initialStoreId ||
-            pendingImage != null || colorChoice != null
+            pendingImage != null || colorChoice != null || pendingBack != null || expiry != null || labels.isNotEmpty()
     } else {
         name != original.name || number != original.number || storeId != original.storeId ||
             formatName != original.formatName || note != original.note.orEmpty() ||
             // Il colore conta solo se scelto a mano: quello automatico può cambiare da solo
             // (catalogo corretto, icona letta) senza che l'utente abbia modificato niente.
-            pendingImage != null || imageRemoved || colorPicked
+            pendingImage != null || imageRemoved || colorPicked ||
+            pendingBack != null || backRemoved || expiry != original.expiry || labels != original.labels
     }
 
     val context = LocalContext.current
@@ -290,17 +302,30 @@ fun EditCardScreen(
     val cameraLauncher = rememberLauncherForActivityResult(PhotoActivity.Contract()) { path ->
         if (path != null) cropSource = path
     }
+    val backCameraLauncher = rememberLauncherForActivityResult(PhotoActivity.Contract()) { path ->
+        if (path != null) backCropSource = path
+    }
+    /** Immagine della galleria copiata in un file provvisorio da ritagliare; `null` se illeggibile. */
+    suspend fun galleryCopy(uri: android.net.Uri): String? = withContext(Dispatchers.IO) {
+        val bitmap = Bitmaps.decode(context, uri) ?: return@withContext null
+        try {
+            images.newTemp("jpg").also { Bitmaps.writeJpeg(bitmap, it) }.path
+        } catch (e: IOException) {
+            null
+        }
+    }
+    val backGalleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) {
+            scope.launch {
+                val path = galleryCopy(uri)
+                if (path != null) backCropSource = path else snackbar.showSnackbar(unreadableMessage)
+            }
+        }
+    }
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             scope.launch {
-                val path = withContext(Dispatchers.IO) {
-                    val bitmap = Bitmaps.decode(context, uri) ?: return@withContext null
-                    try {
-                        images.newTemp("jpg").also { Bitmaps.writeJpeg(bitmap, it) }.path
-                    } catch (e: IOException) {
-                        null
-                    }
-                }
+                val path = galleryCopy(uri)
                 if (path != null) cropSource = path else snackbar.showSnackbar(unreadableMessage)
             }
         }
@@ -349,6 +374,8 @@ fun EditCardScreen(
                 storeId = storeId,
                 createdAt = System.currentTimeMillis(),
                 note = note.trim().ifEmpty { null },
+                expiry = expiry,
+                labels = Card.cleanLabels(labels),
             )
         } else {
             original.copy(
@@ -359,9 +386,19 @@ fun EditCardScreen(
                 color = cardColor,
                 storeId = storeId,
                 note = note.trim().ifEmpty { null },
+                expiry = expiry,
+                labels = Card.cleanLabels(labels),
             )
         }
-        onSave(card, pendingImage?.let(::File), imageRemoved)
+        onSave(
+            card,
+            ImageChanges(
+                newImage = pendingImage?.let(::File),
+                removeImage = imageRemoved,
+                newBack = pendingBack?.let(::File),
+                removeBack = backRemoved,
+            ),
+        )
     }
 
     BackHandler(enabled = dirty) { confirmDiscard = true }
@@ -490,7 +527,7 @@ fun EditCardScreen(
                             onIcon = { domain -> fetchIcon(domain, store?.icon, refresh = cardImage != null) },
                             onCamera = {
                                 focusManager.clearFocus()
-                                cameraLauncher.launch(Unit)
+                                cameraLauncher.launch(false)
                             },
                             onGallery = {
                                 focusManager.clearFocus()
@@ -514,7 +551,52 @@ fun EditCardScreen(
                         )
                     }
 
+                    FormSection(icon = R.drawable.ic_card_back, title = R.string.section_back) {
+                        BackSection(
+                            image = backImage,
+                            hasCamera = hasCamera,
+                            onCamera = {
+                                focusManager.clearFocus()
+                                backCameraLauncher.launch(true)
+                            },
+                            onGallery = {
+                                focusManager.clearFocus()
+                                backGalleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                            },
+                            onRemove = {
+                                pendingBack?.let { File(it).delete() }
+                                pendingBack = null
+                                backRemoved = original?.backImage != null
+                            },
+                        )
+                    }
+
                     FormSection(icon = R.drawable.ic_notes, title = R.string.section_details) {
+                        ExpiryRow(
+                            expiry = Card.parseDate(expiry),
+                            onPick = {
+                                focusManager.clearFocus()
+                                pickExpiry = true
+                            },
+                            onClear = { expiry = null },
+                        )
+                        LabelsPicker(
+                            all = remember(cards) { CardQuery.labels(cards) },
+                            selected = labels,
+                            onToggle = { label ->
+                                labels = ArrayList(
+                                    if (labels.any { it.equals(label, ignoreCase = true) }) {
+                                        labels.filterNot { it.equals(label, ignoreCase = true) }
+                                    } else {
+                                        labels + label
+                                    },
+                                )
+                            },
+                            onAdd = {
+                                focusManager.clearFocus()
+                                newLabel = true
+                            },
+                        )
                         FormTextField(
                             value = note,
                             onValueChange = { note = it },
@@ -555,6 +637,63 @@ fun EditCardScreen(
                 cropSource = null
                 source.delete()
             },
+        )
+    }
+
+    backCropSource?.let { path ->
+        val source = remember(path) { File(path) }
+        CropDialog(
+            source = source,
+            onDone = { bitmap ->
+                backCropSource = null
+                source.delete()
+                scope.launch {
+                    val file = images.newTemp("webp")
+                    val ok = withContext(Dispatchers.IO) {
+                        try {
+                            Bitmaps.writeWebp(bitmap, file)
+                            true
+                        } catch (e: IOException) {
+                            false
+                        }
+                    }
+                    if (ok) {
+                        pendingBack?.let { File(it).delete() }
+                        pendingBack = file.path
+                        backRemoved = false
+                    } else {
+                        snackbar.showSnackbar(unreadableMessage)
+                    }
+                }
+            },
+            onCancel = {
+                backCropSource = null
+                source.delete()
+            },
+        )
+    }
+
+    if (pickExpiry) {
+        ExpiryDialog(
+            initial = Card.parseDate(expiry),
+            onPick = { date ->
+                pickExpiry = false
+                expiry = date.toString()
+            },
+            onDismiss = { pickExpiry = false },
+        )
+    }
+
+    if (newLabel) {
+        NewLabelDialog(
+            onAdd = { label ->
+                newLabel = false
+                val clean = Card.cleanLabels(listOf(label)).firstOrNull()
+                if (clean != null && labels.none { it.equals(clean, ignoreCase = true) }) {
+                    labels = ArrayList(labels + clean)
+                }
+            },
+            onDismiss = { newLabel = false },
         )
     }
 
@@ -889,3 +1028,11 @@ private fun ColorPicker(automatic: Int, selected: Int, onSelect: (Int) -> Unit) 
         }
     }
 }
+
+/** Immagini cambiate nel modulo: file provvisori nuovi o immagini da togliere. */
+class ImageChanges(
+    val newImage: File?,
+    val removeImage: Boolean,
+    val newBack: File?,
+    val removeBack: Boolean,
+)

@@ -65,21 +65,30 @@ class EditCardActivity : ComponentActivity() {
                     initialCode = initialCode,
                     images = images,
                     hasCamera = hasCamera,
-                    onSave = { card, newImage, removeImage ->
-                        // L'immagine si sposta fuori dal thread principale; la lista si aggiorna da sola.
+                    onSave = { card, changes ->
+                        // Le immagini si spostano fuori dal thread principale; la lista si aggiorna da sola.
                         app.appScope.launch(Dispatchers.IO) {
                             var saved = card
                             try {
-                                if (newImage != null) {
-                                    saved = card.copy(image = images.commit(card.id, newImage))
-                                } else if (removeImage) {
-                                    saved = card.copy(image = null)
+                                if (changes.newImage != null) {
+                                    saved = saved.copy(image = images.commit(card.id, changes.newImage))
+                                } else if (changes.removeImage) {
+                                    saved = saved.copy(image = null)
                                 }
                             } catch (e: IOException) {
                                 Log.e("EditCardActivity", "Immagine non salvata", e)
                             }
-                            if (saved.image != original?.image) {
-                                original?.image?.let { old ->
+                            try {
+                                if (changes.newBack != null) {
+                                    saved = saved.copy(backImage = images.commit(card.id + "-back", changes.newBack))
+                                } else if (changes.removeBack) {
+                                    saved = saved.copy(backImage = null)
+                                }
+                            } catch (e: IOException) {
+                                Log.e("EditCardActivity", "Retro non salvato", e)
+                            }
+                            for ((old, now) in listOf(original?.image to saved.image, original?.backImage to saved.backImage)) {
+                                if (old != null && old != now) {
                                     ImageLoader.evict(images.file(old))
                                     images.delete(old)
                                 }

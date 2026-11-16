@@ -104,7 +104,11 @@ class PhotoActivity : ComponentActivity() {
                     },
                     onClose = ::finish,
                 ) {
-                    PhotoScreen(onShoot = ::shoot, onClose = ::finish)
+                    PhotoScreen(
+                        back = intent.getBooleanExtra(EXTRA_BACK, false),
+                        onShoot = ::shoot,
+                        onClose = ::finish,
+                    )
                 }
             }
         }
@@ -150,8 +154,10 @@ class PhotoActivity : ComponentActivity() {
     }
 
     /** Scatta una foto e restituisce il percorso del file provvisorio, o `null` se si chiude. */
-    class Contract : ActivityResultContract<Unit, String?>() {
-        override fun createIntent(context: Context, input: Unit): Intent = Intent(context, PhotoActivity::class.java)
+    /** Input: `true` per fotografare il retro della tessera. */
+    class Contract : ActivityResultContract<Boolean, String?>() {
+        override fun createIntent(context: Context, input: Boolean): Intent =
+            Intent(context, PhotoActivity::class.java).putExtra(EXTRA_BACK, input)
 
         override fun parseResult(resultCode: Int, intent: Intent?): String? =
             if (resultCode == Activity.RESULT_OK) intent?.getStringExtra(EXTRA_PATH) else null
@@ -159,11 +165,12 @@ class PhotoActivity : ComponentActivity() {
 
     private companion object {
         const val EXTRA_PATH = "dev.cantacard.extra.PHOTO_PATH"
+        const val EXTRA_BACK = "dev.cantacard.extra.PHOTO_BACK"
     }
 }
 
 @Composable
-private fun PhotoScreen(onShoot: (ImageCapture, onFailed: () -> Unit) -> Unit, onClose: () -> Unit) {
+private fun PhotoScreen(back: Boolean, onShoot: (ImageCapture, onFailed: () -> Unit) -> Unit, onClose: () -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var surfaceRequest by remember { mutableStateOf<SurfaceRequest?>(null) }
@@ -204,7 +211,7 @@ private fun PhotoScreen(onShoot: (ImageCapture, onFailed: () -> Unit) -> Unit, o
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         surfaceRequest?.let { CameraXViewfinder(surfaceRequest = it, modifier = Modifier.fillMaxSize()) }
-        CardFrame(Modifier.fillMaxSize())
+        CardFrame(back, Modifier.fillMaxSize())
         if (error) {
             Text(stringResource(R.string.camera_error), color = Color.White, modifier = Modifier.align(Alignment.Center))
         }
@@ -242,7 +249,7 @@ private fun PhotoScreen(onShoot: (ImageCapture, onFailed: () -> Unit) -> Unit, o
 
 /** Sagoma della tessera da riempire con la foto (il ritaglio fine si fa dopo). */
 @Composable
-private fun CardFrame(modifier: Modifier = Modifier) {
+private fun CardFrame(back: Boolean, modifier: Modifier = Modifier) {
     Box(modifier) {
         Canvas(
             Modifier
@@ -262,7 +269,7 @@ private fun CardFrame(modifier: Modifier = Modifier) {
             )
         }
         Text(
-            text = stringResource(R.string.photo_hint),
+            text = stringResource(if (back) R.string.photo_hint_back else R.string.photo_hint),
             color = Color.White,
             style = MaterialTheme.typography.titleSmall,
             textAlign = TextAlign.Center,

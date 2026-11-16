@@ -64,6 +64,17 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import dev.cantacard.ui.components.cardSurface
 import dev.cantacard.ui.contentColorOn
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import dev.cantacard.ui.edit.formatDate
+import java.io.File
+import java.time.LocalDate
 
 private val Ink = Color(0xFF111111)
 private val Muted = Color(0xFF5F6B69)
@@ -81,6 +92,9 @@ fun ShowCardScreen(
     onToggleFavorite: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    onArchive: (Boolean) -> Unit,
+    /** Pagina visibile (con lo scorrimento tra tessere ne sono composte due alla volta). */
+    isCurrent: Boolean = true,
     /** Letto solo quando si chiede la conferma: la schermata della tessera resta leggera. */
     isSynced: () -> Boolean = { false },
     /** "Aggiungi alla schermata Home", `null` se il launcher non lo permette. */
@@ -89,13 +103,17 @@ fun ShowCardScreen(
     val format = card.format
     val matrix = remember(card.number, format) { format?.let { BarcodeEncoder.encode(card.number, it) } }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    var rotated by rememberSaveable(card.id) { mutableStateOf(false) }
+    var showBack by rememberSaveable(card.id) { mutableStateOf(false) }
     val color = Color(card.color)
     val onColor = contentColorOn(color)
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val images = LocalContext.current.app.images
 
     // Icone di sistema leggibili sopra il colore del negozio.
     val view = LocalView.current
     SideEffect {
+        if (!isCurrent) return@SideEffect
         val window = (view.context as? Activity)?.window ?: return@SideEffect
         WindowCompat.getInsetsController(window, view).apply {
             isAppearanceLightStatusBars = color.luminance() > 0.55f
@@ -117,6 +135,7 @@ fun ShowCardScreen(
                 onToggleFavorite = onToggleFavorite,
                 onEdit = onEdit,
                 onDelete = { confirmDelete = true },
+                onArchive = onArchive,
                 onPin = onPin,
             )
             if (!landscape) {
@@ -124,7 +143,7 @@ fun ShowCardScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 28.dp),
                 ) {
-                    val image = rememberCardImage(card.image?.let(LocalContext.current.app.images::file))
+                    val image = rememberCardImage(card.image?.let(images::file))
                     if (image != null && image.isPhoto) {
                         Image(
                             bitmap = image.bitmap,
@@ -148,9 +167,11 @@ fun ShowCardScreen(
                             overflow = TextOverflow.Ellipsis,
                         )
                         Text(
-                            text = format?.label ?: card.formatName,
+                            text = (listOf(format?.label ?: card.formatName) + card.labels).joinToString(" · "),
                             color = onColor.copy(alpha = 0.75f),
                             style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
@@ -181,7 +202,9 @@ fun ShowCardScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp),
                     ) {
-                        if (matrix != null) {
+                        if (matrix != null && rotated) {
+                            RotatedBarcode(matrix, Modifier.weight(1f).fillMaxWidth())
+                        } else if (matrix != null) {
                             BarcodeView(
                                 matrix = matrix,
                                 modifier = Modifier
@@ -222,9 +245,40 @@ fun ShowCardScreen(
                                 modifier = Modifier.padding(top = 8.dp, start = 24.dp, end = 24.dp),
                             )
                         }
+                        card.expiryDate?.let { ExpiryLine(it) }
+                    }
+                    val canRotate = matrix?.isLinear == true
+                    if (canRotate || card.backImage != null) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.padding(top = 8.dp),
+                        ) {
+                            if (canRotate) {
+                                CodeAction(
+                                    icon = R.drawable.ic_rotate,
+                                    text = stringResource(if (rotated) R.string.code_straighten else R.string.code_rotate),
+                                    selected = rotated,
+                                    onClick = { rotated = !rotated },
+                                )
+                            }
+                            if (card.backImage != null) {
+                                CodeAction(
+                                    icon = R.drawable.ic_card_back,
+                                    text = stringResource(R.string.show_back),
+                                    selected = false,
+                                    onClick = { showBack = true },
+                                )
+                            }
+                        }
                     }
                 }
             }
+        }
+    }
+
+    if (showBack) {
+        card.backImage?.let { name ->
+            BackPhotoDialog(file = images.file(name), onDismiss = { showBack = false })
         }
     }
 
@@ -285,6 +339,7 @@ private fun TopBar(
     onToggleFavorite: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    onArchive: (Boolean) -> Unit,
     onPin: (() -> Unit)?,
 ) {
     Row(
@@ -320,16 +375,128 @@ private fun TopBar(
                 tint = tint,
             )
         }
-        if (onPin != null) {
-            IconButton(onClick = onPin) {
-                Icon(painterResource(R.drawable.ic_add_home), stringResource(R.string.pin_home), tint = tint)
-            }
-        }
         IconButton(onClick = onEdit) {
             Icon(painterResource(R.drawable.ic_edit), stringResource(R.string.action_edit), tint = tint)
         }
-        IconButton(onClick = onDelete) {
-            Icon(painterResource(R.drawable.ic_delete), stringResource(R.string.action_delete), tint = tint)
+        Box {
+            var menu by remember { mutableStateOf(false) }
+            IconButton(onClick = { menu = true }) {
+                Icon(painterResource(R.drawable.ic_more_vert), stringResource(R.string.more_options), tint = tint)
+            }
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                if (onPin != null) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.pin_home)) },
+                        leadingIcon = { Icon(painterResource(R.drawable.ic_add_home), contentDescription = null) },
+                        onClick = {
+                            menu = false
+                            onPin()
+                        },
+                    )
+                }
+                DropdownMenuItem(
+                    text = { Text(stringResource(if (card.archived) R.string.unarchive else R.string.archive)) },
+                    leadingIcon = { Icon(painterResource(R.drawable.ic_archive), contentDescription = null) },
+                    onClick = {
+                        menu = false
+                        onArchive(!card.archived)
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.action_delete)) },
+                    leadingIcon = { Icon(painterResource(R.drawable.ic_delete), contentDescription = null) },
+                    onClick = {
+                        menu = false
+                        onDelete()
+                    },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Codice a barre girato di 90°: le barre diventano lunghe quanto l'altezza disponibile, più
+ * facili da leggere per i lettori laser vecchi. Il telefono resta in verticale.
+ */
+@Composable
+private fun RotatedBarcode(matrix: dev.cantacard.barcode.BarcodeMatrix, modifier: Modifier = Modifier) {
+    BoxWithConstraints(contentAlignment = Alignment.Center, modifier = modifier) {
+        val ratio = BarcodeLayout.aspectRatio(matrix)
+        // Larghezza del codice prima della rotazione: al massimo l'altezza disponibile.
+        val length = minOf(maxHeight, maxWidth * ratio)
+        val thickness = length / ratio
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(width = thickness, height = length)) {
+            BarcodeView(
+                matrix = matrix,
+                modifier = Modifier
+                    .requiredSize(width = length, height = thickness)
+                    .graphicsLayer { rotationZ = 90f },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExpiryLine(date: LocalDate) {
+    val expired = date.isBefore(LocalDate.now())
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 10.dp)) {
+        Icon(
+            painterResource(R.drawable.ic_event),
+            contentDescription = null,
+            tint = if (expired) Warning else Muted,
+            modifier = Modifier.size(16.dp),
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            stringResource(if (expired) R.string.expired_on else R.string.expires_on, formatDate(date)),
+            color = if (expired) Warning else Muted,
+            style = MaterialTheme.typography.labelLarge,
+        )
+    }
+}
+
+/** Pulsante a pillola nella parte bianca (codice ruotato, retro). */
+@Composable
+private fun CodeAction(icon: Int, text: String, selected: Boolean, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(50),
+        color = if (selected) Ink else Color(0xFFF0F2F2),
+        contentColor = if (selected) Color.White else Ink,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)) {
+            Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(text, style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+/** Foto del retro a tutto schermo, su sfondo bianco; un tocco la chiude. */
+@Composable
+private fun BackPhotoDialog(file: File, onDismiss: () -> Unit) {
+    val image = rememberCardImage(file)
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .clickable(onClick = onDismiss)
+                .padding(16.dp),
+        ) {
+            if (image != null) {
+                Image(
+                    bitmap = image.bitmap,
+                    contentDescription = stringResource(R.string.show_back),
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(image.bitmap.width.toFloat() / image.bitmap.height.coerceAtLeast(1))
+                        .clip(RoundedCornerShape(16.dp)),
+                )
+            }
         }
     }
 }

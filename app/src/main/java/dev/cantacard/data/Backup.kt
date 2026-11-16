@@ -31,7 +31,13 @@ class Backup(
         val content: BackupFormat.Content,
         /** File provvisori delle immagini, per nome della voce nello zip. */
         internal val imageFiles: Map<String, File>,
+        /** Da dove arriva: un backup di CantaCard o un'altra app (solo aggiunta). */
+        val source: Source = Source.BACKUP,
     )
+
+    enum class Source { BACKUP, CATIMA }
+
+    enum class ImportResult { OK, NOT_SUPPORTED, ENCRYPTED, UNREADABLE }
 
     class Summary(val added: Int, val updated: Int, val duplicates: Int, val skipped: Int)
 
@@ -65,6 +71,37 @@ class Backup(
         if (result == null) restoreDir.deleteRecursively()
         pending.value = result
         result != null
+    }
+
+    /**
+     * Legge l'esportazione di un'altra app (oggi Catima) e la mette in [pending], da aggiungere
+     * alle tessere attuali come un backup.
+     */
+    suspend fun readImport(uri: Uri): ImportResult = withContext(Dispatchers.IO) {
+        val result = try {
+            CatimaImport.read(context, uri, restoreDir)
+        } catch (e: IOException) {
+            null
+        } catch (e: SecurityException) {
+            null
+        } catch (e: RuntimeException) {
+            // CSV o immagini malformati: mai un crash per un file scelto dall'utente.
+            null
+        }
+        when (result) {
+            is CatimaImport.Result.Read -> {
+                pending.value = Pending(result.content, result.images, Source.CATIMA)
+                ImportResult.OK
+            }
+            else -> {
+                restoreDir.deleteRecursively()
+                when (result) {
+                    CatimaImport.Result.Encrypted -> ImportResult.ENCRYPTED
+                    CatimaImport.Result.NotCatima -> ImportResult.NOT_SUPPORTED
+                    else -> ImportResult.UNREADABLE
+                }
+            }
+        }
     }
 
     /** Ripristina [pending] (se c'è) nel modo scelto dall'utente. */

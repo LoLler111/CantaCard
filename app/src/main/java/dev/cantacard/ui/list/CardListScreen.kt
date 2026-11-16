@@ -67,6 +67,13 @@ import dev.cantacard.data.Card
 import dev.cantacard.data.CardQuery
 import dev.cantacard.data.CardRepository
 import dev.cantacard.data.SampleCards
+import dev.cantacard.data.SortOrder
+import dev.cantacard.ui.components.CardBadge
+import dev.cantacard.ui.edit.Pill
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
+import java.time.LocalDate
 import dev.cantacard.ui.Brand
 import dev.cantacard.ui.SectionLabelStyle
 import dev.cantacard.ui.components.CARD_RATIO
@@ -78,18 +85,38 @@ import dev.cantacard.update.AppRelease
 @Composable
 fun CardListScreen(
     repository: CardRepository,
+    sortOrder: SortOrder,
+    onSortChange: (SortOrder) -> Unit,
     onOpen: (Card) -> Unit,
     onAdd: () -> Unit,
     onExport: () -> Unit,
     onRestore: () -> Unit,
     onSync: () -> Unit,
+    onImport: () -> Unit,
+    onReport: () -> Unit,
     update: AppRelease?,
     onUpdate: (AppRelease) -> Unit,
 ) {
     val cards by repository.cards.collectAsState()
     var query by rememberSaveable { mutableStateOf("") }
-    val visible = remember(cards, query) {
-        cards?.let { CardQuery.filter(CardQuery.sorted(it), query) }
+    // Filtro sotto l'intestazione: un'etichetta, oppure le archiviate.
+    var label by rememberSaveable { mutableStateOf<String?>(null) }
+    var showArchived by rememberSaveable { mutableStateOf(false) }
+    var reordering by rememberSaveable { mutableStateOf(false) }
+    var sortDialog by rememberSaveable { mutableStateOf(false) }
+    val active = remember(cards) { cards?.filterNot { it.archived } }
+    val archivedCount = cards?.count { it.archived } ?: 0
+    val labels = remember(active) { active?.let(CardQuery::labels).orEmpty() }
+    // Un'etichetta non più usata (o le archiviate finite) non lascia la lista vuota.
+    if (label != null && labels.none { it.equals(label, ignoreCase = true) }) label = null
+    if (showArchived && archivedCount == 0) showArchived = false
+    if (reordering && sortOrder != SortOrder.MANUAL) reordering = false
+    val visible = remember(cards, query, label, showArchived, sortOrder) {
+        cards?.let { all ->
+            val base = if (showArchived) all.filter { it.archived } else all.filterNot { it.archived }
+            val labelled = label?.let { CardQuery.withLabel(base, it) } ?: base
+            CardQuery.filter(CardQuery.sorted(labelled, sortOrder), query)
+        }
     }
     val all = cards
 
@@ -100,20 +127,52 @@ fun CardListScreen(
     ) {
         Column(Modifier.fillMaxSize()) {
             Header(
-                count = all?.size,
+                count = active?.size,
                 query = query,
                 onQueryChange = { query = it },
-                showSearch = !all.isNullOrEmpty(),
+                showSearch = !all.isNullOrEmpty() && !reordering,
                 canExport = !all.isNullOrEmpty(),
+                reordering = reordering,
+                canReorder = sortOrder == SortOrder.MANUAL && !active.isNullOrEmpty(),
+                onDone = { reordering = false },
+                onSort = { sortDialog = true },
+                onReorder = {
+                    query = ""
+                    label = null
+                    showArchived = false
+                    reordering = true
+                },
                 onExport = onExport,
                 onRestore = onRestore,
                 onSync = onSync,
+                onImport = onImport,
+                onReport = onReport,
             )
             // Fissa sotto l'intestazione, fuori dalla griglia: arriva dopo che la lista è già
             // mostrata, e come primo elemento della griglia finiva sopra la parte visibile.
             // Nascosta durante una ricerca.
-            if (all != null && query.isBlank()) {
+            if (all != null && query.isBlank() && !reordering) {
                 UpdateRow(update, onUpdate, Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp))
+                if (labels.isNotEmpty() || archivedCount > 0) {
+                    FilterRow(
+                        labels = labels,
+                        archivedCount = archivedCount,
+                        label = label,
+                        showArchived = showArchived,
+                        onAll = {
+                            label = null
+                            showArchived = false
+                        },
+                        onLabel = {
+                            label = it
+                            showArchived = false
+                        },
+                        onArchived = {
+                            label = null
+                            showArchived = true
+                        },
+                    )
+                }
             }
             when {
                 // Caricamento: dura pochi millisecondi.
@@ -121,18 +180,45 @@ fun CardListScreen(
                 all.isEmpty() -> EmptyState(
                     onAdd = onAdd,
                     onRestore = onRestore,
+                    onImport = onImport,
                     onAddSamples = if (BuildConfig.DEBUG) {
                         { repository.addAll(SampleCards.create()) }
                     } else {
                         null
                     },
                 )
-                visible.isEmpty() -> NoResults(query)
-                else -> CardGrid(cards = visible, grouped = query.isBlank(), onOpen = onOpen)
+                reordering -> {
+                    val sorted = CardQuery.sorted(all.filterNot { it.archived }, SortOrder.MANUAL)
+                    ReorderList(
+                        favorites = sorted.filter { it.favorite },
+                        others = sorted.filterNot { it.favorite },
+                        onMove = { group, from, to -> repository.setRanks(CardQuery.reorder(group, from, to)) },
+                    )
+                }
+                visible.isEmpty() && query.isNotBlank() -> NoResults(query)
+                visible.isEmpty() -> NoCardsHere()
+                else -> CardGrid(cards = visible, grouped = query.isBlank() && !showArchived, onOpen = onOpen)
             }
         }
 
-        if (!all.isNullOrEmpty()) {
+        if (sortDialog) {
+            SortDialog(
+                current = sortOrder,
+                onChoose = { order ->
+                    sortDialog = false
+                    onSortChange(order)
+                    if (order == SortOrder.MANUAL && !active.isNullOrEmpty()) {
+                        query = ""
+                        label = null
+                        showArchived = false
+                        reordering = true
+                    }
+                },
+                onDismiss = { sortDialog = false },
+            )
+        }
+
+        if (!all.isNullOrEmpty() && !reordering) {
             ExtendedFloatingActionButton(
                 onClick = onAdd,
                 containerColor = MaterialTheme.colorScheme.secondary,
@@ -156,9 +242,16 @@ private fun Header(
     onQueryChange: (String) -> Unit,
     showSearch: Boolean,
     canExport: Boolean,
+    reordering: Boolean,
+    canReorder: Boolean,
+    onDone: () -> Unit,
+    onSort: () -> Unit,
+    onReorder: () -> Unit,
     onExport: () -> Unit,
     onRestore: () -> Unit,
     onSync: () -> Unit,
+    onImport: () -> Unit,
+    onReport: () -> Unit,
 ) {
     Box(
         Modifier
@@ -179,12 +272,16 @@ private fun Header(
                 )
                 Spacer(Modifier.width(10.dp))
                 Text(
-                    text = stringResource(R.string.app_name),
+                    text = stringResource(if (reordering) R.string.reorder_title else R.string.app_name),
                     style = MaterialTheme.typography.headlineSmall,
                     color = Color.White,
                     modifier = Modifier.weight(1f),
                 )
-                Box {
+                if (reordering) {
+                    TextButton(onClick = onDone) {
+                        Text(stringResource(R.string.reorder_done), color = Color.White, style = MaterialTheme.typography.titleMedium)
+                    }
+                } else Box {
                     var menu by remember { mutableStateOf(false) }
                     IconButton(onClick = { menu = true }) {
                         Icon(
@@ -194,6 +291,24 @@ private fun Header(
                         )
                     }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.sort_menu)) },
+                            enabled = canExport,
+                            onClick = {
+                                menu = false
+                                onSort()
+                            },
+                        )
+                        if (canReorder) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.reorder_menu)) },
+                                onClick = {
+                                    menu = false
+                                    onReorder()
+                                },
+                            )
+                        }
+                        HorizontalDivider()
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.backup_export)) },
                             enabled = canExport,
@@ -214,6 +329,21 @@ private fun Header(
                             onClick = {
                                 menu = false
                                 onSync()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.import_menu)) },
+                            onClick = {
+                                menu = false
+                                onImport()
+                            },
+                        )
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.report_menu)) },
+                            onClick = {
+                                menu = false
+                                onReport()
                             },
                         )
                     }
@@ -276,6 +406,74 @@ private fun LazyGridScope.cardItems(cards: List<Card>, onOpen: (Card) -> Unit) {
     }
 }
 
+/** Avviso di scadenza per la tessera: scaduta, o entro 30 giorni. */
+@Composable
+private fun expiryBadge(card: Card): CardBadge? {
+    val today = remember { LocalDate.now() }
+    val days = CardQuery.daysToExpiry(card, today) ?: return null
+    return when {
+        days < 0 -> CardBadge(stringResource(R.string.expiry_badge_expired), alert = true)
+        days == 0L -> CardBadge(stringResource(R.string.expiry_badge_today), alert = true)
+        days <= EXPIRY_WARNING_DAYS -> CardBadge(
+            pluralStringResource(R.plurals.expiry_badge_days, days.toInt(), days.toInt()),
+            alert = false,
+        )
+        else -> null
+    }
+}
+
+private const val EXPIRY_WARNING_DAYS = 30
+
+/** Filtri sotto l'intestazione: tutte, ogni etichetta, le archiviate. */
+@Composable
+private fun FilterRow(
+    labels: List<String>,
+    archivedCount: Int,
+    label: String?,
+    showArchived: Boolean,
+    onAll: () -> Unit,
+    onLabel: (String) -> Unit,
+    onArchived: () -> Unit,
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp, bottom = 4.dp),
+    ) {
+        item(key = "all") {
+            Pill(stringResource(R.string.filter_all), onAll, selected = label == null && !showArchived)
+        }
+        items(labels, key = { "label-$it" }) { name ->
+            Pill(name, { onLabel(name) }, icon = R.drawable.ic_label, selected = name.equals(label, ignoreCase = true))
+        }
+        if (archivedCount > 0) {
+            item(key = "archived") {
+                Pill(
+                    stringResource(R.string.filter_archived, archivedCount),
+                    onArchived,
+                    icon = R.drawable.ic_archive,
+                    selected = showArchived,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NoCardsHere() {
+    Text(
+        text = stringResource(R.string.list_filter_empty),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 64.dp, start = 32.dp, end = 32.dp),
+    )
+}
+
 @Composable
 private fun CardTile(card: Card, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val interaction = remember { MutableInteractionSource() }
@@ -291,6 +489,7 @@ private fun CardTile(card: Card, onClick: () -> Unit, modifier: Modifier = Modif
         color = color,
         favorite = card.favorite,
         image = image,
+        badge = expiryBadge(card),
         modifier = modifier
             .graphicsLayer {
                 scaleX = scale
@@ -306,7 +505,7 @@ private fun CardTile(card: Card, onClick: () -> Unit, modifier: Modifier = Modif
 }
 
 @Composable
-private fun EmptyState(onAdd: () -> Unit, onRestore: () -> Unit, onAddSamples: (() -> Unit)?) {
+private fun EmptyState(onAdd: () -> Unit, onRestore: () -> Unit, onImport: () -> Unit, onAddSamples: (() -> Unit)?) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -344,6 +543,9 @@ private fun EmptyState(onAdd: () -> Unit, onRestore: () -> Unit, onAddSamples: (
         }
         TextButton(onClick = onRestore, modifier = Modifier.padding(top = 8.dp)) {
             Text(stringResource(R.string.list_empty_restore))
+        }
+        TextButton(onClick = onImport) {
+            Text(stringResource(R.string.list_empty_import))
         }
         if (onAddSamples != null) {
             TextButton(onClick = onAddSamples, modifier = Modifier.padding(top = 8.dp)) {

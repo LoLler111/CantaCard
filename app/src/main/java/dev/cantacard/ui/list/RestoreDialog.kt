@@ -27,7 +27,32 @@ fun RestoreDialog(
     isNewer: Boolean,
     onChoose: (RestoreMode) -> Unit,
     onDismiss: () -> Unit,
+    /** Nome dell'app da cui si importa (`null` = backup di CantaCard): si può solo aggiungere. */
+    fromApp: String? = null,
 ) {
+    if (fromApp != null) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(stringResource(R.string.import_title)) },
+            text = {
+                Text(
+                    if (backupCount == 0) stringResource(R.string.import_empty, fromApp)
+                    else pluralStringResource(R.plurals.import_count, backupCount, backupCount, fromApp),
+                )
+            },
+            confirmButton = {
+                if (backupCount > 0) {
+                    TextButton(onClick = { onChoose(RestoreMode.ADD) }) { Text(stringResource(R.string.import_confirm)) }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(if (backupCount == 0) R.string.action_close else R.string.action_cancel))
+                }
+            },
+        )
+        return
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.restore_title)) },
