@@ -45,7 +45,11 @@
     <string name="field_format">Formato del codice</string>
     <string name="field_note">Nota (facoltativa)</string>
     <string name="section_code">Codice</string>
-    <string name="section_details">Dettagli</string>
+    <string name="section_store">Negozio</string>
+    <string name="format_more">Altri formati</string>
+    <string name="save_new">Aggiungi tessera</string>
+    <string name="save_edit">Salva modifiche</string>
+    <string name="section_details">Note</string>
     <string name="scan_camera">Scansiona</string>
     <string name="scan_camera_hint">Con la fotocamera</string>
     <string name="scan_photo">Da una foto</string>

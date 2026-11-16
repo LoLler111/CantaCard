@@ -28,15 +28,17 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
-import dev.cantacard.ui.SectionLabelStyle
 import dev.cantacard.ui.components.CARD_RATIO
 import dev.cantacard.ui.components.CardArt
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.draw.shadow
+import dev.cantacard.ui.Brand
+import dev.cantacard.ui.headerColor
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -59,8 +61,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -370,201 +370,175 @@ fun EditCardScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
                 .imePadding(),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(4.dp),
-            ) {
-                IconButton(onClick = { if (dirty) confirmDiscard = true else onClose() }) {
-                    Icon(painterResource(R.drawable.ic_close), stringResource(R.string.action_close))
-                }
-                Text(
-                    text = stringResource(if (original == null) R.string.add_card_title else R.string.edit_card_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 4.dp),
-                )
-                Button(
-                    onClick = { save() },
-                    enabled = canSave,
-                    modifier = Modifier.padding(end = 8.dp),
-                ) { Text(stringResource(R.string.action_save)) }
-            }
-
+            FormTopBar(
+                title = stringResource(if (original == null) R.string.add_card_title else R.string.edit_card_title),
+                onClose = { if (dirty) confirmDiscard = true else onClose() },
+            )
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
             ) {
-                // Anteprima della tessera, aggiornata mentre si scrive.
-                val previewColor = Color(cardColor)
-                CardArt(
-                    name = name.trim().ifEmpty { stringResource(R.string.field_name) },
-                    initial = Card.initialOf(name),
-                    color = previewColor,
-                    favorite = original?.favorite == true,
-                    image = cardImage,
-                    compact = false,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .widthIn(max = 340.dp)
-                        .fillMaxWidth()
-                        .aspectRatio(CARD_RATIO),
-                )
-                Spacer(Modifier.height(4.dp))
+                // Anteprima della tessera, aggiornata mentre si scrive, a cavallo dell'intestazione verde.
+                PreviewHeader {
+                    CardArt(
+                        name = name.trim().ifEmpty { stringResource(R.string.field_name) },
+                        initial = Card.initialOf(name),
+                        color = Color(cardColor),
+                        favorite = original?.favorite == true,
+                        image = cardImage,
+                        compact = false,
+                        modifier = it,
+                    )
+                }
 
-                StoreField(
-                    store = store,
-                    onClick = {
-                        focusManager.clearFocus()
-                        storeLauncher.launch(storeId)
-                    },
-                )
-
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.field_name)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Words,
-                        imeAction = ImeAction.Next,
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
-                SectionTitle(R.string.section_code)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                    if (hasCamera) {
-                        ActionTile(
-                            icon = R.drawable.ic_scan,
-                            title = R.string.scan_camera,
-                            subtitle = R.string.scan_camera_hint,
-                            primary = true,
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 20.dp),
+                ) {
+                    FormSection(icon = R.drawable.ic_store, title = R.string.section_store) {
+                        StoreField(
+                            store = store,
                             onClick = {
                                 focusManager.clearFocus()
-                                scanLauncher.launch(Unit)
+                                storeLauncher.launch(storeId)
                             },
-                            modifier = Modifier.weight(1f),
+                        )
+                        FormTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = R.string.field_name,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Words,
+                                imeAction = ImeAction.Next,
+                            ),
                         )
                     }
-                    ActionTile(
-                        icon = R.drawable.ic_image,
-                        title = R.string.scan_photo,
-                        subtitle = R.string.scan_photo_hint,
-                        primary = false,
-                        onClick = {
-                            focusManager.clearFocus()
-                            photoLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+
+                    FormSection(icon = R.drawable.ic_scan, title = R.string.section_code) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                            if (hasCamera) {
+                                ActionTile(
+                                    icon = R.drawable.ic_scan,
+                                    title = R.string.scan_camera,
+                                    subtitle = R.string.scan_camera_hint,
+                                    primary = true,
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        scanLauncher.launch(Unit)
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            ActionTile(
+                                icon = R.drawable.ic_image,
+                                title = R.string.scan_photo,
+                                subtitle = R.string.scan_photo_hint,
+                                primary = false,
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    photoLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                                    )
+                                },
+                                modifier = Modifier.weight(1f),
                             )
-                        },
-                        modifier = Modifier.weight(1f),
-                    )
+                        }
+                        OrDivider(stringResource(R.string.edit_or_manual))
+
+                        val showError = cleanNumber.isNotEmpty() && format != null && matrix == null
+                        FormTextField(
+                            value = number,
+                            onValueChange = { number = it },
+                            label = R.string.field_number,
+                            isError = showError,
+                            supportingText = if (showError) stringResource(R.string.number_invalid, format.label) else null,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Ascii,
+                                autoCorrectEnabled = false,
+                                imeAction = ImeAction.Next,
+                            ),
+                        )
+
+                        FormatChips(
+                            selected = format,
+                            unknownName = formatName.takeIf { format == null },
+                            onSelect = { formatName = it.name },
+                        )
+
+                        if (matrix != null) {
+                            BarcodeView(
+                                matrix = matrix,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(if (matrix.isLinear) 110.dp else 170.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
+                            )
+                        }
+                    }
+
+                    FormSection(icon = R.drawable.ic_palette, title = R.string.section_image, accent = Brand.Coral) {
+                        ImageSection(
+                            hasImage = cardImage != null,
+                            iconStatus = iconStatus,
+                            domain = store?.domain,
+                            hasCamera = hasCamera,
+                            // "Aggiorna icona" la riscarica; "Icona dal sito" (nessuna immagine) va bene dalla cache.
+                            onIcon = { domain -> fetchIcon(domain, store?.icon, refresh = cardImage != null) },
+                            onCamera = {
+                                focusManager.clearFocus()
+                                cameraLauncher.launch(Unit)
+                            },
+                            onGallery = {
+                                focusManager.clearFocus()
+                                galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                            },
+                            onRemove = {
+                                pendingImage?.let { File(it).delete() }
+                                pendingImage = null
+                                imageRemoved = original?.image != null
+                                iconStatus = IconStatus.IDLE
+                            },
+                        )
+                        ColorPicker(
+                            automatic = automaticColor,
+                            selected = cardColor,
+                            onSelect = { color ->
+                                colorChoice = color.takeUnless { it == automaticColor }
+                                colorPicked = true
+                                colorKnown = true
+                            },
+                        )
+                    }
+
+                    FormSection(icon = R.drawable.ic_notes, title = R.string.section_details) {
+                        FormTextField(
+                            value = note,
+                            onValueChange = { note = it },
+                            label = R.string.field_note,
+                            singleLine = false,
+                            minLines = 2,
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                        )
+                    }
                 }
-                Text(
-                    text = stringResource(R.string.edit_or_manual),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(vertical = 4.dp),
-                )
-
-                val showError = cleanNumber.isNotEmpty() && format != null && matrix == null
-                OutlinedTextField(
-                    value = number,
-                    onValueChange = { number = it },
-                    label = { Text(stringResource(R.string.field_number)) },
-                    singleLine = true,
-                    isError = showError,
-                    supportingText = if (showError) {
-                        { Text(stringResource(R.string.number_invalid, format.label)) }
-                    } else {
-                        null
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Ascii,
-                        autoCorrectEnabled = false,
-                        imeAction = ImeAction.Next,
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
-                FormatPicker(
-                    selectedLabel = format?.label ?: formatName.orEmpty(),
-                    onSelect = { formatName = it.name },
-                )
-
-                if (matrix != null) {
-                    BarcodeView(
-                        matrix = matrix,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(if (matrix.isLinear) 120.dp else 180.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
-                    )
-                }
-
-                SectionTitle(R.string.section_image)
-                ImageSection(
-                    hasImage = cardImage != null,
-                    iconStatus = iconStatus,
-                    domain = store?.domain,
-                    hasCamera = hasCamera,
-                    // "Aggiorna icona" la riscarica; "Icona dal sito" (nessuna immagine) va bene dalla cache.
-                    onIcon = { domain -> fetchIcon(domain, store?.icon, refresh = cardImage != null) },
-                    onCamera = {
-                        focusManager.clearFocus()
-                        cameraLauncher.launch(Unit)
-                    },
-                    onGallery = {
-                        focusManager.clearFocus()
-                        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                    },
-                    onRemove = {
-                        pendingImage?.let { File(it).delete() }
-                        pendingImage = null
-                        imageRemoved = original?.image != null
-                        iconStatus = IconStatus.IDLE
-                    },
-                )
-                ColorPicker(
-                    automatic = automaticColor,
-                    selected = cardColor,
-                    onSelect = { color ->
-                        colorChoice = color.takeUnless { it == automaticColor }
-                        colorPicked = true
-                        colorKnown = true
-                    },
-                )
-
-                SectionTitle(R.string.section_details)
-                OutlinedTextField(
-                    value = note,
-                    onValueChange = { note = it },
-                    label = { Text(stringResource(R.string.field_note)) },
-                    minLines = 2,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(16.dp))
             }
+            SaveBar(
+                text = stringResource(if (original == null) R.string.save_new else R.string.save_edit),
+                enabled = canSave,
+                onClick = { save() },
+            )
         }
         SnackbarHost(
             hostState = snackbar,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
+                .imePadding()
                 .navigationBarsPadding()
-                .imePadding(),
+                .padding(bottom = 80.dp),
         )
     }
 
@@ -620,91 +594,126 @@ fun EditCardScreen(
     }
 }
 
+/** Barra in alto, verde come l'intestazione della lista. */
 @Composable
-private fun SectionTitle(text: Int) {
-    Text(
-        text = stringResource(text).uppercase(),
-        style = SectionLabelStyle,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(top = 8.dp, start = 4.dp),
-    )
-}
-
-/** Pulsante grande con icona in un tondo, titolo e sottotitolo. */
-@Composable
-private fun ActionTile(
-    icon: Int,
-    title: Int,
-    subtitle: Int,
-    primary: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MaterialTheme.colorScheme
-    val container = if (primary) colors.primary else colors.surfaceContainerHigh
-    val content = if (primary) colors.onPrimary else colors.onSurface
-    Surface(
-        onClick = onClick,
-        color = container,
-        contentColor = content,
-        shape = RoundedCornerShape(20.dp),
-        modifier = modifier,
+private fun FormTopBar(title: String, onClose: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(headerColor)
+            .statusBarsPadding()
+            .padding(horizontal = 4.dp, vertical = 4.dp),
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(content.copy(alpha = 0.14f)),
-            ) {
-                Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(22.dp))
-            }
-            Spacer(Modifier.height(12.dp))
-            Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
-            Text(
-                stringResource(subtitle),
-                style = MaterialTheme.typography.bodySmall,
-                color = content.copy(alpha = 0.75f),
-            )
+        IconButton(onClick = onClose) {
+            Icon(painterResource(R.drawable.ic_close), stringResource(R.string.action_close), tint = Color.White)
         }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            color = Color.White,
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 4.dp),
+        )
     }
 }
 
-/** Campo di sola lettura che apre l'elenco dei formati. */
+/**
+ * Prosecuzione dell'intestazione verde, con gli angoli in basso arrotondati come nella lista, e la
+ * tessera che ci sta sopra a cavallo del bordo. [card] riceve il modificatore con le dimensioni.
+ */
 @Composable
-private fun FormatPicker(selectedLabel: String, onSelect: (CodeFormat) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    Box(Modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = selectedLabel,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(stringResource(R.string.field_format)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        // Copre il campo per aprire il menu con un tocco ovunque.
+private fun PreviewHeader(card: @Composable (Modifier) -> Unit) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val cardWidth = minOf(maxWidth - 72.dp, 340.dp)
+        val cardHeight = cardWidth / CARD_RATIO
         Box(
             Modifier
-                .matchParentSize()
-                .clip(RoundedCornerShape(4.dp))
-                .background(Color.Transparent)
-                .clickable { expanded = true },
+                .fillMaxWidth()
+                .height(12.dp + cardHeight * 0.62f)
+                .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
+                .background(headerColor),
         )
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            CodeFormat.entries.forEach { format ->
-                DropdownMenuItem(
-                    text = { Text(format.label) },
-                    onClick = {
-                        expanded = false
-                        onSelect(format)
-                    },
+        card(
+            Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 12.dp)
+                .shadow(10.dp, RoundedCornerShape(18.dp))
+                .width(cardWidth)
+                .height(cardHeight),
+        )
+    }
+}
+
+/** Pulsante di salvataggio grande, fisso in basso (sopra la tastiera quando è aperta). */
+@Composable
+private fun SaveBar(text: String, enabled: Boolean, onClick: () -> Unit) {
+    Surface(color = MaterialTheme.colorScheme.background) {
+        Button(
+            onClick = onClick,
+            enabled = enabled,
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary,
+            ),
+            contentPadding = PaddingValues(vertical = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+        ) {
+            Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(text, style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+/** I formati più comuni come pillole, gli altri in un menu ("Altri formati"). */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FormatChips(selected: CodeFormat?, unknownName: String?, onSelect: (CodeFormat) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            stringResource(R.string.field_format),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            commonFormats.forEach { format ->
+                Pill(text = format.label, selected = format == selected, onClick = { onSelect(format) })
+            }
+            Box {
+                val other = selected?.takeUnless { it in commonFormats }
+                Pill(
+                    text = other?.label ?: unknownName ?: stringResource(R.string.format_more),
+                    selected = other != null || unknownName != null,
+                    trailingIcon = R.drawable.ic_expand_more,
+                    onClick = { expanded = true },
                 )
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    CodeFormat.entries.filterNot { it in commonFormats }.forEach { format ->
+                        DropdownMenuItem(
+                            text = { Text(format.label) },
+                            onClick = {
+                                expanded = false
+                                onSelect(format)
+                            },
+                        )
+                    }
+                }
             }
         }
     }
 }
+
+private val commonFormats = listOf(CodeFormat.EAN_13, CodeFormat.CODE_128, CodeFormat.QR_CODE, CodeFormat.EAN_8)
 
 /** Riga del negozio scelto (o "Altro negozio") con il comando per cambiarlo. */
 @Composable
@@ -712,30 +721,29 @@ private fun StoreField(store: Store?, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
-        color = colors.surfaceContainerLowest,
-        border = BorderStroke(1.dp, colors.outlineVariant),
+        shape = RoundedCornerShape(16.dp),
+        color = fieldColor(),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
         ) {
             if (store != null) {
-                StoreBadge(store, 40.dp)
+                StoreBadge(store, 44.dp)
             } else {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(44.dp)
                         .clip(CircleShape)
                         .background(colors.secondaryContainer),
                 ) {
                     Icon(
-                        painterResource(R.drawable.ic_add),
+                        painterResource(R.drawable.ic_store),
                         contentDescription = null,
                         tint = colors.onSecondaryContainer,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(22.dp),
                     )
                 }
             }
@@ -754,11 +762,13 @@ private fun StoreField(store: Store?, onClick: () -> Unit) {
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
-            Text(
-                stringResource(R.string.store_change),
-                style = MaterialTheme.typography.labelLarge,
-                color = colors.primary,
-            )
+            Surface(color = colors.primary.copy(alpha = 0.12f), contentColor = colors.primary, shape = CircleShape) {
+                Text(
+                    stringResource(R.string.store_change),
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                )
+            }
         }
     }
 }
@@ -785,16 +795,16 @@ private fun ImageSection(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (domain != null) {
-                ImageButton(
+                Pill(
+                    text = stringResource(if (hasImage) R.string.image_icon_refresh else R.string.image_icon),
                     icon = R.drawable.ic_refresh,
-                    label = if (hasImage) R.string.image_icon_refresh else R.string.image_icon,
                     enabled = iconStatus != IconStatus.LOADING,
                     onClick = { onIcon(domain) },
                 )
             }
-            if (hasCamera) ImageButton(R.drawable.ic_photo_camera, R.string.image_photo, onClick = onCamera)
-            ImageButton(R.drawable.ic_image, R.string.image_gallery, onClick = onGallery)
-            if (hasImage) ImageButton(R.drawable.ic_delete, R.string.image_remove, onClick = onRemove)
+            if (hasCamera) Pill(stringResource(R.string.image_photo), onCamera, icon = R.drawable.ic_photo_camera)
+            Pill(stringResource(R.string.image_gallery), onGallery, icon = R.drawable.ic_image)
+            if (hasImage) Pill(stringResource(R.string.image_remove), onRemove, icon = R.drawable.ic_delete)
         }
         when (iconStatus) {
             IconStatus.LOADING -> Row(verticalAlignment = Alignment.CenterVertically) {
@@ -813,19 +823,6 @@ private fun ImageSection(
             )
             IconStatus.IDLE -> Unit
         }
-    }
-}
-
-@Composable
-private fun ImageButton(icon: Int, label: Int, enabled: Boolean = true, onClick: () -> Unit) {
-    OutlinedButton(
-        onClick = onClick,
-        enabled = enabled,
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-    ) {
-        Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(6.dp))
-        Text(stringResource(label))
     }
 }
 
@@ -854,8 +851,8 @@ private fun ColorPicker(automatic: Int, selected: Int, onSelect: (Int) -> Unit) 
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             colors.forEach { value ->
                 val color = Color(value)
@@ -864,13 +861,15 @@ private fun ColorPicker(automatic: Int, selected: Int, onSelect: (Int) -> Unit) 
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(38.dp)
+                        .size(42.dp)
                         .clip(CircleShape)
-                        .background(color)
                         .then(
-                            if (isSelected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                            if (isSelected) Modifier.border(2.5.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
                             else Modifier,
                         )
+                        .padding(if (isSelected) 5.dp else 2.dp)
+                        .clip(CircleShape)
+                        .background(color)
                         .clickable(onClickLabel = label) { onSelect(value) }
                         .semantics {
                             contentDescription = label
