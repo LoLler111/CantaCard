@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English translation. The default language (values/) stays Italian. -->
+<resources>
+    <!-- Common actions -->
+    <string name="action_back">Back</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_save">Save</string>
+    <string name="action_edit">Edit</string>
+
+    <!-- Card list -->
+    <string name="search_hint">Search cards</string>
+    <string name="search_clear">Clear search</string>
+    <string name="list_empty_title">Your wallet is empty</string>
+    <string name="list_empty_body">Add your loyalty cards: show them at the checkout in a moment, even offline.</string>
+    <string name="list_empty_cta">Add your first card</string>
+    <string name="list_no_results">No cards for “%1$s”</string>
+    <plurals name="list_header_count">
+        <item quantity="one">%d card · always offline</item>
+        <item quantity="other">%d cards · always offline</item>
+    </plurals>
+    <string name="section_favorites">Favorites</string>
+    <string name="section_all">Your cards</string>
+    <string name="card_favorite">Favorite</string>
+    <string name="add_card">Add</string>
+    <string name="filter_all">All</string>
+    <string name="filter_archived">Archived · %1$d</string>
+    <string name="list_filter_empty">No cards here</string>
+    <string name="list_empty_import">Coming from Catima? Import your cards</string>
+    <string name="expiry_badge_expired">Expired</string>
+    <string name="expiry_badge_today">Expires today</string>
+    <plurals name="expiry_badge_days">
+        <item quantity="one">Expires tomorrow</item>
+        <item quantity="other">Expires in %d days</item>
+    </plurals>
+
+    <!-- Sorting -->
+    <string name="sort_menu">Sort cards</string>
+    <string name="sort_title">Sort cards</string>
+    <string name="sort_recent">Recently used</string>
+    <string name="sort_name">By name</string>
+    <string name="sort_manual">Custom</string>
+    <string name="sort_favorites_note">Favorites always stay on top.</string>
+    <string name="reorder_menu">Reorder cards</string>
+    <string name="reorder_title">Reorder</string>
+    <string name="reorder_done">Done</string>
+    <string name="reorder_hint">Drag the cards by the handle on the right.</string>
+    <string name="reorder_up">Move up</string>
+    <string name="reorder_down">Move down</string>
+
+    <!-- Import from other apps -->
+    <string name="import_menu">Import from Catima</string>
+    <string name="import_title">Import cards?</string>
+    <plurals name="import_count">
+        <item quantity="one">Found %1$d card from %2$s: it will be added to yours, without duplicates.</item>
+        <item quantity="other">Found %1$d cards from %2$s: they will be added to yours, without duplicates.</item>
+    </plurals>
+    <string name="import_empty">The %1$s file has no cards.</string>
+    <string name="import_confirm">Import</string>
+    <plurals name="import_done">
+        <item quantity="one">Imported %d card</item>
+        <item quantity="other">Imported %d cards</item>
+    </plurals>
+    <string name="import_encrypted">The file is password protected: export it again from Catima without a password.</string>
+    <string name="import_not_supported">This file is not a Catima export</string>
+    <string name="import_unreadable">Unable to read the file</string>
+
+    <!-- Report a problem -->
+    <string name="report_menu">Report a problem</string>
+    <string name="report_body">**What happened?**\n\n\n**What did you expect?**\n\n\n---\nCantaCard %1$s · Android %2$s (API %3$d) · %4$s</string>
+
+    <!-- Card screen -->
+    <string name="favorite_add">Add to favorites</string>
+    <string name="favorite_remove">Remove from favorites</string>
+    <string name="card_not_found">Card not found</string>
+    <string name="show_hint">Full brightness · hold it close to the scanner</string>
+    <string name="code_invalid">The number is not valid for the %1$s format. Show the number at the checkout to type it in.</string>
+    <string name="code_unknown_format">The %1$s format is not supported by this version. Show the number at the checkout to type it in.</string>
+    <string name="code_rotate">Rotate code</string>
+    <string name="code_straighten">Straight code</string>
+    <string name="show_back">Back</string>
+    <string name="expires_on">Expires on %1$s</string>
+    <string name="expired_on">Expired on %1$s</string>
+    <string name="archive">Archive</string>
+    <string name="unarchive">Unarchive</string>
+    <string name="archived_done">Card archived: you’ll find it under “Archived”</string>
+    <string name="unarchived_done">Card unarchived</string>
+    <string name="delete_title">Delete the card?</string>
+    <string name="delete_message">“%1$s” will be deleted from this phone.</string>
+    <string name="delete_message_synced">“%1$s” will be deleted from this phone and the other synced phones.</string>
+
+    <!-- Add and edit -->
+    <string name="add_card_title">New card</string>
+    <string name="edit_card_title">Edit card</string>
+    <string name="field_name">Card name</string>
+    <string name="field_number">Card number</string>
+    <string name="field_format">Code format</string>
+    <string name="field_note">Note (optional)</string>
+    <string name="section_code">Code</string>
+    <string name="section_store">Store</string>
+    <string name="format_more">More formats</string>
+    <string name="save_new">Add card</string>
+    <string name="save_edit">Save changes</string>
+    <string name="section_details">Details</string>
+    <string name="section_back">Back of the card</string>
+    <string name="back_hint">A photo of the back, if it has something you need at the checkout or the desk.</string>
+    <string name="back_photo">Take a photo of the back</string>
+    <string name="back_photo_again">Retake photo</string>
+    <string name="field_expiry">Expiry date</string>
+    <string name="expiry_none">No expiry date</string>
+    <string name="expiry_clear">Remove expiry date</string>
+    <string name="expiry_set">Set</string>
+    <string name="field_labels">Labels</string>
+    <string name="label_new">New label</string>
+    <string name="label_name">Label name</string>
+    <string name="label_add">Add</string>
+    <string name="scan_camera">Scan</string>
+    <string name="scan_camera_hint">With the camera</string>
+    <string name="scan_photo">From a photo</string>
+    <string name="scan_photo_hint">Photo or screenshot</string>
+    <string name="edit_or_manual">or type it in</string>
+    <string name="number_invalid">Number not valid for the %1$s format</string>
+    <string name="photo_no_code">No code found in the image</string>
+    <string name="photo_error">Unable to open the image</string>
+    <string name="discard_title">Discard changes?</string>
+    <string name="discard_confirm">Discard</string>
+    <string name="duplicate_title">Card already saved</string>
+    <string name="duplicate_body">You already have the card “%1$s” with this number for the same store. Save it anyway?</string>
+    <string name="duplicate_add">Add anyway</string>
+    <string name="duplicate_save">Save anyway</string>
+
+    <!-- Store picker (catalog) -->
+    <string name="store_picker_title">Choose the store</string>
+    <string name="store_search_hint">Search a store</string>
+    <string name="store_other">Other store</string>
+    <string name="store_other_hint">Any card: you type the name and the code</string>
+    <string name="store_other_named">Use “%1$s” as the name</string>
+    <string name="store_section">Stores</string>
+    <string name="store_no_results">No store in the catalog for “%1$s”</string>
+    <string name="store_selected">Selected</string>
+    <string name="field_store">Store</string>
+    <string name="store_change">Change</string>
+    <string name="more_options">More options</string>
+    <string name="catalog_update">Update catalog</string>
+    <string name="catalog_updating">Checking for updates…</string>
+    <string name="catalog_updated">Catalog updated</string>
+    <string name="catalog_up_to_date">The catalog is already up to date</string>
+    <string name="catalog_update_failed">Update failed. The current catalog is still available.</string>
+
+    <!-- Card image and color -->
+    <string name="section_image">Image and color</string>
+    <string name="image_icon">Icon from the website</string>
+    <string name="image_icon_refresh">Refresh icon</string>
+    <string name="image_photo">Photo of the card</string>
+    <string name="image_gallery">From the gallery</string>
+    <string name="image_remove">Remove image</string>
+    <string name="image_icon_loading">Looking for the icon on %1$s…</string>
+    <string name="image_icon_failed">No icon found on %1$s</string>
+    <string name="field_color">Color</string>
+    <string name="color_automatic">Automatic color</string>
+    <string name="photo_hint">Frame the front of the card</string>
+    <string name="photo_hint_back">Frame the back of the card</string>
+    <string name="photo_shutter">Take the photo</string>
+    <string name="crop_hint">Move and zoom the photo to fit it in the frame</string>
+    <string name="crop_rotate">Rotate</string>
+    <string name="crop_use">Use photo</string>
+    <string name="share_label">New CantaCard card</string>
+    <string name="share_unreadable">Unreadable image</string>
+
+    <!-- Backup and restore -->
+    <string name="backup_export">Export backup</string>
+    <string name="backup_restore">Restore backup</string>
+    <plurals name="backup_exported">
+        <item quantity="one">Backup saved: %d card</item>
+        <item quantity="other">Backup saved: %d cards</item>
+    </plurals>
+    <string name="backup_export_failed">Backup failed. Try saving it somewhere else.</string>
+    <string name="backup_invalid">This file is not a CantaCard backup</string>
+    <string name="list_empty_restore">Have a backup? Restore it</string>
+    <string name="restore_title">Restore the backup?</string>
+    <plurals name="restore_count">
+        <item quantity="one">The backup contains %d card.</item>
+        <item quantity="other">The backup contains %d cards.</item>
+    </plurals>
+    <string name="restore_newer">It was created by a newer version of CantaCard: some information may not be read.</string>
+    <plurals name="restore_current">
+        <item quantity="one">There is already %d card on this phone: you can add the ones from the backup (without duplicates) or replace it.</item>
+        <item quantity="other">There are already %d cards on this phone: you can add the ones from the backup (without duplicates) or replace them all.</item>
+    </plurals>
+    <string name="restore_empty">The backup has no cards.</string>
+    <string name="restore_add">Add to current</string>
+    <string name="restore_replace">Replace all</string>
+    <string name="restore_confirm">Restore</string>
+    <string name="restore_none_new">No new cards</string>
+    <plurals name="restore_done">
+        <item quantity="one">Restored %d card</item>
+        <item quantity="other">Restored %d cards</item>
+    </plurals>
+    <plurals name="restore_updated">
+        <item quantity="one">%d updated</item>
+        <item quantity="other">%d updated</item>
+    </plurals>
+    <plurals name="restore_duplicates">
+        <item quantity="one">%d already saved</item>
+        <item quantity="other">%d already saved</item>
+    </plurals>
+    <plurals name="restore_skipped">
+        <item quantity="one">%d unreadable</item>
+        <item quantity="other">%d unreadable</item>
+    </plurals>
+
+    <!-- Sync between phones -->
+    <string name="sync_menu">Sync</string>
+    <string name="sync_title_off">Sync between phones</string>
+    <string name="sync_body_off">Choose a file in your storage, for example Google Drive: CantaCard updates it on every change and reads it again when you open the app. On the other phone choose the same file with “Use an existing file”.</string>
+    <string name="sync_note">Changes reach the other phone after your storage app has uploaded them. The cards always stay on this phone too.</string>
+    <string name="sync_create">Create a new file</string>
+    <string name="sync_use_existing">Use an existing file</string>
+    <string name="sync_title_on">Sync is on</string>
+    <string name="sync_file">File: %1$s</string>
+    <string name="sync_last">Last sync: %1$s</string>
+    <string name="sync_never">Not synced yet</string>
+    <string name="sync_just_now">just now</string>
+    <plurals name="sync_minutes_ago">
+        <item quantity="one">%d minute ago</item>
+        <item quantity="other">%d minutes ago</item>
+    </plurals>
+    <plurals name="sync_hours_ago">
+        <item quantity="one">%d hour ago</item>
+        <item quantity="other">%d hours ago</item>
+    </plurals>
+    <string name="sync_running">Syncing…</string>
+    <string name="sync_failed_unreachable">Last sync failed: the file can’t be reached. Try again later or choose the file again.</string>
+    <string name="sync_now">Sync now</string>
+    <string name="sync_disable">Turn off</string>
+    <string name="sync_enabled">Sync turned on</string>
+    <string name="sync_done">Synced</string>
+    <string name="sync_failed">Sync failed: I’ll try again later</string>
+    <string name="sync_invalid">This file is not a CantaCard file</string>
+    <string name="sync_no_permission">This file can’t be used: choose one somewhere else</string>
+    <string name="sync_disabled">Sync turned off: the cards stay on this phone</string>
+
+    <!-- Quick access: shortcuts and widgets -->
+    <string name="pin_home">Add to Home screen</string>
+    <string name="tile_label">Cards</string>
+    <string name="tile_subtitle_empty">No cards</string>
+    <string name="shortcut_card_deleted">Card deleted</string>
+    <string name="widget_favorites_label">Favorite cards</string>
+    <string name="widget_favorites_description">Your favorite cards, then the most used: tap and show it at the checkout</string>
+    <string name="widget_card_label">Card</string>
+    <string name="widget_card_description">One card of your choice, always at hand</string>
+    <string name="widget_empty">No cards: add one in CantaCard</string>
+    <string name="widget_card_missing">Card deleted. Tap to open CantaCard</string>
+    <string name="widget_pick_title">Choose the card</string>
+    <string name="widget_pick_empty">You don’t have any cards yet. Add one in CantaCard, then create the widget again.</string>
+    <string name="open_app">Open CantaCard</string>
+
+    <!-- Scanning -->
+    <string name="scan_hint">Frame the card’s code</string>
+    <string name="torch_on">Turn on the flashlight</string>
+    <string name="torch_off">Turn off the flashlight</string>
+    <string name="camera_permission_title">Camera needed</string>
+    <string name="camera_permission_body">CantaCard uses the camera only on your phone, to read the code or take a photo of the card. Otherwise you can type the number or use a photo from the gallery.</string>
+    <string name="camera_permission_grant">Allow</string>
+    <string name="camera_permission_settings">Open settings</string>
+    <string name="camera_error">Camera not available</string>
+
+    <!-- App update -->
+    <string name="update_available">New version available: %1$s</string>
+    <string name="update_tap">Tap to download it · %1$s</string>
+    <string name="update_tap_no_size">Tap to download it</string>
+    <string name="update_no_browser">No app to open the update link</string>
+
+    <!-- Debug builds only -->
+    <string name="debug_add_samples">Add sample cards</string>
+</resources>

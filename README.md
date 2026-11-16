@@ -14,10 +14,18 @@ leggere in cassa, subito, anche senza connessione.
 - Catalogo di catene italiane con ricerca; per i negozi non in elenco c'è "Altro negozio".
 - Codice a tutto schermo con luminosità al massimo e schermo sempre acceso finché è aperto.
 - Icona del negozio scaricata dal suo sito (a scelta), foto della tessera o iniziale colorata.
-- Preferite in cima, poi le tessere usate più di recente; ricerca.
+- Foto del retro, data di scadenza (con avviso nella lista), etichette e note.
+- Preferite in cima, poi le tessere usate più di recente, per nome o nell'ordine che scegli tu;
+  ricerca e filtro per etichetta; archivio per le tessere che usi di rado.
+- In cassa si scorre da una tessera all'altra; i codici a barre si possono girare di 90° per i
+  lettori più vecchi.
 - Backup e ripristino su un file `.zip` salvato dove vuoi (Drive, OneDrive, memoria del telefono…).
 - Sincronizzazione tra due telefoni tramite un file condiviso, per esempio su Drive.
-- Scorciatoie tenendo premuta l'icona, icona della tessera in Home e due widget.
+- Importazione delle tessere da [Catima](https://catima.app/) (file esportato da Catima, senza
+  password).
+- Scorciatoie tenendo premuta l'icona, icona della tessera in Home, due widget e il riquadro
+  "Tessere" nelle impostazioni rapide.
+- In italiano e in inglese.
 
 ## Installazione
 
@@ -37,8 +45,8 @@ Le versioni 0.x sono anteprime: non ancora provate su tutti i telefoni.
 
 - **Fotocamera**: solo per scansionare il codice o fotografare la tessera, chiesto la prima volta
   che la usi.
-- **Internet**: solo per scaricare le icone dei negozi e gli aggiornamenti del catalogo, sempre
-  facoltativi. Nessun dato viene inviato.
+- **Internet**: solo per scaricare le icone dei negozi, gli aggiornamenti del catalogo e per sapere
+  se c'è una nuova versione, sempre facoltativi. Nessun dato viene inviato.
 
 Nessun permesso di accesso ai file: backup e sincronizzazione usano il selettore di file di Android.
 

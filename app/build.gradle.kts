@@ -24,8 +24,8 @@ android {
         applicationId = "io.github.loller111.cantacard"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "0.1.6"
+        versionCode = 8
+        versionName = "0.2.0"
     }
 
     signingConfigs {
@@ -77,7 +77,7 @@ android {
     androidResources {
         // Solo le lingue dell'interfaccia: elimina le traduzioni delle librerie.
         // Aggiungere qui ogni nuova lingua tradotta.
-        localeFilters += listOf("it")
+        localeFilters += listOf("it", "en")
     }
 
     // Niente blocco dipendenze cifrato di Google nell'APK.

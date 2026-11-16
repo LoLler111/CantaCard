@@ -31,6 +31,22 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 - Fase 6b (sincronizzazione) completata: `data.Sync` (file scelto con il SAF, permesso persistente, all'apertura e 2 s dopo ogni modifica, file riscritto solo se cambia), `data.SyncMerge` (regole, testate), cancellate in `cards.json` (`"deleted"`, tenute un anno), zip in comune con il backup (`data.BackupZip`), `ui.list.SyncDialog`. APK release 2,20 MB.
 - Fase 7 (accesso rapido) completata: scorciatoie dinamiche (`shortcuts.CardShortcuts`), "Aggiungi alla schermata Home" nella schermata della tessera, widget "Tessere preferite" e "Tessera" (`widget.Widgets`, `widget.CardWidgetConfigActivity`), tessere disegnate come bitmap (`image.CardBitmaps`), aggiornati da `QuickAccess` solo quando cambia qualcosa di visibile. APK release 2,21 MB. Tutte le fasi previste sono fatte.
 - Aggiornamento dell'app (13/11/2026): `update.AppUpdater` controlla GitHub Releases a ogni avvio e, se c'è una versione più nuova, mostra in cima alla lista la riga "Nuova versione disponibile" (`ui.list.UpdateRow`, sempre visibile, non chiudibile); toccandola si apre nel browser il link diretto dell'APK. La v0.1.2 lo installava dall'app con il `PackageInstaller`, ma Play Protect la segnalava come dannosa: dalla 0.1.3 l'app non installa più niente. Provato sull'emulatore: riga e apertura di Chrome sul link giusto (il download in Chrome no, era fermo alla prima configurazione). APK release 2,21 MB.
+- Versione 0.2.0 (16/11/2026, richiesta dell'utente): nuova grafica del modulo di aggiunta/modifica
+  (intestazione verde con l'anteprima della tessera a cavallo del bordo, sezioni in riquadri
+  arrotondati `ui.edit.FormSection`, campi pieni `FormTextField`, formati come pillole, "Salva" grande
+  in basso); foto del retro, scadenza (calendario Material 3), etichette, archivio e ordine
+  personalizzato (vedi "Modello dati"); avviso "Scade tra N giorni" sulle tessere entro 30 giorni;
+  scorrimento tra le tessere in `ShowCardActivity` (`HorizontalPager`, stesso ordine della lista,
+  fissato all'apertura); codice a barre ruotato di 90° ("Ruota il codice"); menu ⋮ nella tessera
+  (Aggiungi a Home, Archivia, Elimina); riquadro "Tessere" nelle impostazioni rapide
+  (`CardTileService`, apre la prima tessera, con il telefono bloccato chiede lo sblocco);
+  importazione da Catima (`data.CatimaCsv` + `data.CatimaImport`, zip o CSV, riusa il ripristino in
+  modalità "Aggiungi"); "Segnala un problema" (issue GitHub precompilata con versione, Android e
+  modello, inviata solo dall'utente); traduzione inglese (`values-en`, l'italiano resta la lingua
+  predefinita); test di compatibilità dei dati (`DataCompatibilityTest`, file in
+  `src/test/resources/compat/`); `ETag` nel controllo aggiornamenti (`update.UpdateCache`).
+  APK release 2,37 MB (+156 KB). **Stocard**: importazione non fatta, serve un file esportato vero
+  per conoscerne il formato.
 - Icona: la tessera con la faccia che urla, inclinata di 8°, su verde acqua (vettoriale): icona
   adattiva + monocromatica + logo dell'intestazione. Le mani del concept "Carta canta" sono state
   tolte su richiesta dell'utente. APK release 2,06 MB. Dal 13/11/2026 bocca a spicchio curvo (disegno
@@ -79,7 +95,10 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 | Aggiornamento app | Controllo a ogni avvio dell'app (una volta per processo, da `MainActivity.onStart`, in background a lista già mostrata) su `api.github.com/repos/LoLler111/CantaCard/releases`, **pre-release comprese**, bozze escluse; vale il `tag_name` (`v<versionName>`) più alto con un asset `.apk`. Riga sempre visibile (non chiudibile), **fissa sotto l'intestazione, fuori dalla griglia** (come primo elemento della griglia arrivava a lista già mostrata e la griglia, che resta ancorata alla prima tessera, la lasciava fuori schermo sotto l'intestazione: corretto nella 0.1.5), nascosta durante una ricerca. Al tocco si apre con `ACTION_VIEW` il `browser_download_url` dell'APK letto al controllo (mai un link fisso nel codice: si installa sempre direttamente l'ultima versione, saltando le intermedie); download e installazione li fanno il browser e Android. Senza rete o con errori il controllo non mostra nulla (scelte dell'utente) | Eccezione voluta alla regola "nessuna rete all'avvio": non blocca mai la lista né la visualizzazione delle tessere. Niente installazione dall'app né `REQUEST_INSTALL_PACKAGES`: nella 0.1.2 facevano segnalare l'app da Play Protect come dannosa (scelta dell'utente dopo la segnalazione). Ogni versione deve saper leggere i dati di qualsiasi versione precedente, perché si possono saltare aggiornamenti. Per Play Store/F-Droid la riga andrà nascosta in quelle build. |
 | Aggiornamento catalogo | Controllo automatico in background al massimo una volta a settimana, solo all'apertura della scelta negozio, silenzioso; più "Aggiorna catalogo" nel menu della stessa schermata (scelta dell'utente) | Nessuna rete all'avvio; senza rete si usa sempre la copia locale. Copia scaricata in `files/catalog/stores.json`, vince la `version` più alta. |
 | Icona | Solo la tessera (banda magnetica, faccia corallo che urla) inclinata di 8° con ombra leggera; le mani del concept iniziale sono state scartate dall'utente. Vector drawable in coordinate px (tessera 315–937 × 255–708), scala 0,085 (translate 0,79 / 13,07, centro a 54,54): a 0,07 la tessera sembrava piccola sul telefono (osservazione dell'utente), a 0,09 l'angolo in alto a destra arrivava a filo del tondo del launcher Pixel. Bocca a spicchio **curvo** (disegno dell'utente): faccia `M639,485 A99,99 0 1,0 646,610 A65,65 0 0,1 639,485 Z`, occhio in 557,501; lo spicchio dritto con la punta al centro somigliava a Pac-Man (marchio registrato Bandai Namco). Logo dell'intestazione `ic_logo` mostrato a 52 dp. Niente PNG | Pochi KB, nitida a ogni densità. |
-| Lingue | `localeFilters = ["it"]` | Elimina dall'APK le traduzioni delle librerie. Aggiungere ogni nuova lingua quando si traduce. |
+| Lingue | Italiano predefinito (`values/`), inglese in `values-en/`; `localeFilters = ["it", "en"]` | Elimina dall'APK le altre traduzioni delle librerie. Aggiungere ogni nuova lingua quando si traduce; ogni stringa nuova va scritta in entrambi i file. |
+| Ordine della lista | Preferite sempre in cima, poi "Usate di recente" (predefinito), "Per nome" o "Personalizzato" (`SortOrder`, preferenza solo locale in `ListPrefs`). Riordino trascinando per la maniglia (`ui.list.ReorderList`, senza librerie), preferite e altre separatamente. `Card.rank` è un `Double`: spostare una tessera tra due altre le dà la posizione a metà, così cambia (e si sincronizza) solo lei; si rinumera solo se mancano posizioni o non c'è spazio (`CardQuery.reorder`) | Nessuna libreria, sincronizzazione semplice. |
+| Scorciatoie, widget, riquadro | Escludono le archiviate (`CardQuery.quickAccess`); scorciatoie e widget restano su preferite + uso recente qualunque sia l'ordine della lista; il riquadro rapido segue l'ordine della lista | |
+| Importazione da altre app | Catima: colonne riconosciute per nome (formato 1 e 2), gruppi → etichette, `barcodeid` come contenuto del codice (il `cardid` diverso finisce nella nota), immagini `card_<id>_front/back/icon.png` convertite in WebP. Zip con password non supportati (`java.util.zip`): si chiede di esportare senza. Stocard: da fare solo con un file vero | Zero dipendenze. |
 | Moduli | Un solo modulo `:app` | Progetto piccolo, multi-modulo non porta benefici. |
 
 ## Struttura prevista
@@ -114,6 +133,11 @@ CantaCard/
 
 - `Card`: `id` (UUID), `name`, `storeId?`, `number`, `format` (nome dell'enum ZXing, es. `"EAN_13"`,
   mai l'ordinal), `color`, `image?` (nome file), `favorite`, `lastUsed`, `useCount`, `createdAt`, `note?`, `updatedAt` (ultima modifica dell'utente: salvataggio e preferita, non l'apertura in cassa; 0 = sconosciuta).
+  Dalla 0.2.0: `backImage?` (foto del retro, `files/images/<id>-back-<versione>.webp`, nel backup
+  `images/<id>-back.webp`), `expiry?` (data ISO `yyyy-MM-dd`), `labels` (lista, senza doppioni),
+  `archived`, `rank?` (ordine personalizzato). Scritti nel JSON solo se diversi dal default: le
+  versioni precedenti li ignorano. **Ogni cambio di formato: aggiungere i file della nuova versione
+  in `src/test/resources/compat/` e i test in `DataCompatibilityTest`, senza togliere i vecchi.**
 - Salvataggio: `files/cards.json` = `{"version": 1, "cards": [...], "deleted": [{"id", "at"}]}` (cancellate, per la sincronizzazione); immagini in `files/images/<id>-<versione>.webp` (nome nuovo a ogni sostituzione, la vecchia si cancella; provvisorie in `cache/edit-images/`).
 - Lettura tollerante: campi sconosciuti ignorati, campi mancanti con default, un record corrotto non
   deve bloccare gli altri.

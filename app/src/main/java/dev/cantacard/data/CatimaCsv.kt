@@ -14,12 +14,15 @@ import java.time.ZoneId
  */
 object CatimaCsv {
 
+    /** Segno di inizio file UTF-8 che alcuni programmi mettono davanti al CSV. */
+    private const val BOM = "\uFEFF"
+
     /** Una tessera letta, con l'id di Catima per ritrovare le sue immagini nello zip. */
     class Entry(val catimaId: String, val card: Card)
 
     /** `null` se il testo non contiene la sezione delle tessere di Catima. */
     fun parse(text: String, newId: () -> String = Card::newId, zone: ZoneId = ZoneId.systemDefault()): List<Entry>? {
-        val records = records(text.removePrefix("﻿"))
+        val records = records(text.removePrefix(BOM))
         val headerIndex = records.indexOfFirst { "store" in it && "cardid" in it && "_id" in it }
         if (headerIndex < 0) return null
         val header = records[headerIndex]
