@@ -73,7 +73,15 @@ import dev.cantacard.ui.edit.Pill
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import dev.cantacard.ui.Brand
 import dev.cantacard.ui.SectionLabelStyle
 import dev.cantacard.ui.components.CARD_RATIO
@@ -349,18 +357,65 @@ private fun Header(
                     }
                 }
             }
-            if (count != null && count > 0) {
-                Text(
-                    text = pluralStringResource(R.plurals.list_header_count, count, count),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.8f),
-                    modifier = Modifier.padding(top = 2.dp, start = 50.dp),
-                )
+            if (count != null && count > 0 && !reordering) {
+                HeaderSubtitle(count, onSync, Modifier.padding(start = 50.dp))
             }
             if (showSearch) {
                 Spacer(Modifier.height(16.dp))
                 SearchField(query, onQueryChange, placeholder = R.string.search_hint)
             }
+        }
+    }
+}
+
+/**
+ * Sotto il nome: numero di tessere e, con la sincronizzazione attiva, quando sono state salvate
+ * l'ultima volta nel file; altrimenti l'invito "Fai il backup delle tessere". Tutti e due aprono la
+ * sincronizzazione.
+ */
+@Composable
+private fun HeaderSubtitle(count: Int, onSync: () -> Unit, modifier: Modifier = Modifier) {
+    // Letto qui e non in MainActivity: il sottotitolo compare a tessere già caricate, quando la
+    // sincronizzazione è già stata creata in background da onStart: niente lettura delle
+    // preferenze sul thread principale al primo frame.
+    val sync by LocalContext.current.app.sync.state.collectAsState()
+    val dim = Color.White.copy(alpha = 0.8f)
+    val style = MaterialTheme.typography.bodyMedium
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        Text("${pluralStringResource(R.plurals.list_header_count, count, count)} · ", style = style, color = dim)
+        Text(
+            text = if (sync.enabled) savedText(sync.lastSync) else stringResource(R.string.header_backup_cta),
+            style = style,
+            color = if (sync.enabled) dim else Color.White,
+            fontWeight = if (sync.enabled) null else FontWeight.SemiBold,
+            textDecoration = if (sync.enabled) null else TextDecoration.Underline,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .clickable(onClick = onSync)
+                .padding(horizontal = 2.dp, vertical = 4.dp),
+        )
+    }
+}
+
+/** "salvate oggi alle 14:32", "salvate ieri alle 9:05", "salvate il 17 nov alle 18:40". */
+@Composable
+private fun savedText(time: Long): String {
+    if (time <= 0L) return stringResource(R.string.header_saved_never)
+    val locale = LocalConfiguration.current.locales[0]
+    val zone = ZoneId.systemDefault()
+    val saved = Instant.ofEpochMilli(time).atZone(zone)
+    val today = LocalDate.now(zone)
+    val hour = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale).format(saved)
+    return when (saved.toLocalDate()) {
+        today -> stringResource(R.string.header_saved_today, hour)
+        today.minusDays(1) -> stringResource(R.string.header_saved_yesterday, hour)
+        else -> {
+            val pattern = stringResource(
+                if (saved.year == today.year) R.string.header_saved_date_pattern else R.string.header_saved_date_year_pattern,
+            )
+            stringResource(R.string.header_saved_date, DateTimeFormatter.ofPattern(pattern, locale).format(saved), hour)
         }
     }
 }

@@ -17,9 +17,16 @@
     <string name="list_empty_cta">Add your first card</string>
     <string name="list_no_results">No cards for “%1$s”</string>
     <plurals name="list_header_count">
-        <item quantity="one">%d card · always offline</item>
-        <item quantity="other">%d cards · always offline</item>
+        <item quantity="one">%d card</item>
+        <item quantity="other">%d cards</item>
     </plurals>
+    <string name="header_saved_today">saved today at %1$s</string>
+    <string name="header_saved_yesterday">saved yesterday at %1$s</string>
+    <string name="header_saved_date">saved on %1$s at %2$s</string>
+    <string name="header_saved_date_pattern">MMM d</string>
+    <string name="header_saved_date_year_pattern">MMM d, yyyy</string>
+    <string name="header_saved_never">not saved yet</string>
+    <string name="header_backup_cta">Back up your cards</string>
     <string name="section_favorites">Favorites</string>
     <string name="section_all">Your cards</string>
     <string name="card_favorite">Favorite</string>
@@ -212,8 +219,8 @@
 
     <!-- Sync between phones -->
     <string name="sync_menu">Sync</string>
-    <string name="sync_title_off">Sync between phones</string>
-    <string name="sync_body_off">Choose a file in your storage, for example Google Drive: CantaCard updates it on every change and reads it again when you open the app. On the other phone choose the same file with “Use an existing file”.</string>
+    <string name="sync_title_off">Backup and sync</string>
+    <string name="sync_body_off">Choose a file in your storage, for example Google Drive: CantaCard saves your cards there on every change, so you always have a backup. To have them on another phone too, choose the same file there with “Use an existing file”.</string>
     <string name="sync_note">Changes reach the other phone after your storage app has uploaded them. The cards always stay on this phone too.</string>
     <string name="sync_create">Create a new file</string>
     <string name="sync_use_existing">Use an existing file</string>

@@ -47,6 +47,11 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
   `src/test/resources/compat/`); `ETag` nel controllo aggiornamenti (`update.UpdateCache`).
   APK release 2,37 MB (+156 KB). **Stocard**: importazione non fatta, serve un file esportato vero
   per conoscerne il formato.
+- Sottotitolo della lista (19/11/2026, richiesta dell'utente): al posto di "sempre offline", con la
+  sincronizzazione attiva "N tessere · salvate oggi/ieri alle HH:MM" (o "il 17 nov alle …"; ultima
+  sincronizzazione riuscita), altrimenti il link "Fai il backup delle tessere"; tutti e due aprono
+  `SyncDialog`, che da spento si intitola "Backup e sincronizzazione". Stato letto in
+  `HeaderSubtitle` (non in `MainActivity`), così `Sync` resta creato in background da `onStart`.
 - Icona: la tessera con la faccia che urla, inclinata di 8°, su verde acqua (vettoriale): icona
   adattiva + monocromatica + logo dell'intestazione. Le mani del concept "Carta canta" sono state
   tolte su richiesta dell'utente. APK release 2,06 MB. Dal 13/11/2026 bocca a spicchio curvo (disegno

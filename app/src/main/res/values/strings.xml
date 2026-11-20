@@ -18,9 +18,17 @@
     <string name="list_empty_cta">Aggiungi la prima tessera</string>
     <string name="list_no_results">Nessuna tessera per «%1$s»</string>
     <plurals name="list_header_count">
-        <item quantity="one">%d tessera · sempre offline</item>
-        <item quantity="other">%d tessere · sempre offline</item>
+        <item quantity="one">%d tessera</item>
+        <item quantity="other">%d tessere</item>
     </plurals>
+    <string name="header_saved_today">salvate oggi alle %1$s</string>
+    <string name="header_saved_yesterday">salvate ieri alle %1$s</string>
+    <string name="header_saved_date">salvate il %1$s alle %2$s</string>
+    <!-- Formati di java.time per la data dell'ultimo salvataggio. -->
+    <string name="header_saved_date_pattern">d MMM</string>
+    <string name="header_saved_date_year_pattern">d MMM yyyy</string>
+    <string name="header_saved_never">non ancora salvate</string>
+    <string name="header_backup_cta">Fai il backup delle tessere</string>
     <string name="section_favorites">Preferite</string>
     <string name="section_all">Le tue tessere</string>
     <string name="card_favorite">Preferita</string>
@@ -214,8 +222,8 @@
 
     <!-- Sincronizzazione tra telefoni -->
     <string name="sync_menu">Sincronizzazione</string>
-    <string name="sync_title_off">Sincronizza tra telefoni</string>
-    <string name="sync_body_off">Scegli un file nel tuo spazio di archiviazione, per esempio Google Drive: CantaCard lo aggiorna a ogni modifica e lo rilegge quando la apri. Sull\'altro telefono scegli lo stesso file con «Usa un file esistente».</string>
+    <string name="sync_title_off">Backup e sincronizzazione</string>
+    <string name="sync_body_off">Scegli un file nel tuo spazio di archiviazione, per esempio Google Drive: CantaCard ci salva le tessere a ogni modifica, così hai sempre un backup. Per averle anche su un altro telefono, lì scegli lo stesso file con «Usa un file esistente».</string>
     <string name="sync_note">Le modifiche arrivano sull\'altro telefono dopo che l\'app di archiviazione le ha caricate. Le tessere restano sempre anche su questo telefono.</string>
     <string name="sync_create">Crea un nuovo file</string>
     <string name="sync_use_existing">Usa un file esistente</string>
