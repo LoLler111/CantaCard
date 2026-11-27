@@ -55,6 +55,7 @@ class ShowCardActivity : ComponentActivity() {
         }
         val repository = app.cards
         val sortOrder = app.listPrefs.sortOrder.value
+        val favoritesOrder = app.listPrefs.favoritesOrder.value
         val canPin = CardShortcuts.canPin(this)
 
         setContent {
@@ -65,7 +66,7 @@ class ShowCardActivity : ComponentActivity() {
             var used by rememberSaveable { mutableStateOf(ArrayList<String>()) }
             val loaded = cards
             if (loaded != null && pages == null) {
-                pages = pagesFor(loaded, requestedId, sortOrder)
+                pages = pagesFor(loaded, requestedId, sortOrder, favoritesOrder)
             }
             val ids = pages ?: return@setContent
             if (ids.isEmpty()) {
@@ -146,11 +147,16 @@ class ShowCardActivity : ComponentActivity() {
          * Id delle pagine: le tessere attive (o le archiviate, se si apre un'archiviata) nell'ordine
          * della lista. Una tessera richiesta che non c'è dà un elenco con solo lei (si chiuderà).
          */
-        internal fun pagesFor(cards: List<Card>, requestedId: String?, order: SortOrder): ArrayList<String> {
+        internal fun pagesFor(
+            cards: List<Card>,
+            requestedId: String?,
+            order: SortOrder,
+            favoritesOrder: SortOrder = order,
+        ): ArrayList<String> {
             val requested = requestedId?.let { id -> cards.firstOrNull { it.id == id } }
             if (requestedId != null && requested == null) return arrayListOf(requestedId)
             val archived = requested?.archived == true
-            val pool = CardQuery.sorted(cards.filter { it.archived == archived }, order)
+            val pool = CardQuery.sorted(cards.filter { it.archived == archived }, order, favoritesOrder)
             return pool.mapTo(ArrayList()) { it.id }
         }
     }

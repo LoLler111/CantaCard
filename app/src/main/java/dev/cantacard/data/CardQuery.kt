@@ -6,7 +6,10 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 
-/** Ordine della lista scelto dall'utente; le preferite restano sempre in cima. */
+/**
+ * Ordine della lista scelto dall'utente, separato per le preferite e per le altre tessere;
+ * le preferite restano sempre in cima.
+ */
 enum class SortOrder {
     /** Usate più di recente prima (predefinito). */
     RECENT,
@@ -31,25 +34,39 @@ object CardQuery {
     private val diacritics = Regex("\\p{Mn}+")
 
     /**
-     * Preferite in cima, poi secondo [order]: per uso più recente (le mai usate per nome), per nome,
-     * o nell'ordine personalizzato (le mai spostate in fondo, dalla più vecchia).
+     * Preferite in cima, ordinate secondo [favoritesOrder], poi le altre secondo [order]: per uso più
+     * recente (le mai usate per nome), per nome, o nell'ordine personalizzato (le mai spostate in
+     * fondo, dalla più vecchia).
      */
-    fun sorted(cards: List<Card>, order: SortOrder = SortOrder.RECENT): List<Card> {
-        val favoritesFirst = compareByDescending<Card> { it.favorite }
-        val comparator = when (order) {
-            SortOrder.RECENT -> favoritesFirst.thenByDescending { it.lastUsed }.thenBy(collator) { it.name }
-            SortOrder.NAME -> favoritesFirst.thenBy(collator) { it.name }.thenBy { it.createdAt }
-            SortOrder.MANUAL -> favoritesFirst
-                .thenBy { it.rank == null }
-                .thenBy { it.rank ?: 0.0 }
-                .thenBy { it.createdAt }
-                .thenBy(collator) { it.name }
-        }
-        return cards.sortedWith(comparator)
+    fun sorted(cards: List<Card>, order: SortOrder = SortOrder.RECENT, favoritesOrder: SortOrder = order): List<Card> {
+        val (favorites, others) = cards.partition { it.favorite }
+        return favorites.sortedWith(comparator(favoritesOrder)) + others.sortedWith(comparator(order))
     }
 
-    /** Tessere per scorciatoie, widget e riquadro rapido: le archiviate no. */
-    fun quickAccess(cards: List<Card>): List<Card> = sorted(cards.filterNot { it.archived })
+    private fun comparator(order: SortOrder): Comparator<Card> = when (order) {
+        SortOrder.RECENT -> compareByDescending<Card> { it.lastUsed }.thenBy(collator) { it.name }
+        SortOrder.NAME -> compareBy<Card, String>(collator) { it.name }.thenBy { it.createdAt }
+        SortOrder.MANUAL -> compareBy<Card> { it.rank == null }
+            .thenBy { it.rank ?: 0.0 }
+            .thenBy { it.createdAt }
+            .thenBy(collator) { it.name }
+    }
+
+    /**
+     * Tessere per scorciatoie e widget: le archiviate no. Preferite nel loro ordine
+     * ([favoritesOrder]), poi le altre per uso recente.
+     */
+    fun quickAccess(cards: List<Card>, favoritesOrder: SortOrder = SortOrder.RECENT): List<Card> =
+        sorted(cards.filterNot { it.archived }, SortOrder.RECENT, favoritesOrder)
+
+    /**
+     * Posizioni da dare a un gruppo di tessere (preferite o altre) quando passa all'ordine
+     * personalizzato: se nessuna ne ha ancora una, restano nell'ordine in cui si vedono ora
+     * ([group]); altrimenti niente (quelle senza posizione vanno in fondo). Id → posizione.
+     */
+    fun freezeOrder(group: List<Card>): Map<String, Double> =
+        if (group.any { it.rank != null }) emptyMap()
+        else group.mapIndexed { index, card -> card.id to (index + 1).toDouble() }.toMap()
 
     /**
      * Cerca nel nome (senza distinguere maiuscole e accenti), nelle etichette e nel numero

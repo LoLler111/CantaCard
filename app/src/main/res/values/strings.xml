@@ -51,6 +51,8 @@
     <string name="sort_name">Per nome</string>
     <string name="sort_manual">Personalizzato</string>
     <string name="sort_favorites_note">Le preferite restano sempre in cima.</string>
+    <string name="sort_group_others">Altre tessere</string>
+    <string name="sort_drag_hint">Con «Personalizzato» tieni premuta una tessera nella lista e trascinala dove vuoi.</string>
     <string name="reorder_menu">Riordina le tessere</string>
     <string name="reorder_title">Riordina</string>
     <string name="reorder_done">Fine</string>
@@ -282,6 +284,23 @@
     <string name="update_tap">Tocca per scaricarla · %1$s</string>
     <string name="update_tap_no_size">Tocca per scaricarla</string>
     <string name="update_no_browser">Nessuna app per aprire il link dell\'aggiornamento</string>
+
+    <!-- Impostazioni -->
+    <string name="settings_menu">Impostazioni</string>
+    <string name="settings_section_list">Lista</string>
+    <string name="settings_sort_favorites">Ordine delle preferite</string>
+    <string name="settings_sort_others">Ordine delle altre tessere</string>
+    <string name="reorder_favorites_menu">Riordina le preferite</string>
+    <string name="settings_no_favorites">Non hai ancora preferite: tocca la stella di una tessera</string>
+    <string name="settings_section_backup">Backup e sincronizzazione</string>
+    <string name="settings_sync_on">Attiva · %1$s</string>
+    <string name="settings_sync_off">Disattivata: tieni allineati due telefoni</string>
+    <string name="settings_export_body">Un file .zip con tessere e immagini</string>
+    <string name="settings_restore_body">Da un file .zip di CantaCard</string>
+    <string name="settings_section_info">Informazioni</string>
+    <string name="settings_report_body">Apre GitHub con versione e telefono già scritti</string>
+    <string name="settings_version">Versione %1$s</string>
+    <string name="settings_source">Codice sorgente su GitHub · GPL-3.0</string>
 
     <!-- Solo build di debug -->
     <string name="debug_add_samples">Aggiungi tessere di prova</string>

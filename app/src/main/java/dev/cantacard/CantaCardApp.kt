@@ -32,7 +32,7 @@ class CantaCardApp : Application() {
     val sync: Sync by lazy { Sync(this, cards, images, appScope) }
 
     /** Scorciatoie e widget allineati alle tessere. */
-    private val quickAccess by lazy { QuickAccess(this, cards, images, appScope) }
+    private val quickAccess by lazy { QuickAccess(this, cards, images, listPrefs, appScope) }
 
     /** Letto solo quando serve (scelta del negozio, modulo), non all'avvio. */
     val catalog: CatalogRepository by lazy { CatalogRepository(this, appScope) }

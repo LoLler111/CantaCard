@@ -87,7 +87,7 @@ object Widgets {
         val (widthDp, heightDp) = sizeDp(manager, widgetId, defaultWidth = 250, defaultHeight = 70)
         val columns = ((widthDp - 12) / SLOT_DP).coerceIn(1, SLOTS_PER_ROW)
         val rows = if (heightDp >= 130) 2 else 1
-        val shown = CardQuery.quickAccess(cards).take(columns * rows)
+        val shown = CardQuery.quickAccess(cards, context.app.listPrefs.favoritesOrder.value).take(columns * rows)
         val views = RemoteViews(context.packageName, R.layout.widget_favorites)
         if (shown.isEmpty()) {
             views.setViewVisibility(R.id.empty, View.VISIBLE)

@@ -101,6 +101,57 @@ class CardQueryTest {
     }
 
     @Test
+    fun favoritesAndOthersHaveTheirOwnOrder() {
+        val cards = listOf(
+            card("pref-b", favorite = true, lastUsed = 900).copy(rank = 2.0),
+            card("pref-a", favorite = true, lastUsed = 1).copy(rank = 1.0),
+            card("pref-nuova", favorite = true, lastUsed = 999),
+            card("Zeta", lastUsed = 10).copy(rank = 0.5),
+            card("alfa", lastUsed = 50),
+        )
+        // Preferite personalizzate (senza posizione in fondo), altre per uso recente.
+        assertEquals(
+            listOf("pref-a", "pref-b", "pref-nuova", "alfa", "Zeta"),
+            CardQuery.sorted(cards, SortOrder.RECENT, favoritesOrder = SortOrder.MANUAL).map { it.name },
+        )
+        // Preferite per uso recente, altre personalizzate.
+        assertEquals(
+            listOf("pref-nuova", "pref-b", "pref-a", "Zeta", "alfa"),
+            CardQuery.sorted(cards, SortOrder.MANUAL, favoritesOrder = SortOrder.RECENT).map { it.name },
+        )
+        // Senza un ordine per le preferite vale quello della lista.
+        assertEquals(
+            listOf("pref-a", "pref-b", "pref-nuova", "alfa", "Zeta"),
+            CardQuery.sorted(cards, SortOrder.NAME).map { it.name },
+        )
+    }
+
+    @Test
+    fun quickAccessFollowsTheFavoritesOrderAndSkipsArchived() {
+        val cards = listOf(
+            card("pref-b", favorite = true, lastUsed = 900).copy(rank = 2.0),
+            card("pref-a", favorite = true, lastUsed = 1).copy(rank = 1.0),
+            card("archiviata", favorite = true).copy(rank = 0.0, archived = true),
+            card("vecchia", lastUsed = 5).copy(rank = 1.0),
+            card("recente", lastUsed = 50).copy(rank = 2.0),
+        )
+        assertEquals(
+            listOf("pref-a", "pref-b", "recente", "vecchia"),
+            CardQuery.quickAccess(cards, SortOrder.MANUAL).map { it.name },
+        )
+        assertEquals(listOf("pref-b", "pref-a", "recente", "vecchia"), CardQuery.quickAccess(cards).map { it.name })
+    }
+
+    @Test
+    fun freezeOrderKeepsTheVisibleOrderOnlyIfNoneHasARank() {
+        val visible = listOf(card("c"), card("a"), card("b"))
+        assertEquals(mapOf("c" to 1.0, "a" to 2.0, "b" to 3.0), CardQuery.freezeOrder(visible))
+        val partly = listOf(card("c"), card("a").copy(rank = 4.0))
+        assertEquals(emptyMap<String, Double>(), CardQuery.freezeOrder(partly))
+        assertEquals(emptyMap<String, Double>(), CardQuery.freezeOrder(emptyList()))
+    }
+
+    @Test
     fun reorderMovesOnlyTheCardWhenAllHaveRanks() {
         val cards = listOf(card("a").copy(rank = 1.0), card("b").copy(rank = 2.0), card("c").copy(rank = 3.0))
         assertEquals(mapOf("c" to 1.5), CardQuery.reorder(cards, from = 2, to = 1))

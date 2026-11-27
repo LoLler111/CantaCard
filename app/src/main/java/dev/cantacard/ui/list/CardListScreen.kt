@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -52,6 +53,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -93,15 +95,18 @@ import dev.cantacard.update.AppRelease
 @Composable
 fun CardListScreen(
     repository: CardRepository,
+    /** Ordine delle tessere non preferite. */
     sortOrder: SortOrder,
+    favoritesOrder: SortOrder,
     onSortChange: (SortOrder) -> Unit,
+    onFavoritesOrderChange: (SortOrder) -> Unit,
     onOpen: (Card) -> Unit,
     onAdd: () -> Unit,
-    onExport: () -> Unit,
     onRestore: () -> Unit,
-    onSync: () -> Unit,
     onImport: () -> Unit,
-    onReport: () -> Unit,
+    /** Dal sottotitolo: ultimo salvataggio o invito al backup. */
+    onSync: () -> Unit,
+    onSettings: () -> Unit,
     update: AppRelease?,
     onUpdate: (AppRelease) -> Unit,
 ) {
@@ -118,12 +123,17 @@ fun CardListScreen(
     // Un'etichetta non più usata (o le archiviate finite) non lascia la lista vuota.
     if (label != null && labels.none { it.equals(label, ignoreCase = true) }) label = null
     if (showArchived && archivedCount == 0) showArchived = false
-    if (reordering && sortOrder != SortOrder.MANUAL) reordering = false
-    val visible = remember(cards, query, label, showArchived, sortOrder) {
+    // Si riordinano a mano solo i gruppi (preferite, altre) con l'ordine personalizzato.
+    val favoritesManual = favoritesOrder == SortOrder.MANUAL
+    val othersManual = sortOrder == SortOrder.MANUAL
+    val canReorder = !active.isNullOrEmpty() &&
+        ((favoritesManual && active.any { it.favorite }) || (othersManual && active.any { !it.favorite }))
+    if (reordering && !canReorder) reordering = false
+    val visible = remember(cards, query, label, showArchived, sortOrder, favoritesOrder) {
         cards?.let { all ->
             val base = if (showArchived) all.filter { it.archived } else all.filterNot { it.archived }
             val labelled = label?.let { CardQuery.withLabel(base, it) } ?: base
-            CardQuery.filter(CardQuery.sorted(labelled, sortOrder), query)
+            CardQuery.filter(CardQuery.sorted(labelled, sortOrder, favoritesOrder), query)
         }
     }
     val all = cards
@@ -139,9 +149,10 @@ fun CardListScreen(
                 query = query,
                 onQueryChange = { query = it },
                 showSearch = !all.isNullOrEmpty() && !reordering,
-                canExport = !all.isNullOrEmpty(),
+                hasCards = !all.isNullOrEmpty(),
                 reordering = reordering,
-                canReorder = sortOrder == SortOrder.MANUAL && !active.isNullOrEmpty(),
+                canReorder = canReorder,
+                reorderLabel = if (othersManual) R.string.reorder_menu else R.string.reorder_favorites_menu,
                 onDone = { reordering = false },
                 onSort = { sortDialog = true },
                 onReorder = {
@@ -150,11 +161,8 @@ fun CardListScreen(
                     showArchived = false
                     reordering = true
                 },
-                onExport = onExport,
-                onRestore = onRestore,
                 onSync = onSync,
-                onImport = onImport,
-                onReport = onReport,
+                onSettings = onSettings,
             )
             // Fissa sotto l'intestazione, fuori dalla griglia: arriva dopo che la lista è già
             // mostrata, e come primo elemento della griglia finiva sopra la parte visibile.
@@ -198,30 +206,35 @@ fun CardListScreen(
                 reordering -> {
                     val sorted = CardQuery.sorted(all.filterNot { it.archived }, SortOrder.MANUAL)
                     ReorderList(
-                        favorites = sorted.filter { it.favorite },
-                        others = sorted.filterNot { it.favorite },
+                        favorites = if (favoritesManual) sorted.filter { it.favorite } else emptyList(),
+                        others = if (othersManual) sorted.filterNot { it.favorite } else emptyList(),
                         onMove = { group, from, to -> repository.setRanks(CardQuery.reorder(group, from, to)) },
                     )
                 }
                 visible.isEmpty() && query.isNotBlank() -> NoResults(query)
                 visible.isEmpty() -> NoCardsHere()
-                else -> CardGrid(cards = visible, grouped = query.isBlank() && !showArchived, onOpen = onOpen)
+                else -> {
+                    // Trascinamento nella griglia solo con tutte le tessere in vista (niente ricerca né filtri).
+                    val grouped = query.isBlank() && !showArchived
+                    val unfiltered = grouped && label == null
+                    CardGrid(
+                        cards = visible,
+                        grouped = grouped,
+                        dragFavorites = unfiltered && favoritesManual,
+                        dragOthers = unfiltered && othersManual,
+                        onOpen = onOpen,
+                        onMove = { group, from, to -> repository.setRanks(CardQuery.reorder(group, from, to)) },
+                    )
+                }
             }
         }
 
         if (sortDialog) {
             SortDialog(
-                current = sortOrder,
-                onChoose = { order ->
-                    sortDialog = false
-                    onSortChange(order)
-                    if (order == SortOrder.MANUAL && !active.isNullOrEmpty()) {
-                        query = ""
-                        label = null
-                        showArchived = false
-                        reordering = true
-                    }
-                },
+                favoritesOrder = favoritesOrder,
+                othersOrder = sortOrder,
+                onFavoritesOrder = onFavoritesOrderChange,
+                onOthersOrder = onSortChange,
                 onDismiss = { sortDialog = false },
             )
         }
@@ -249,17 +262,15 @@ private fun Header(
     query: String,
     onQueryChange: (String) -> Unit,
     showSearch: Boolean,
-    canExport: Boolean,
+    hasCards: Boolean,
     reordering: Boolean,
     canReorder: Boolean,
+    reorderLabel: Int,
     onDone: () -> Unit,
     onSort: () -> Unit,
     onReorder: () -> Unit,
-    onExport: () -> Unit,
-    onRestore: () -> Unit,
     onSync: () -> Unit,
-    onImport: () -> Unit,
-    onReport: () -> Unit,
+    onSettings: () -> Unit,
 ) {
     Box(
         Modifier
@@ -301,7 +312,8 @@ private fun Header(
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.sort_menu)) },
-                            enabled = canExport,
+                            leadingIcon = { MenuIcon(R.drawable.ic_sort) },
+                            enabled = hasCards,
                             onClick = {
                                 menu = false
                                 onSort()
@@ -309,7 +321,8 @@ private fun Header(
                         )
                         if (canReorder) {
                             DropdownMenuItem(
-                                text = { Text(stringResource(R.string.reorder_menu)) },
+                                text = { Text(stringResource(reorderLabel)) },
+                                leadingIcon = { MenuIcon(R.drawable.ic_drag) },
                                 onClick = {
                                     menu = false
                                     onReorder()
@@ -318,40 +331,11 @@ private fun Header(
                         }
                         HorizontalDivider()
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.backup_export)) },
-                            enabled = canExport,
+                            text = { Text(stringResource(R.string.settings_menu)) },
+                            leadingIcon = { MenuIcon(R.drawable.ic_settings) },
                             onClick = {
                                 menu = false
-                                onExport()
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.backup_restore)) },
-                            onClick = {
-                                menu = false
-                                onRestore()
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.sync_menu)) },
-                            onClick = {
-                                menu = false
-                                onSync()
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.import_menu)) },
-                            onClick = {
-                                menu = false
-                                onImport()
-                            },
-                        )
-                        HorizontalDivider()
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.report_menu)) },
-                            onClick = {
-                                menu = false
-                                onReport()
+                                onSettings()
                             },
                         )
                     }
@@ -366,6 +350,11 @@ private fun Header(
             }
         }
     }
+}
+
+@Composable
+private fun MenuIcon(icon: Int) {
+    Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(22.dp))
 }
 
 /**
@@ -421,24 +410,36 @@ private fun savedText(time: Long): String {
 }
 
 @Composable
-private fun CardGrid(cards: List<Card>, grouped: Boolean, onOpen: (Card) -> Unit) {
+private fun CardGrid(
+    cards: List<Card>,
+    grouped: Boolean,
+    dragFavorites: Boolean,
+    dragOthers: Boolean,
+    onOpen: (Card) -> Unit,
+    onMove: (group: List<Card>, from: Int, to: Int) -> Unit,
+) {
     val favorites = if (grouped) cards.filter { it.favorite } else emptyList()
     val others = if (grouped && favorites.isNotEmpty()) cards.filterNot { it.favorite } else cards
+    val gridState = rememberLazyGridState()
+    val drag = rememberGridReorder(gridState, favorites, others, dragFavorites, dragOthers, onMove)
+    val haptic = LocalHapticFeedback.current
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 150.dp),
+        state = gridState,
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 112.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
         modifier = Modifier
             .fillMaxSize()
-            .navigationBarsPadding(),
+            .navigationBarsPadding()
+            .then(if (dragFavorites || dragOthers) Modifier.gridReorder(drag, haptic) else Modifier),
     ) {
-        if (favorites.isNotEmpty()) {
+        if (drag.favorites.isNotEmpty()) {
             section(R.string.section_favorites)
-            cardItems(favorites, onOpen)
+            cardItems(drag.favorites, drag, onOpen)
             section(R.string.section_all)
         }
-        cardItems(others, onOpen)
+        cardItems(drag.others, drag, onOpen)
     }
 }
 
@@ -455,9 +456,11 @@ private fun LazyGridScope.section(title: Int) {
     }
 }
 
-private fun LazyGridScope.cardItems(cards: List<Card>, onOpen: (Card) -> Unit) {
+private fun LazyGridScope.cardItems(cards: List<Card>, drag: GridReorderState, onOpen: (Card) -> Unit) {
     items(cards, key = { it.id }) { card ->
-        CardTile(card = card, onClick = { onOpen(card) }, modifier = Modifier.animateItem())
+        // La tessera trascinata segue il dito; le altre scivolano al loro nuovo posto.
+        val modifier = if (drag.draggingId == card.id) Modifier.dragged(drag) else Modifier.animateItem()
+        CardTile(card = card, onClick = { onOpen(card) }, modifier = modifier)
     }
 }
 

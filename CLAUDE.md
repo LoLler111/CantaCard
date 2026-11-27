@@ -54,6 +54,17 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
   `HeaderSubtitle` (non in `MainActivity`), così `Sync` resta creato in background da `onStart`.
   Provato sull'emulatore (link, finestra, "salvate oggi alle …" dopo aver creato il file). Uscito
   nella **0.2.1** (20/11/2026, pre-release). APK release 2,37 MB.
+- Impostazioni e ordinamento (27/11/2026, richiesta dell'utente, non ancora in una release):
+  `SettingsActivity` (`ui.settings.SettingsScreen`, riquadri `FormSection` con un'icona per riga)
+  dal menu ⋮ della lista, che ora ha solo Ordina, Riordina e Impostazioni (con icone). Dentro:
+  ordine delle preferite e delle altre, riordino a mano, sincronizzazione, esporta/ripristina
+  backup, importa da Catima, "Segnala un problema", versione e link al codice. Comandi di backup e
+  sincronizzazione in comune tra lista e impostazioni in `BackupActions` (`rememberBackupActions`,
+  `RestorePrompt`, `SyncSettingsDialog`). Ordine **separato** per preferite e altre; con
+  "Personalizzato" una tessera si sposta **tenendola premuta nella griglia della lista**
+  (`ui.list.GridReorder`, senza librerie; solo senza ricerca né filtri, solo nel suo gruppo).
+  Provato sull'emulatore (menu, impostazioni, dialogo, trascinamento, ordine dopo il riavvio, tocco
+  che apre ancora la tessera). APK release 2,39 MB (+20 KB).
 - Icona: la tessera con la faccia che urla, inclinata di 8°, su verde acqua (vettoriale): icona
   adattiva + monocromatica + logo dell'intestazione. Le mani del concept "Carta canta" sono state
   tolte su richiesta dell'utente. APK release 2,06 MB. Dal 13/11/2026 bocca a spicchio curvo (disegno
@@ -103,8 +114,8 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
 | Aggiornamento catalogo | Controllo automatico in background al massimo una volta a settimana, solo all'apertura della scelta negozio, silenzioso; più "Aggiorna catalogo" nel menu della stessa schermata (scelta dell'utente) | Nessuna rete all'avvio; senza rete si usa sempre la copia locale. Copia scaricata in `files/catalog/stores.json`, vince la `version` più alta. |
 | Icona | Solo la tessera (banda magnetica, faccia corallo che urla) inclinata di 8° con ombra leggera; le mani del concept iniziale sono state scartate dall'utente. Vector drawable in coordinate px (tessera 315–937 × 255–708), scala 0,085 (translate 0,79 / 13,07, centro a 54,54): a 0,07 la tessera sembrava piccola sul telefono (osservazione dell'utente), a 0,09 l'angolo in alto a destra arrivava a filo del tondo del launcher Pixel. Bocca a spicchio **curvo** (disegno dell'utente): faccia `M639,485 A99,99 0 1,0 646,610 A65,65 0 0,1 639,485 Z`, occhio in 557,501; lo spicchio dritto con la punta al centro somigliava a Pac-Man (marchio registrato Bandai Namco). Logo dell'intestazione `ic_logo` mostrato a 52 dp. Niente PNG | Pochi KB, nitida a ogni densità. |
 | Lingue | Italiano predefinito (`values/`), inglese in `values-en/`; `localeFilters = ["it", "en"]` | Elimina dall'APK le altre traduzioni delle librerie. Aggiungere ogni nuova lingua quando si traduce; ogni stringa nuova va scritta in entrambi i file. |
-| Ordine della lista | Preferite sempre in cima, poi "Usate di recente" (predefinito), "Per nome" o "Personalizzato" (`SortOrder`, preferenza solo locale in `ListPrefs`). Riordino trascinando per la maniglia (`ui.list.ReorderList`, senza librerie), preferite e altre separatamente. `Card.rank` è un `Double`: spostare una tessera tra due altre le dà la posizione a metà, così cambia (e si sincronizza) solo lei; si rinumera solo se mancano posizioni o non c'è spazio (`CardQuery.reorder`) | Nessuna libreria, sincronizzazione semplice. |
-| Scorciatoie, widget, riquadro | Escludono le archiviate (`CardQuery.quickAccess`); scorciatoie e widget restano su preferite + uso recente qualunque sia l'ordine della lista; il riquadro rapido segue l'ordine della lista | |
+| Ordine della lista | Preferite sempre in cima. Ordine scelto **separatamente** per le preferite (`ListPrefs.favoritesOrder`, la prima volta uguale a quello di prima) e per le altre (`ListPrefs.sortOrder`): "Usate di recente" (predefinito), "Per nome" o "Personalizzato" (`SortOrder`, preferenze solo locali, scelte dell'utente). Con "Personalizzato" si riordina tenendo premuta una tessera nella griglia (`ui.list.GridReorder`: gesto preso nel passaggio `Initial`, così la griglia non scorre e la tessera non si apre al rilascio; solo con tutte le tessere in vista, solo nel suo gruppo) oppure con "Riordina" (`ui.list.ReorderList`, maniglia, azioni di accessibilità "Sposta su/giù"). Passando a "Personalizzato" un gruppo mai ordinato resta com'era (`CardQuery.freezeOrder`, in `changeOrder`). `Card.rank` è un `Double`: spostare una tessera tra due altre le dà la posizione a metà, così cambia (e si sincronizza) solo lei; si rinumera solo se mancano posizioni o non c'è spazio (`CardQuery.reorder`) | Nessuna libreria, sincronizzazione semplice. |
+| Scorciatoie, widget, riquadro | Escludono le archiviate (`CardQuery.quickAccess`); in scorciatoie e widget le preferite seguono il loro ordine, poi le altre per uso recente (qualunque sia l'ordine delle altre); il riquadro rapido e lo scorrimento in `ShowCardActivity` seguono l'ordine della lista | |
 | Importazione da altre app | Catima: colonne riconosciute per nome (formato 1 e 2), gruppi → etichette, `barcodeid` come contenuto del codice (il `cardid` diverso finisce nella nota), immagini `card_<id>_front/back/icon.png` convertite in WebP. Zip con password non supportati (`java.util.zip`): si chiede di esportare senza. Stocard: da fare solo con un file vero | Zero dipendenze. |
 | Moduli | Un solo modulo `:app` | Progetto piccolo, multi-modulo non porta benefici. |
 

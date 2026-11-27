@@ -107,7 +107,7 @@ fun SyncDialog(
 
 /** "adesso", "5 minuti fa", "2 ore fa", poi la data: in italiano, come il resto dell'app. */
 @Composable
-private fun whenText(time: Long): String {
+internal fun whenText(time: Long): String {
     val minutes = ((System.currentTimeMillis() - time).coerceAtLeast(0L) / 60_000L).toInt()
     return when {
         minutes < 1 -> stringResource(R.string.sync_just_now)

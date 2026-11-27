@@ -7,6 +7,7 @@ import android.content.pm.ShortcutManager
 import android.graphics.drawable.Icon
 import android.util.Log
 import dev.cantacard.R
+import dev.cantacard.app
 import dev.cantacard.ShowCardActivity
 import dev.cantacard.data.Card
 import dev.cantacard.data.CardQuery
@@ -31,7 +32,7 @@ object CardShortcuts {
         val manager = context.getSystemService(ShortcutManager::class.java) ?: return
         try {
             val max = minOf(MAX_DYNAMIC, manager.maxShortcutCountPerActivity)
-            val chosen = CardQuery.quickAccess(cards).take(max)
+            val chosen = CardQuery.quickAccess(cards, context.app.listPrefs.favoritesOrder.value).take(max)
             manager.dynamicShortcuts = chosen.mapIndexed { rank, card -> build(context, card, images, rank) }
 
             // Scorciatoie fissate in Home: aggiornate (nome, icona) o disattivate se la tessera non c'è più

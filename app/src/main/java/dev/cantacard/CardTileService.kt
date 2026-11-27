@@ -32,7 +32,11 @@ class CardTileService : TileService() {
         // Le tessere si leggono in background; se arrivano dopo che la tendina si è chiusa, niente.
         subtitleJob = app.appScope.launch(Dispatchers.Main) {
             val cards = app.cards.cards.filterNotNull().first()
-            val first = CardQuery.sorted(cards.filterNot { it.archived }, app.listPrefs.sortOrder.value).firstOrNull()
+            val first = CardQuery.sorted(
+                cards.filterNot { it.archived },
+                app.listPrefs.sortOrder.value,
+                app.listPrefs.favoritesOrder.value,
+            ).firstOrNull()
             qsTile?.apply {
                 subtitle = first?.name ?: getString(R.string.tile_subtitle_empty)
                 updateTile()

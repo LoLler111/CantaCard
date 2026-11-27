@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -84,12 +85,16 @@ fun ReorderList(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
         )
+        // Titoli solo se ci sono entrambi i gruppi (con l'ordine fisso si riordinano solo le preferite).
+        val grouped = favorites.isNotEmpty() && others.isNotEmpty()
         if (favorites.isNotEmpty()) {
-            GroupTitle(R.string.section_favorites)
+            if (grouped) GroupTitle(R.string.section_favorites)
             ReorderGroup(favorites, onMove)
-            GroupTitle(R.string.section_all)
         }
-        ReorderGroup(others, onMove)
+        if (others.isNotEmpty()) {
+            if (grouped) GroupTitle(R.string.section_all)
+            ReorderGroup(others, onMove)
+        }
     }
 }
 
@@ -219,39 +224,73 @@ private fun ReorderRow(card: Card, lifted: Boolean, handle: Modifier, modifier: 
     }
 }
 
-/** Scelta dell'ordine della lista; "Personalizzato" porta subito al riordino. */
+/**
+ * Scelta dell'ordine, separata per le preferite e per le altre tessere. Ogni scelta vale subito;
+ * con "Personalizzato" le tessere si spostano tenendole premute nella lista.
+ */
 @Composable
-fun SortDialog(current: SortOrder, onChoose: (SortOrder) -> Unit, onDismiss: () -> Unit) {
+fun SortDialog(
+    favoritesOrder: SortOrder,
+    othersOrder: SortOrder,
+    onFavoritesOrder: (SortOrder) -> Unit,
+    onOthersOrder: (SortOrder) -> Unit,
+    onDismiss: () -> Unit,
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.sort_title)) },
         text = {
-            Column {
-                listOf(
-                    SortOrder.RECENT to R.string.sort_recent,
-                    SortOrder.NAME to R.string.sort_name,
-                    SortOrder.MANUAL to R.string.sort_manual,
-                ).forEach { (order, label) ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .selectable(selected = order == current, role = Role.RadioButton) { onChoose(order) }
-                            .padding(vertical = 4.dp),
-                    ) {
-                        RadioButton(selected = order == current, onClick = null)
-                        Spacer(Modifier.width(12.dp))
-                        Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
-                    }
-                }
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                SortGroup(R.string.section_favorites, favoritesOrder, onFavoritesOrder)
+                Spacer(Modifier.height(12.dp))
+                SortGroup(R.string.sort_group_others, othersOrder, onOthersOrder)
                 Text(
-                    stringResource(R.string.sort_favorites_note),
+                    stringResource(
+                        if (favoritesOrder == SortOrder.MANUAL || othersOrder == SortOrder.MANUAL) R.string.sort_drag_hint
+                        else R.string.sort_favorites_note,
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 12.dp),
                 )
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
     )
+}
+
+@Composable
+private fun SortGroup(title: Int, current: SortOrder, onChoose: (SortOrder) -> Unit) {
+    Column(Modifier.selectableGroup()) {
+        Text(
+            stringResource(title).uppercase(),
+            style = SectionLabelStyle,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 4.dp),
+        )
+        listOf(
+            SortOrder.RECENT to R.string.sort_recent,
+            SortOrder.NAME to R.string.sort_name,
+            SortOrder.MANUAL to R.string.sort_manual,
+        ).forEach { (order, label) ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectable(selected = order == current, role = Role.RadioButton) { onChoose(order) }
+                    .padding(vertical = 2.dp),
+            ) {
+                RadioButton(selected = order == current, onClick = null)
+                Spacer(Modifier.width(12.dp))
+                Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
+            }
+        }
+    }
+}
+
+/** Nome dell'ordine, per le impostazioni. */
+fun sortLabel(order: SortOrder): Int = when (order) {
+    SortOrder.RECENT -> R.string.sort_recent
+    SortOrder.NAME -> R.string.sort_name
+    SortOrder.MANUAL -> R.string.sort_manual
 }

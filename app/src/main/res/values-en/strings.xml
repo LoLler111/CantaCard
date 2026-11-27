@@ -49,6 +49,8 @@
     <string name="sort_name">By name</string>
     <string name="sort_manual">Custom</string>
     <string name="sort_favorites_note">Favorites always stay on top.</string>
+    <string name="sort_group_others">Other cards</string>
+    <string name="sort_drag_hint">With “Custom”, press and hold a card in the list and drag it where you want.</string>
     <string name="reorder_menu">Reorder cards</string>
     <string name="reorder_title">Reorder</string>
     <string name="reorder_done">Done</string>
@@ -278,6 +280,23 @@
     <string name="update_tap">Tap to download it · %1$s</string>
     <string name="update_tap_no_size">Tap to download it</string>
     <string name="update_no_browser">No app to open the update link</string>
+
+    <!-- Settings -->
+    <string name="settings_menu">Settings</string>
+    <string name="settings_section_list">List</string>
+    <string name="settings_sort_favorites">Favorites order</string>
+    <string name="settings_sort_others">Other cards order</string>
+    <string name="reorder_favorites_menu">Reorder favorites</string>
+    <string name="settings_no_favorites">No favorites yet: tap the star on a card</string>
+    <string name="settings_section_backup">Backup and sync</string>
+    <string name="settings_sync_on">On · %1$s</string>
+    <string name="settings_sync_off">Off: keep two phones in step</string>
+    <string name="settings_export_body">A .zip file with cards and images</string>
+    <string name="settings_restore_body">From a CantaCard .zip file</string>
+    <string name="settings_section_info">About</string>
+    <string name="settings_report_body">Opens GitHub with app version and phone already filled in</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_source">Source code on GitHub · GPL-3.0</string>
 
     <!-- Debug builds only -->
     <string name="debug_add_samples">Add sample cards</string>
