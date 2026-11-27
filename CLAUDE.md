@@ -54,7 +54,7 @@ Klarna e che spesso chiede aggiornamenti proprio alla cassa).
   `HeaderSubtitle` (non in `MainActivity`), così `Sync` resta creato in background da `onStart`.
   Provato sull'emulatore (link, finestra, "salvate oggi alle …" dopo aver creato il file). Uscito
   nella **0.2.1** (20/11/2026, pre-release). APK release 2,37 MB.
-- Impostazioni e ordinamento (27/11/2026, richiesta dell'utente, non ancora in una release):
+- Impostazioni e ordinamento (27/11/2026, richiesta dell'utente, uscito nella **0.3.0**, pre-release):
   `SettingsActivity` (`ui.settings.SettingsScreen`, riquadri `FormSection` con un'icona per riga)
   dal menu ⋮ della lista, che ora ha solo Ordina, Riordina e Impostazioni (con icone). Dentro:
   ordine delle preferite e delle altre, riordino a mano, sincronizzazione, esporta/ripristina

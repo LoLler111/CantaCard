@@ -24,8 +24,8 @@ android {
         applicationId = "io.github.loller111.cantacard"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.2.1"
+        versionCode = 10
+        versionName = "0.3.0"
     }
 
     signingConfigs {
